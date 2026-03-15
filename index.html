@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="DA Tracker">
-<link href="<https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Share+Tech+Mono&display=swap>" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
   :root {
     --black: #0a0a0a;
@@ -846,7 +846,7 @@ function renderPills() {
   const container = document.getElementById('phase-pills');
   container.innerHTML = phases.map((p, i) => {
     const total = p.items.length;
-    const done = p.items.filter((_, j) => checked[`${<p.id>}-${j}`]).length;
+    const done = p.items.filter((_, j) => checked[`${p.id}-${j}`]).length;
     const isComplete = done === total;
     const cls = isComplete ? 'done' : i === activePhaseIndex ? 'active' : '';
     return `<div class="phase-pill ${cls}" onclick="goToPhase(${i})">${p.title.split('—')[0].trim().replace(' Phase','').replace(' of Turn','')}</div>`;
@@ -857,7 +857,7 @@ function renderPhases() {
   const container = document.getElementById('phases-container');
   container.innerHTML = phases.map((phase, pi) => {
     const total = phase.items.length;
-    const done = phase.items.filter((_, j) => checked[`${<phase.id>}-${j}`]).length;
+    const done = phase.items.filter((_, j) => checked[`${phase.id}-${j}`]).length;
     const isComplete = done === total;
     const isActive = pi === activePhaseIndex;
 
@@ -868,7 +868,7 @@ function renderPhases() {
     ].filter(Boolean).join(' ');
 
     return `
-      <div class="${sectionCls}" id="phase-${<phase.id>}">
+      <div class="${sectionCls}" id="phase-${phase.id}">
         <div class="phase-header" onclick="goToPhase(${pi})">
           <div class="phase-header-left">
             <span class="phase-number">${String(pi + 1).padStart(2,'0')}</span>
@@ -881,11 +881,11 @@ function renderPhases() {
         </div>
         ${isActive ? `<div class="phase-body">
           ${phase.items.map((item, j) => {
-            const key = `${<phase.id>}-${j}`;
+            const key = `${phase.id}-${j}`;
             const isChecked = checked[key];
             const hasKw = item.keywords && item.keywords.length > 0;
             return `
-              <div class="check-item ${isChecked ? 'checked' : ''} ${hasKw ? 'has-keyword' : ''}" onclick="toggleCheck('${<phase.id>}',${j})">
+              <div class="check-item ${isChecked ? 'checked' : ''} ${hasKw ? 'has-keyword' : ''}" onclick="toggleCheck('${phase.id}',${j})">
                 <div class="checkbox"></div>
                 <div class="item-content">
                   <div class="item-text">${item.text}</div>
@@ -910,7 +910,7 @@ function toggleCheck(phaseId, itemIndex) {
   checked[key] = !checked[key];
   // Auto-advance when all items in the active phase are checked
   const phase = phases[activePhaseIndex];
-  const allDone = phase.items.every((_, j) => checked[`${<phase.id>}-${j}`]);
+  const allDone = phase.items.every((_, j) => checked[`${phase.id}-${j}`]);
   if (allDone && activePhaseIndex < phases.length - 1) {
     activePhaseIndex++;
   }
