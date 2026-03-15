@@ -586,7 +586,7 @@
 
 <main>
   <div id="phases-container"></div>
-  <div class="scroll-hint">Click any weapon keyword to see its rules</div>
+  <div class="scroll-hint">Click any keyword tag to see its rules</div>
 </main>
 
 <!-- Keyword Info Panel -->
@@ -606,82 +606,232 @@ let activePhaseIndex = 0;
 
 // ─── KEYWORD DEFINITIONS ─────────────────────────────────
 const keywords = {
+
+  // ══ WEAPON ABILITIES ══════════════════════════════════════════════════════
+
+  'ANTI-[KEYWORD] X+': [
+    'Against targets with the matching keyword, an unmodified Wound roll of X+ scores a Critical Wound.',
+    'Critical Wounds bypass Toughness — the wound automatically succeeds regardless of target\'s T.',
+    'e.g. Anti-Infantry 4+ scores a Critical Wound vs INFANTRY on a 4+. Pairs powerfully with Devastating Wounds.'
+  ],
   'ASSAULT': [
-    'Can shoot even if unit Advanced this turn.',
-    'When Advancing, can only resolve attacks using Assault weapons.'
-  ],
-  'RAPID FIRE X': [
-    'When targeting a unit within half the weapon\'s range, increase Attacks by X.',
-    'e.g. Rapid Fire 1 at half range = +1 Attack.'
-  ],
-  'HEAVY': [
-    'If the bearer\'s unit Remained Stationary this turn, add +1 to Hit rolls.',
-  ],
-  'PISTOL': [
-    'Can shoot while within Engagement Range of enemies.',
-    'Must target one of the enemy units in Engagement Range.',
-    'Cannot be used alongside other non-Pistol weapons (unless Monster or Vehicle).'
-  ],
-  'TORRENT': [
-    'Attacks automatically hit — no Hit roll required.'
+    'Can shoot even if the bearer\'s unit Advanced this turn.',
+    'If the unit Advanced and shoots, it may only use Assault weapons that turn.'
   ],
   'BLAST': [
-    'Add 1 to Attacks for every 5 models in the target unit (round down).',
-    'Cannot target units within Engagement Range of your own units.'
-  ],
-  'MELTA X': [
-    'When targeting a unit within half the weapon\'s range, increase Damage by X.',
-    'e.g. Melta 2 with D6 Damage = D6+2 at half range.'
-  ],
-  'TWIN-LINKED': [
-    'You may re-roll the Wound roll for each attack made with this weapon.'
-  ],
-  'LETHAL HITS': [
-    'A Critical Hit (unmodified 6 to hit) automatically wounds.',
-    'No Wound roll is made — proceed directly to saving throw.'
-  ],
-  'SUSTAINED HITS X': [
-    'A Critical Hit scores X additional hits on the target.',
-    'e.g. Sustained Hits 2 on a Critical Hit = 3 total hits.'
+    'Add +1 to Attacks for every 5 models in the target unit (round down).',
+    'Cannot target units within Engagement Range of any friendly units.'
   ],
   'DEVASTATING WOUNDS': [
-    'A Critical Wound (unmodified 6 to wound) inflicts mortal wounds equal to the weapon\'s Damage.',
-    'The attack sequence ends — no saving throw.'
+    'A Critical Wound (unmodified 6 to wound, or triggered by Anti-) bypasses all saves — including invulnerable.',
+    'Inflicts mortal wounds equal to the weapon\'s Damage instead of normal damage.',
+    'Note: auto-wounds from Lethal Hits are NOT Critical Wounds and do not trigger Devastating Wounds.'
   ],
-  'ANTI-KEYWORD X+': [
-    'Against targets with the matching keyword, an unmodified Wound roll of X+ counts as a Critical Wound.',
-    'e.g. Anti-Vehicle 4+ scores a Critical Wound vs Vehicles on a 4+.'
+  'EXTRA ATTACKS': [
+    'Attack with this weapon in addition to one other selected melee weapon.',
+    'The number of attacks with this weapon cannot be modified by any rule.'
   ],
-  'PRECISION': [
-    'When targeting an Attached unit, you can allocate the attack to a visible Character model in that unit.'
+  'HAZARDOUS': [
+    'After shooting or fighting, roll 1D6 per Hazardous weapon used.',
+    'On a 1: CHARACTER, VEHICLE, or MONSTER suffers 3 mortal wounds; otherwise one model is destroyed.',
+    'In an Attached unit, mortal wounds from Hazardous are allocated to the Character model, not bodyguards.'
+  ],
+  'HEAVY': [
+    'If the bearer\'s unit Remained Stationary this turn, add +1 to Hit rolls.'
+  ],
+  'IGNORES COVER': [
+    'Attacks from this weapon ignore Benefit of Cover — targets cannot apply the +1 save from Light or Dense Cover.'
   ],
   'INDIRECT FIRE': [
     'Can target units not visible to the attacking model.',
     'If no models in the target are visible: -1 to Hit rolls and target has Benefit of Cover.'
   ],
-  'IGNORES COVER': [
-    'Target cannot use Benefit of Cover against attacks from this weapon.'
-  ],
   'LANCE': [
-    'If the bearer made a Charge move this turn, add +1 to Wound rolls.'
+    'If the bearer\'s unit made a Charge move this turn, add +1 to Wound rolls.'
   ],
-  'HAZARDOUS': [
-    'After unit finishes shooting or fighting, roll 1D6 per Hazardous weapon used.',
-    'On a 1: one model with that weapon is destroyed.',
-    'Characters, Monsters, and Vehicles suffer 3 mortal wounds instead of being destroyed.'
+  'LETHAL HITS': [
+    'A Critical Hit (unmodified 6 to hit) automatically wounds — no Wound roll is made.',
+    'This auto-wound is NOT a Critical Wound and does not trigger Devastating Wounds.'
   ],
-  'EXTRA ATTACKS': [
-    'The bearer attacks with this weapon in addition to any other melee weapon it uses.',
-    'Number of attacks cannot be modified by other rules.'
+  'MELTA X': [
+    'When targeting a unit within half the weapon\'s range, increase Damage by X.',
+    'e.g. Melta 2 with D6 Damage = D6+2 at half range.'
+  ],
+  'ONE SHOT': [
+    'This weapon can only be fired once per battle.',
+    'Track usage — after firing it cannot be used again for the rest of the game.'
+  ],
+  'PISTOL': [
+    'Can shoot while within Engagement Range of enemies.',
+    'Must target one of the enemy units in Engagement Range.',
+    'Cannot mix with non-Pistol weapons when shooting (unless the model is a MONSTER or VEHICLE).'
+  ],
+  'PRECISION': [
+    'When an attack wounds an Attached unit, the attacker may allocate it to any visible CHARACTER in that unit.',
+    'Allocate all Precision attacks that wound before making any saving throws.'
+  ],
+  'PSYCHIC': [
+    'This attack or ability counts as a Psychic Attack.',
+    'No separate Psychic phase — Psychic weapons are used during Shooting or Fight phases like any other weapon.',
+    'Any model armed with a Psychic weapon can use it regardless of whether it has the PSYKER keyword.'
+  ],
+  'RAPID FIRE X': [
+    'When targeting a unit within half the weapon\'s range, increase Attacks by X.',
+    'e.g. Rapid Fire 1 at half range = +1 Attack.'
+  ],
+  'SUSTAINED HITS X': [
+    'A Critical Hit (unmodified 6 to hit) scores X additional hits.',
+    'e.g. Sustained Hits 2: each Critical Hit generates 2 extra hits that then wound normally.'
+  ],
+  'TORRENT': [
+    'Attacks automatically hit — no Hit roll required.',
+    'Wound rolls, saving throws, and damage are still resolved normally.'
+  ],
+  'TWIN-LINKED': [
+    'You may re-roll the Wound roll for each attack made with this weapon.'
+  ],
+
+  // ══ UNIT ABILITIES ════════════════════════════════════════════════════════
+
+  'BATTLE-SHOCK': [
+    'Tested in Command phase for each unit Below Half-strength: roll 2D6 vs Leadership.',
+    'If failed, unit is Battle-shocked until next Command phase: OC becomes 0, cannot use Stratagems.',
+    'Battle-shocked units must take Desperate Escape tests (D6 per model, 1-2 = destroyed) when Falling Back.'
+  ],
+  'DEADLY DEMISE X': [
+    'When this model is destroyed, roll 1D6 before removing it.',
+    'On a 6, every unit within 6" suffers X mortal wounds.',
+    'Models disembarking a destroyed Transport are not affected; instead roll D6 per model — on a 1, that unit suffers 1 mortal wound.'
+  ],
+  'DEEP STRIKE': [
+    'Unit can be held in Reserves and deployed during the Reinforcements step of any Movement phase.',
+    'Every model must be placed more than 9" horizontally from all enemy models on arrival.',
+    'Cannot arrive in Battle Round 1 in standard matched play unless a specific rule overrides this.'
+  ],
+  'FEEL NO PAIN X+': [
+    'Each time this model would lose a wound (including from mortal wounds), roll 1D6.',
+    'On X or higher, that wound is not lost. Roll separately for each wound.',
+    'Common values: 4+, 5+, 6+. Resolved after all other saves.'
   ],
   'FIGHTS FIRST': [
     'Unit fights in the Fights First step of the Fight phase.',
-    'All units that make a Charge move this turn gain Fights First until end of turn.'
+    'All units that made a Charge move this turn also gain Fights First until end of turn.',
+    'Defending player selects eligible Fights First units before the active player.'
   ],
-  'DEEP STRIKE': [
-    'Unit can be set up in Reserves instead of on the battlefield.',
-    'In the Reinforcements step, set up more than 9" horizontally away from all enemy models.'
+  'FIGHTS LAST': [
+    'Unit fights after all units without Fights Last have fought in Remaining Combats.',
+    'Fight order: Fights First → Remaining Combats → Fights Last.',
+    'If multiple Fights Last units remain, the active player chooses the order.'
+  ],
+  'FIRING DECK X': [
+    'When this TRANSPORT shoots, it can make additional attacks using up to X weapons from embarked models.',
+    'The transport makes these attacks — rules affecting the transport apply, not the embarked model\'s rules.',
+    'Cannot be used for Overwatch or other out-of-phase shooting.'
+  ],
+  'HOVER': [
+    'Declare Hover mode at the start of the battle or when deployed. Lasts the rest of the battle.',
+    'While in Hover mode: Move becomes 20" and the AIRCRAFT keyword and all Aircraft movement rules are lost.',
+    'Hover models deploy and operate like standard units — not automatically placed in Reserves.'
+  ],
+  'INFILTRATORS': [
+    'Set up during Deployment anywhere more than 9" from the enemy deployment zone and all enemy models.',
+    'Cannot be placed in Reserves — they deploy directly onto the battlefield.',
+    'If both players have Infiltrators, the first player deploys theirs first, then players alternate.'
+  ],
+  'LEADER': [
+    'Before the battle, this CHARACTER can attach to one of its listed Bodyguard units, forming an Attached unit.',
+    'While Attached: wounds allocated to Bodyguard first; CHARACTER uses Bodyguard\'s Toughness.',
+    'Once all Bodyguard models are destroyed, the CHARACTER operates as a standalone unit.'
+  ],
+  'LONE OPERATIVE': [
+    'Cannot be selected as a ranged attack target unless the attacking model is within 12".',
+    'Does not affect melee targeting.'
+  ],
+  'OBJECTIVE SECURED': [
+    'While this unit is on an objective, it controls it even if an enemy unit is also present.',
+    'If both sides have ObjSec units on the same objective, the player with more ObjSec models controls it.',
+    'Battle-shocked units\' OC is 0 and cannot contribute to objective control.'
+  ],
+  'SCOUTS X"': [
+    'Before the first battle round begins (after deployment), this unit can make a Normal Move of up to X".',
+    'Cannot end within Engagement Range of enemy units. Cannot declare a Charge in the first battle round.',
+    'First player moves their Scouts units first; players then alternate.'
+  ],
+  'SMOKE': [
+    'Unit keyword that enables the Smokescreen Core Stratagem (1 CP).',
+    'When triggered in the opponent\'s Shooting phase: this unit gains Benefit of Cover and Stealth until end of phase.'
+  ],
+  'STEALTH': [
+    'Enemy units targeting this unit from more than 12" away suffer -1 to Hit rolls.',
+    'Subject to the standard modifier cap — maximum -1 total penalty from all sources combined.'
+  ],
+
+  // ══ VEHICLE / MONSTER SPECIAL RULES ══════════════════════════════════════
+
+  'ATTACHED UNIT': [
+    'A unit containing a LEADER — the Character and Bodyguard are treated as a single unit.',
+    'Wounds are always allocated to Bodyguard models until all are destroyed.',
+    'Characters can only be singled out via the Precision weapon ability while Bodyguard remain.'
+  ],
+  'DAMAGED: X WOUNDS REMAINING': [
+    'When reduced to X or fewer wounds, certain characteristics (Attacks, BS/WS) are reduced.',
+    'Represents the model being crippled — exact threshold and penalty are listed on each datasheet.',
+    'Healed wounds do not restore the lost characteristics once the threshold is crossed.'
+  ],
+
+  // ══ CORE STRATAGEMS (available to all armies) ════════════════════════════
+
+  'COMMAND RE-ROLL': [
+    '1 CP — Any phase.',
+    'Re-roll one Advance, Charge, Desperate Escape, Hazardous, Hit, Wound, Damage, or Save roll for one unit.'
+  ],
+  'COUNTER-OFFENSIVE': [
+    '2 CP — Fight phase, just after an enemy unit fights.',
+    'One of your units in Engagement Range that has not yet fought this phase fights next.'
+  ],
+  'EPIC CHALLENGE': [
+    '1 CP — Fight phase, when a CHARACTER unit is selected to fight.',
+    'One Character model\'s melee attacks gain [PRECISION] for the phase.'
+  ],
+  'FIRE OVERWATCH': [
+    '1 CP — Opponent\'s Movement or Charge phase, when an enemy unit is selected to move or charge.',
+    'One friendly unit within 24" of the moving/arriving enemy shoots at it — hits only on unmodified 6s. Once per turn.'
+  ],
+  'GO TO GROUND': [
+    '1 CP — Opponent\'s Shooting phase, when one of your INFANTRY units is selected as the target.',
+    'That unit gains a 6+ invulnerable save and Benefit of Cover until end of phase.'
+  ],
+  'GRENADE': [
+    '1 CP — Your Shooting phase.',
+    'A GRENADES unit not in Engagement Range rolls 6D6 against a visible enemy within 8" — each 4+ deals 1 mortal wound.'
+  ],
+  'HEROIC INTERVENTION': [
+    '2 CP — Opponent\'s Charge phase, after an enemy Charge move is made.',
+    'One friendly unit within 6" of the charging enemy makes an immediate charge against it. No Fights First bonus.',
+    'VEHICLE units may only use this if they also have the WALKER keyword.'
+  ],
+  'INSANE BRAVERY': [
+    '1 CP — Command phase, Battle-shock step. Once per battle.',
+    'One unit automatically passes one Battle-shock test.'
+  ],
+  'NEW ORDERS': [
+    '1 CP — Your Command phase or end of any of your phases. Once per battle.',
+    'Discard your current Secondary Mission card and draw a new one.'
+  ],
+  'RAPID INGRESS': [
+    '1 CP — End of opponent\'s Movement phase (Reinforcements step).',
+    'One of your Reserves units arrives immediately using normal Reinforcements rules.',
+    'Deep Strike rules apply if the unit has Deep Strike. Cannot arrive a round earlier than normally allowed.'
+  ],
+  'SMOKESCREEN': [
+    '1 CP — Opponent\'s Shooting phase, when a SMOKE unit is selected as a target.',
+    'That unit gains Benefit of Cover and Stealth until end of phase.'
+  ],
+  'TANK SHOCK': [
+    '1 CP — Charge phase, after a VEHICLE unit makes a Charge move.',
+    'Select one enemy unit in Engagement Range; roll dice equal to one melee weapon\'s Strength — each 5+ deals 1 mortal wound.'
   ]
+
 };
 
 // ─── PHASE DATA ──────────────────────────────────────────
@@ -691,9 +841,9 @@ const phases = [
     title: 'Command Phase',
     items: [
       { text: 'Both players gain 1CP' },
-      { text: 'Resolve any other Command phase rules' },
-      { text: 'For each unit below half-strength, roll 2D6 — equal or beat Leadership to pass' },
-      { text: 'Failed Battle-shock test: unit OC becomes 0, Stratagems cannot affect them until next Command phase' },
+      { text: 'Resolve any other Command phase rules, including detachment and army abilities that trigger here' },
+      { text: 'For each unit Below Half-strength, roll 2D6 — equal or beat Leadership to pass', keywords: ['BATTLE-SHOCK', 'INSANE BRAVERY'] },
+      { text: 'Failed Battle-shock: unit OC becomes 0, cannot use Stratagems until next Command phase. Battle-shocked units take Desperate Escape tests when Falling Back', keywords: ['BATTLE-SHOCK'] },
     ]
   },
   {
@@ -704,7 +854,10 @@ const phases = [
       { text: 'Units in Engagement Range can only Remain Stationary or Fall Back' },
       { text: 'Units that Advance cannot shoot or charge this turn', keywords: ['ASSAULT'] },
       { text: 'Units that Remain Stationary get +1 to Hit rolls for Heavy weapons this turn', keywords: ['HEAVY'] },
-      { text: 'Units that Fall Back cannot shoot or charge this turn' },
+      { text: 'Units that Fall Back cannot shoot or charge this turn. Battle-shocked units must take Desperate Escape tests', keywords: ['BATTLE-SHOCK'] },
+      { text: 'LEADER: Attached units (Character + bodyguard) move together as a single unit — they cannot separate', keywords: ['LEADER', 'ATTACHED UNIT'] },
+      { text: 'SCOUTS: eligible units may make their pre-battle Scout move before the first battle round begins', keywords: ['SCOUTS X"'] },
+      { text: 'HOVER: declare Hover mode now if needed — model loses AIRCRAFT rules, Move becomes 20"', keywords: ['HOVER'] },
       { text: 'Reinforcements step: set up any units arriving from Deep Strike or Reserves', keywords: ['DEEP STRIKE'] },
     ]
   },
@@ -716,6 +869,15 @@ const phases = [
       { text: 'Declare all targets before rolling — target must be visible and in range', keywords: ['INDIRECT FIRE'] },
       { text: 'Units in Engagement Range cannot shoot — exceptions: Monsters, Vehicles, Pistol weapons', keywords: ['PISTOL'] },
       { text: 'Pistol: must target a unit in Engagement Range, cannot mix with non-Pistol weapons', keywords: ['PISTOL'] },
+      { text: 'Lone Operative: cannot be targeted by ranged attacks unless the attacker is within 12"', keywords: ['LONE OPERATIVE'] },
+      { text: 'Stealth: enemies shooting at this unit from more than 12" away suffer -1 to Hit rolls', keywords: ['STEALTH'] },
+      { text: 'Psychic: weapons/abilities tagged [PSYCHIC] are resolved in this phase — no separate Psychic phase', keywords: ['PSYCHIC'] },
+      { text: 'One Shot: track any One Shot weapons used this turn — they cannot be fired again this battle', keywords: ['ONE SHOT'] },
+      { text: 'Smoke Stratagem (1CP): when a SMOKE unit is targeted, it gains Benefit of Cover and Stealth until end of phase', keywords: ['SMOKE', 'SMOKESCREEN'] },
+      { text: 'Overwatch Stratagem (1CP): shoot at an enemy moving or arriving — hits only on unmodified 6s', keywords: ['FIRE OVERWATCH'] },
+      { text: 'Go to Ground (1CP): targeted INFANTRY unit gains 6+ invulnerable save and Benefit of Cover until end of phase', keywords: ['GO TO GROUND'] },
+      { text: 'Grenade (1CP): a GRENADES unit rolls 6D6 against a visible enemy within 8" — each 4+ deals 1 mortal wound', keywords: ['GRENADE'] },
+      { text: 'FIRING DECK: TRANSPORT models with Firing Deck may shoot using embarked models\' weapons', keywords: ['FIRING DECK X'] },
       { text: 'Torrent: attacks automatically hit, skip Hit roll', keywords: ['TORRENT'] },
       { text: 'Rapid Fire X: check if target is within half range, if so add X to Attacks', keywords: ['RAPID FIRE X'] },
       { text: 'Blast: add 1 to Attacks per 5 models in target unit. Cannot use vs units in Engagement Range of your own', keywords: ['BLAST'] },
@@ -724,10 +886,12 @@ const phases = [
       { text: 'Roll Hit rolls → check unmodified 6s (Critical Hits)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'] },
       { text: 'Roll Wound rolls → check unmodified 6s (Critical Wounds)', keywords: ['DEVASTATING WOUNDS', 'ANTI-KEYWORD X+'] },
       { text: 'Apply AP to saving throws — Invulnerable saves are never modified by AP' },
+      { text: 'Feel No Pain: after saves, eligible models roll Feel No Pain to negate wounds not saved', keywords: ['FEEL NO PAIN X+'] },
       { text: 'Ignores Cover: target cannot use Benefit of Cover', keywords: ['IGNORES COVER'] },
       { text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'] },
       { text: 'Melta X: check if target is within half range, if so add X to Damage', keywords: ['MELTA X'] },
       { text: 'After shooting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'] },
+      { text: 'Deadly Demise: when a model with this ability is destroyed, roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'] },
     ]
   },
   {
@@ -736,8 +900,10 @@ const phases = [
     items: [
       { text: 'Eligible units: within 12" of enemy, haven\'t Advanced or Fell Back, not in Engagement Range' },
       { text: 'Targets do not need to be visible' },
-      { text: 'Roll 2D6 for Charge roll — must reach all targets or charge fails' },
+      { text: 'Roll 2D6 for Charge roll — must reach all targets or charge fails. Use Command Re-roll if needed', keywords: ['COMMAND RE-ROLL'] },
       { text: 'Successful charge gives unit Fights First this turn', keywords: ['FIGHTS FIRST'] },
+      { text: 'Tank Shock (1CP): after a VEHICLE charges, roll vs one enemy in Engagement Range — each 5+ deals 1 mortal wound', keywords: ['TANK SHOCK'] },
+      { text: 'Heroic Intervention (2CP): a friendly unit within 6" of the charging enemy can make an immediate charge against it', keywords: ['HEROIC INTERVENTION'] },
     ]
   },
   {
@@ -745,7 +911,8 @@ const phases = [
     title: 'Fight Phase — Fights First',
     items: [
       { text: 'Units with Fights First ability fight now (including all units that charged)', keywords: ['FIGHTS FIRST'] },
-      { text: 'Players alternate selecting units — opponent goes first' },
+      { text: 'Units with Fights Last fight after all other units — select them only once all normal units have fought', keywords: ['FIGHTS LAST'] },
+      { text: 'Players alternate selecting units — defending player picks first. Counter-Offensive (2CP) can interrupt the sequence', keywords: ['COUNTER-OFFENSIVE'] },
       { text: 'Pile In: move each model up to 3" closer to nearest enemy' },
       { text: 'Lance: add +1 to Wound rolls if bearer charged this turn', keywords: ['LANCE'] },
       { text: 'Extra Attacks: bearer attacks with this weapon in addition to other melee weapons', keywords: ['EXTRA ATTACKS'] },
@@ -753,8 +920,11 @@ const phases = [
       { text: 'Roll Hit rolls → check unmodified 6s (Critical Hits)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'] },
       { text: 'Roll Wound rolls → check unmodified 6s (Critical Wounds)', keywords: ['DEVASTATING WOUNDS', 'ANTI-KEYWORD X+'] },
       { text: 'Apply AP to saving throws — Invulnerable saves never modified by AP' },
+      { text: 'Feel No Pain: after saves, eligible models roll Feel No Pain to negate wounds not saved', keywords: ['FEEL NO PAIN X+'] },
       { text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'] },
+      { text: 'Epic Challenge (1CP): one Character model\'s melee attacks gain Precision for this phase', keywords: ['EPIC CHALLENGE'] },
       { text: 'After fighting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'] },
+      { text: 'Deadly Demise: when a model with this ability is destroyed, roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'] },
       { text: 'Consolidate: move each model up to 3" closer to nearest enemy' },
     ]
   },
@@ -763,6 +933,8 @@ const phases = [
     title: 'Fight Phase — Remaining Combats',
     items: [
       { text: 'All remaining eligible units fight — same sequence as Fights First step' },
+      { text: 'Units with Fights Last fight after all other units — select them only once all normal units have fought', keywords: ['FIGHTS LAST'] },
+      { text: 'Players alternate selecting units — defending player picks first. Counter-Offensive (2CP) can interrupt', keywords: ['COUNTER-OFFENSIVE'] },
       { text: 'Pile In → Select weapon & targets → Make attacks → Consolidate' },
       { text: 'No unit can fight more than once per phase' },
       { text: 'Lance: add +1 to Wound rolls if bearer charged this turn', keywords: ['LANCE'] },
@@ -770,8 +942,11 @@ const phases = [
       { text: 'Roll Hit rolls → check unmodified 6s (Critical Hits)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'] },
       { text: 'Roll Wound rolls → check unmodified 6s (Critical Wounds)', keywords: ['DEVASTATING WOUNDS', 'ANTI-KEYWORD X+'] },
       { text: 'Apply AP to saving throws — Invulnerable saves never modified by AP' },
+      { text: 'Feel No Pain: after saves, eligible models roll Feel No Pain to negate wounds not saved', keywords: ['FEEL NO PAIN X+'] },
       { text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'] },
+      { text: 'Epic Challenge (1CP): one Character model\'s melee attacks gain Precision for this phase', keywords: ['EPIC CHALLENGE'] },
       { text: 'After fighting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'] },
+      { text: 'Deadly Demise: when a model with this ability is destroyed, roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'] },
     ]
   },
   {
@@ -779,6 +954,8 @@ const phases = [
     title: 'End of Turn',
     items: [
       { text: 'Check unit coherency — remove models from any unit not in coherency' },
+      { text: 'Score objectives — units with Objective Secured control markers even against non-ObjSec enemies', keywords: ['OBJECTIVE SECURED'] },
+      { text: 'New Orders (1CP): discard current Secondary Mission card and draw a new one (once per battle)', keywords: ['NEW ORDERS'] },
       { text: 'Note victory points scored this turn' },
       { text: 'Pass to your opponent' },
     ]
