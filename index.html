@@ -1299,6 +1299,11 @@ const keywords = {
 };
 
 // ─── PHASE DATA ──────────────────────────────────────────
+// playerOnly: true  →  hidden when roster is loaded and no keyword from
+//                       the item appears in the player's roster.
+//                       Use for steps about YOUR OWN units/weapons only.
+//                       Omit (or false) for steps that are always relevant
+//                       or that could apply to enemy units as well.
 const phases = [
   {
     id: 'command',
@@ -1316,45 +1321,45 @@ const phases = [
     items: [
       { text: 'Select each unit and choose: Normal Move, Advance, Remain Stationary, or Fall Back' },
       { text: 'Units in Engagement Range can only Remain Stationary or Fall Back' },
-      { text: 'Units that Advance cannot shoot or charge this turn', keywords: ['ASSAULT'] },
-      { text: 'Units that Remain Stationary get +1 to Hit rolls for Heavy weapons this turn', keywords: ['HEAVY'] },
+      { text: 'Units that Advance cannot shoot or charge this turn — exception: Assault weapons can still fire', keywords: ['ASSAULT'], playerOnly: true },
+      { text: 'Units that Remain Stationary get +1 to Hit rolls for Heavy weapons this turn', keywords: ['HEAVY'], playerOnly: true },
       { text: 'Units that Fall Back cannot shoot or charge this turn. Battle-shocked units must take Desperate Escape tests', keywords: ['BATTLE-SHOCK'] },
       { text: 'LEADER: Attached units (Character + bodyguard) move together as a single unit — they cannot separate', keywords: ['LEADER', 'ATTACHED UNIT'] },
-      { text: 'SCOUTS: eligible units may make their pre-battle Scout move before the first battle round begins', keywords: ['SCOUTS X"'] },
-      { text: 'HOVER: declare Hover mode now if needed — model loses AIRCRAFT rules, Move becomes 20"', keywords: ['HOVER'] },
-      { text: 'Reinforcements step: set up any units arriving from Deep Strike or Reserves', keywords: ['DEEP STRIKE'] },
+      { text: 'SCOUTS: eligible units may make their pre-battle Scout move before the first battle round begins', keywords: ['SCOUTS X"'], playerOnly: true },
+      { text: 'HOVER: declare Hover mode now if needed — model loses AIRCRAFT rules, Move becomes 20"', keywords: ['HOVER'], playerOnly: true },
+      { text: 'Reinforcements step: set up any units arriving from Deep Strike or Reserves', keywords: ['DEEP STRIKE'], playerOnly: true },
     ]
   },
   {
     id: 'shooting',
     title: 'Shooting Phase',
     items: [
-      { text: 'Skip units that Advanced or Fell Back — unless using Assault weapons', keywords: ['ASSAULT'] },
-      { text: 'Declare all targets before rolling — target must be visible and in range', keywords: ['INDIRECT FIRE'] },
-      { text: 'Units in Engagement Range cannot shoot — exceptions: Monsters, Vehicles, Pistol weapons', keywords: ['PISTOL'] },
-      { text: 'Pistol: must target a unit in Engagement Range, cannot mix with non-Pistol weapons', keywords: ['PISTOL'] },
-      { text: 'Lone Operative: cannot be targeted by ranged attacks unless the attacker is within 12"', keywords: ['LONE OPERATIVE'] },
-      { text: 'Stealth: enemies shooting at this unit from more than 12" away suffer -1 to Hit rolls', keywords: ['STEALTH'] },
-      { text: 'Psychic: weapons/abilities tagged [PSYCHIC] are resolved in this phase — no separate Psychic phase', keywords: ['PSYCHIC'] },
-      { text: 'One Shot: track any One Shot weapons used this turn — they cannot be fired again this battle', keywords: ['ONE SHOT'] },
-      { text: 'Smoke Stratagem (1CP): when a SMOKE unit is targeted, it gains Benefit of Cover and Stealth until end of phase', keywords: ['SMOKE', 'SMOKESCREEN'] },
+      { text: 'Skip units that Advanced or Fell Back — unless using Assault weapons', keywords: ['ASSAULT'], playerOnly: true },
+      { text: 'Declare all targets before rolling — Indirect Fire weapons may target units not visible', keywords: ['INDIRECT FIRE'], playerOnly: true },
+      { text: 'Units in Engagement Range cannot shoot — exceptions: Monsters, Vehicles, Pistol weapons', keywords: ['PISTOL'], playerOnly: true },
+      { text: 'Pistol: must target a unit in Engagement Range, cannot mix with non-Pistol weapons', keywords: ['PISTOL'], playerOnly: true },
+      { text: 'Lone Operative: cannot be targeted by ranged attacks unless the attacker is within 12"', keywords: ['LONE OPERATIVE'], playerOnly: true },
+      { text: 'Stealth: enemies shooting at this unit from more than 12" away suffer -1 to Hit rolls', keywords: ['STEALTH'], playerOnly: true },
+      { text: 'Psychic: weapons/abilities tagged [PSYCHIC] are resolved in this phase — no separate Psychic phase', keywords: ['PSYCHIC'], playerOnly: true },
+      { text: 'One Shot: track any One Shot weapons used this turn — they cannot be fired again this battle', keywords: ['ONE SHOT'], playerOnly: true },
+      { text: 'Smoke Stratagem (1CP): when a SMOKE unit is targeted, it gains Benefit of Cover and Stealth until end of phase', keywords: ['SMOKE', 'SMOKESCREEN'], playerOnly: true },
       { text: 'Overwatch Stratagem (1CP): shoot at an enemy moving or arriving — hits only on unmodified 6s', keywords: ['FIRE OVERWATCH'] },
       { text: 'Go to Ground (1CP): targeted INFANTRY unit gains 6+ invulnerable save and Benefit of Cover until end of phase', keywords: ['GO TO GROUND'] },
-      { text: 'Grenade (1CP): a GRENADES unit rolls 6D6 against a visible enemy within 8" — each 4+ deals 1 mortal wound', keywords: ['GRENADE'] },
-      { text: 'FIRING DECK: TRANSPORT models with Firing Deck may shoot using embarked models\' weapons', keywords: ['FIRING DECK X'] },
-      { text: 'Torrent: attacks automatically hit, skip Hit roll', keywords: ['TORRENT'] },
-      { text: 'Rapid Fire X: check if target is within half range, if so add X to Attacks', keywords: ['RAPID FIRE X'] },
-      { text: 'Blast: add 1 to Attacks per 5 models in target unit. Cannot use vs units in Engagement Range of your own', keywords: ['BLAST'] },
-      { text: 'Heavy: add +1 to Hit rolls if unit Remained Stationary this turn', keywords: ['HEAVY'] },
-      { text: 'Indirect Fire with no visible target: -1 to Hit rolls, target has Benefit of Cover', keywords: ['INDIRECT FIRE'] },
-      { text: 'Roll Hit rolls → check unmodified 6s (Critical Hits)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'] },
-      { text: 'Roll Wound rolls → check unmodified 6s (Critical Wounds)', keywords: ['DEVASTATING WOUNDS', 'ANTI-KEYWORD X+'] },
+      { text: 'Grenade (1CP): a GRENADES unit rolls 6D6 against a visible enemy within 8" — each 4+ deals 1 mortal wound', keywords: ['GRENADE'], playerOnly: true },
+      { text: 'FIRING DECK: TRANSPORT models with Firing Deck may shoot using embarked models\' weapons', keywords: ['FIRING DECK X'], playerOnly: true },
+      { text: 'Torrent: attacks automatically hit, skip Hit roll', keywords: ['TORRENT'], playerOnly: true },
+      { text: 'Rapid Fire X: check if target is within half range, if so add X to Attacks', keywords: ['RAPID FIRE X'], playerOnly: true },
+      { text: 'Blast: add 1 to Attacks per 5 models in target unit. Cannot use vs units in Engagement Range of your own', keywords: ['BLAST'], playerOnly: true },
+      { text: 'Heavy: add +1 to Hit rolls if unit Remained Stationary this turn', keywords: ['HEAVY'], playerOnly: true },
+      { text: 'Indirect Fire with no visible target: -1 to Hit rolls, target has Benefit of Cover', keywords: ['INDIRECT FIRE'], playerOnly: true },
+      { text: 'Roll Hit rolls → check unmodified 6s (Critical Hits)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'], playerOnly: true },
+      { text: 'Roll Wound rolls → check unmodified 6s (Critical Wounds)', keywords: ['DEVASTATING WOUNDS', 'ANTI-[KEYWORD] X+'], playerOnly: true },
       { text: 'Apply AP to saving throws — Invulnerable saves are never modified by AP' },
-      { text: 'Feel No Pain: after saves, eligible models roll Feel No Pain to negate wounds not saved', keywords: ['FEEL NO PAIN X+'] },
-      { text: 'Ignores Cover: target cannot use Benefit of Cover', keywords: ['IGNORES COVER'] },
-      { text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'] },
-      { text: 'Melta X: check if target is within half range, if so add X to Damage', keywords: ['MELTA X'] },
-      { text: 'After shooting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'] },
+      { text: 'Feel No Pain: after saves, eligible models roll Feel No Pain to negate wounds not saved', keywords: ['FEEL NO PAIN X+'], playerOnly: true },
+      { text: 'Ignores Cover: target cannot use Benefit of Cover', keywords: ['IGNORES COVER'], playerOnly: true },
+      { text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'], playerOnly: true },
+      { text: 'Melta X: check if target is within half range, if so add X to Damage', keywords: ['MELTA X'], playerOnly: true },
+      { text: 'After shooting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'], playerOnly: true },
       { text: 'Deadly Demise: when a model with this ability is destroyed, roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'] },
     ]
   },
@@ -1366,7 +1371,7 @@ const phases = [
       { text: 'Targets do not need to be visible' },
       { text: 'Roll 2D6 for Charge roll — must reach all targets or charge fails. Use Command Re-roll if needed', keywords: ['COMMAND RE-ROLL'] },
       { text: 'Successful charge gives unit Fights First this turn', keywords: ['FIGHTS FIRST'] },
-      { text: 'Tank Shock (1CP): after a VEHICLE charges, roll vs one enemy in Engagement Range — each 5+ deals 1 mortal wound', keywords: ['TANK SHOCK'] },
+      { text: 'Tank Shock (1CP): after a VEHICLE charges, roll vs one enemy in Engagement Range — each 5+ deals 1 mortal wound', keywords: ['TANK SHOCK'], playerOnly: true },
       { text: 'Heroic Intervention (2CP): a friendly unit within 6" of the charging enemy can make an immediate charge against it', keywords: ['HEROIC INTERVENTION'] },
     ]
   },
@@ -1378,16 +1383,16 @@ const phases = [
       { text: 'Units with Fights Last fight after all other units — select them only once all normal units have fought', keywords: ['FIGHTS LAST'] },
       { text: 'Players alternate selecting units — defending player picks first. Counter-Offensive (2CP) can interrupt the sequence', keywords: ['COUNTER-OFFENSIVE'] },
       { text: 'Pile In: move each model up to 3" closer to nearest enemy' },
-      { text: 'Lance: add +1 to Wound rolls if bearer charged this turn', keywords: ['LANCE'] },
-      { text: 'Extra Attacks: bearer attacks with this weapon in addition to other melee weapons', keywords: ['EXTRA ATTACKS'] },
-      { text: 'Precision: when targeting Attached unit, can allocate attack to visible Character', keywords: ['PRECISION'] },
-      { text: 'Roll Hit rolls → check unmodified 6s (Critical Hits)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'] },
-      { text: 'Roll Wound rolls → check unmodified 6s (Critical Wounds)', keywords: ['DEVASTATING WOUNDS', 'ANTI-KEYWORD X+'] },
+      { text: 'Lance: add +1 to Wound rolls if bearer charged this turn', keywords: ['LANCE'], playerOnly: true },
+      { text: 'Extra Attacks: bearer attacks with this weapon in addition to other melee weapons', keywords: ['EXTRA ATTACKS'], playerOnly: true },
+      { text: 'Precision: when targeting Attached unit, can allocate attack to visible Character', keywords: ['PRECISION'], playerOnly: true },
+      { text: 'Roll Hit rolls → check unmodified 6s (Critical Hits)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'], playerOnly: true },
+      { text: 'Roll Wound rolls → check unmodified 6s (Critical Wounds)', keywords: ['DEVASTATING WOUNDS', 'ANTI-[KEYWORD] X+'], playerOnly: true },
       { text: 'Apply AP to saving throws — Invulnerable saves never modified by AP' },
-      { text: 'Feel No Pain: after saves, eligible models roll Feel No Pain to negate wounds not saved', keywords: ['FEEL NO PAIN X+'] },
-      { text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'] },
+      { text: 'Feel No Pain: after saves, eligible models roll Feel No Pain to negate wounds not saved', keywords: ['FEEL NO PAIN X+'], playerOnly: true },
+      { text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'], playerOnly: true },
       { text: 'Epic Challenge (1CP): one Character model\'s melee attacks gain Precision for this phase', keywords: ['EPIC CHALLENGE'] },
-      { text: 'After fighting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'] },
+      { text: 'After fighting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'], playerOnly: true },
       { text: 'Deadly Demise: when a model with this ability is destroyed, roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'] },
       { text: 'Consolidate: move each model up to 3" closer to nearest enemy' },
     ]
@@ -1401,15 +1406,15 @@ const phases = [
       { text: 'Players alternate selecting units — defending player picks first. Counter-Offensive (2CP) can interrupt', keywords: ['COUNTER-OFFENSIVE'] },
       { text: 'Pile In → Select weapon & targets → Make attacks → Consolidate' },
       { text: 'No unit can fight more than once per phase' },
-      { text: 'Lance: add +1 to Wound rolls if bearer charged this turn', keywords: ['LANCE'] },
-      { text: 'Extra Attacks: bearer attacks with this weapon in addition to other melee weapons', keywords: ['EXTRA ATTACKS'] },
-      { text: 'Roll Hit rolls → check unmodified 6s (Critical Hits)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'] },
-      { text: 'Roll Wound rolls → check unmodified 6s (Critical Wounds)', keywords: ['DEVASTATING WOUNDS', 'ANTI-KEYWORD X+'] },
+      { text: 'Lance: add +1 to Wound rolls if bearer charged this turn', keywords: ['LANCE'], playerOnly: true },
+      { text: 'Extra Attacks: bearer attacks with this weapon in addition to other melee weapons', keywords: ['EXTRA ATTACKS'], playerOnly: true },
+      { text: 'Roll Hit rolls → check unmodified 6s (Critical Hits)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'], playerOnly: true },
+      { text: 'Roll Wound rolls → check unmodified 6s (Critical Wounds)', keywords: ['DEVASTATING WOUNDS', 'ANTI-[KEYWORD] X+'], playerOnly: true },
       { text: 'Apply AP to saving throws — Invulnerable saves never modified by AP' },
-      { text: 'Feel No Pain: after saves, eligible models roll Feel No Pain to negate wounds not saved', keywords: ['FEEL NO PAIN X+'] },
-      { text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'] },
+      { text: 'Feel No Pain: after saves, eligible models roll Feel No Pain to negate wounds not saved', keywords: ['FEEL NO PAIN X+'], playerOnly: true },
+      { text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'], playerOnly: true },
       { text: 'Epic Challenge (1CP): one Character model\'s melee attacks gain Precision for this phase', keywords: ['EPIC CHALLENGE'] },
-      { text: 'After fighting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'] },
+      { text: 'After fighting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'], playerOnly: true },
       { text: 'Deadly Demise: when a model with this ability is destroyed, roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'] },
     ]
   },
@@ -1451,6 +1456,18 @@ function isKeywordVisible(kw) {
   if (roster.loaded) return roster.activeKeywords.has(kw);
 
   return true;
+}
+
+// ─── ITEM VISIBILITY ─────────────────────────────────────
+// Returns false only when ALL of these are true:
+//   • item.playerOnly === true  (step is about the player's own units)
+//   • a roster has been loaded
+//   • none of the item's keywords appear in that roster
+// Items with no keywords are never hidden by this rule.
+function shouldShowItem(item) {
+  if (!item.playerOnly || !roster.loaded) return true;
+  if (!item.keywords || item.keywords.length === 0) return true;
+  return item.keywords.some(kw => isKeywordVisible(kw));
 }
 
 // ─── ROSTER PARSING ──────────────────────────────────────
@@ -1805,8 +1822,14 @@ function renderPhases() {
   const container = document.getElementById('phases-container');
   const pi = activePhaseIndex;
   const phase = phases[pi];
-  const total = phase.items.length;
-  const done = phase.items.filter((_, j) => checked[`${phase.id}-${j}`]).length;
+
+  // Pair each item with its original index so checked-state keys stay stable.
+  const visible = phase.items
+    .map((item, j) => ({ item, j }))
+    .filter(({ item }) => shouldShowItem(item));
+
+  const total = visible.length;
+  const done  = visible.filter(({ j }) => checked[`${phase.id}-${j}`]).length;
   const isComplete = done === total;
 
   container.innerHTML = `
@@ -1821,7 +1844,7 @@ function renderPhases() {
           ${isComplete ? '<span style="color:var(--green-glow);font-size:11px;letter-spacing:1px">✓ DONE</span>' : ''}
         </div>
       </div>
-      ${phase.items.map((item, j) => {
+      ${visible.map(({ item, j }) => {
         const key = `${phase.id}-${j}`;
         const isChecked = checked[key];
         const visibleKws = (item.keywords || []).filter(isKeywordVisible);
@@ -1848,9 +1871,13 @@ function renderPhases() {
 function toggleCheck(phaseId, itemIndex) {
   const key = `${phaseId}-${itemIndex}`;
   checked[key] = !checked[key];
-  // Auto-advance when all items in the active phase are checked
+  // Auto-advance when all visible items in the active phase are checked.
   const phase = phases[activePhaseIndex];
-  const allDone = phase.items.every((_, j) => checked[`${phase.id}-${j}`]);
+  const visibleJs = phase.items
+    .map((item, j) => ({ item, j }))
+    .filter(({ item }) => shouldShowItem(item))
+    .map(({ j }) => j);
+  const allDone = visibleJs.every(j => checked[`${phase.id}-${j}`]);
   if (allDone && activePhaseIndex < phases.length - 1) {
     activePhaseIndex++;
   }
