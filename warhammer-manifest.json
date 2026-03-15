@@ -1,0 +1,18 @@
+{
+  "name": "Dark Angels Turn Tracker",
+  "short_name": "DA Tracker",
+  "description": "Warhammer 40K 10th Edition turn-by-turn checklist for Dark Angels",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0a0a0a",
+  "theme_color": "#1a6b2e",
+  "icons": [
+    {
+      "src": "./warhammer-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
