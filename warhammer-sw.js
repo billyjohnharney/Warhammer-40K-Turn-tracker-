@@ -1,4 +1,4 @@
-const CACHE = 'da-tracker-v2';
+const CACHE = 'da-tracker-v3';
 const ASSETS = [
   './index.html',
   './warhammer-icon.svg',

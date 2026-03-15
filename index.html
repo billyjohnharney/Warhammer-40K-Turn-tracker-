@@ -586,7 +586,7 @@
 
 <main>
   <div id="phases-container"></div>
-  <div class="scroll-hint">Click any weapon keyword to see its rules</div>
+  <div class="scroll-hint">Click any keyword tag to see its rules</div>
 </main>
 
 <!-- Keyword Info Panel -->
@@ -681,6 +681,75 @@ const keywords = {
   'DEEP STRIKE': [
     'Unit can be set up in Reserves instead of on the battlefield.',
     'In the Reinforcements step, set up more than 9" horizontally away from all enemy models.'
+  ],
+
+  // ── ARMY ABILITIES ──────────────────────────────────────
+  'GRIM RESOLVE': [
+    'Army Rule — Dark Angels. Units never take Desperate Escape tests when Falling Back.',
+    'Units can Fall Back normally from Engagement Range without any dice roll.'
+  ],
+
+  // ── UNIT ABILITIES ──────────────────────────────────────
+  'OBJECTIVE SECURED': [
+    'While this unit is on an objective marker, it controls it even if an enemy unit is also present.',
+    'If both sides have ObjSec units on the same objective, the player with more ObjSec models controls it.'
+  ],
+  'STEALTH': [
+    'Enemy units targeting this unit from more than 12" away suffer -1 to Hit rolls.',
+    'Cumulative with other to-hit modifiers (e.g. Benefit of Cover).'
+  ],
+  'SCOUTS X': [
+    'Before the first battle round begins, this unit can make a Normal Move of up to X".',
+    'Cannot declare a Charge in the first battle round if a Scout move was made.'
+  ],
+  'INFILTRATORS': [
+    'Set up during Deployment anywhere more than 9" from the enemy deployment zone and all enemy models.',
+    'Cannot be set up in Reserves — they deploy directly onto the battlefield.'
+  ],
+  'FIGHTS LAST': [
+    'This unit fights after all units without Fights Last have fought.',
+    'If multiple Fights Last units remain, the active player chooses the order.'
+  ],
+  'SMOKE': [
+    'Once per game, in your Shooting phase, this unit can use Smoke instead of shooting.',
+    'Until the start of your next turn, this unit has Benefit of Cover against ranged attacks.'
+  ],
+
+  // ── CHARACTER ABILITIES ─────────────────────────────────
+  'LEADER': [
+    'Can be attached to the Bodyguard unit(s) listed on the datasheet.',
+    'While Attached: the Character and Bodyguard move, shoot, and fight as one unit.',
+    'If the Leader is destroyed while Attached, the Bodyguard continues as a normal unit.'
+  ],
+  'LONE OPERATIVE': [
+    'Cannot be selected as a ranged attack target unless the attacking model is within 12".',
+    'If the attacker is within 12", this model can be targeted normally.'
+  ],
+  'ATTACHED UNIT': [
+    'A unit containing a Leader model — Character and Bodyguard are treated as a single unit.',
+    'Characters in an Attached unit can only be singled out via the Precision weapon ability.',
+    'The Attached unit must move, shoot, and fight together as one.'
+  ],
+
+  // ── DETACHMENT ABILITIES ────────────────────────────────
+  'INNER CIRCLE': [
+    'Detachment Rule — Inner Circle Task Force.',
+    'DEATHWING units gain Lethal Hits when targeting Chaos or Heretic units.',
+    'RAVENWING units gain Stealth while within 6" of a friendly DEATHWING unit.'
+  ],
+
+  // ── ENHANCEMENT ABILITIES ───────────────────────────────
+  'THE LION HELM': [
+    'Enhancement — Character only. Bearer has a 4+ invulnerable save.',
+    'Once per battle, can re-roll one failed Hit, Wound, or saving throw.'
+  ],
+  'PENNANT OF REMEMBRANCE': [
+    'Enhancement — Character only. Add 1 to the OC of the bearer\'s unit.',
+    'Re-roll Hit rolls of 1 for attacks made by the bearer\'s unit.'
+  ],
+  'RITES OF BATTLE': [
+    'Enhancement — Character only. Add 1 to Wound rolls for attacks made by the bearer\'s unit.',
+    'While the bearer is Attached, the Attached unit can use this bonus.'
   ]
 };
 
@@ -691,7 +760,7 @@ const phases = [
     title: 'Command Phase',
     items: [
       { text: 'Both players gain 1CP' },
-      { text: 'Resolve any other Command phase rules' },
+      { text: 'Resolve any other Command phase rules — including detachment and army abilities that trigger here', keywords: ['INNER CIRCLE'] },
       { text: 'For each unit below half-strength, roll 2D6 — equal or beat Leadership to pass' },
       { text: 'Failed Battle-shock test: unit OC becomes 0, Stratagems cannot affect them until next Command phase' },
     ]
@@ -704,7 +773,9 @@ const phases = [
       { text: 'Units in Engagement Range can only Remain Stationary or Fall Back' },
       { text: 'Units that Advance cannot shoot or charge this turn', keywords: ['ASSAULT'] },
       { text: 'Units that Remain Stationary get +1 to Hit rolls for Heavy weapons this turn', keywords: ['HEAVY'] },
-      { text: 'Units that Fall Back cannot shoot or charge this turn' },
+      { text: 'Units that Fall Back cannot shoot or charge this turn. Dark Angels never take Desperate Escape tests', keywords: ['GRIM RESOLVE'] },
+      { text: 'LEADER: Attached units (Character + bodyguard) move together as a single unit — they cannot separate', keywords: ['LEADER', 'ATTACHED UNIT'] },
+      { text: 'SCOUTS X: eligible units may make their pre-battle Scout move before the first battle round begins', keywords: ['SCOUTS X'] },
       { text: 'Reinforcements step: set up any units arriving from Deep Strike or Reserves', keywords: ['DEEP STRIKE'] },
     ]
   },
@@ -716,6 +787,9 @@ const phases = [
       { text: 'Declare all targets before rolling — target must be visible and in range', keywords: ['INDIRECT FIRE'] },
       { text: 'Units in Engagement Range cannot shoot — exceptions: Monsters, Vehicles, Pistol weapons', keywords: ['PISTOL'] },
       { text: 'Pistol: must target a unit in Engagement Range, cannot mix with non-Pistol weapons', keywords: ['PISTOL'] },
+      { text: 'Lone Operative: cannot be targeted by ranged attacks unless the attacker is within 12"', keywords: ['LONE OPERATIVE'] },
+      { text: 'Stealth: enemies shooting at this unit from more than 12" away suffer -1 to Hit rolls', keywords: ['STEALTH'] },
+      { text: 'Smoke: unit may forgo all shooting to gain Benefit of Cover until your next turn (once per game)', keywords: ['SMOKE'] },
       { text: 'Torrent: attacks automatically hit, skip Hit roll', keywords: ['TORRENT'] },
       { text: 'Rapid Fire X: check if target is within half range, if so add X to Attacks', keywords: ['RAPID FIRE X'] },
       { text: 'Blast: add 1 to Attacks per 5 models in target unit. Cannot use vs units in Engagement Range of your own', keywords: ['BLAST'] },
@@ -745,6 +819,7 @@ const phases = [
     title: 'Fight Phase — Fights First',
     items: [
       { text: 'Units with Fights First ability fight now (including all units that charged)', keywords: ['FIGHTS FIRST'] },
+      { text: 'Units with Fights Last fight after all other units — select them only once all normal units have fought', keywords: ['FIGHTS LAST'] },
       { text: 'Players alternate selecting units — opponent goes first' },
       { text: 'Pile In: move each model up to 3" closer to nearest enemy' },
       { text: 'Lance: add +1 to Wound rolls if bearer charged this turn', keywords: ['LANCE'] },
@@ -763,6 +838,7 @@ const phases = [
     title: 'Fight Phase — Remaining Combats',
     items: [
       { text: 'All remaining eligible units fight — same sequence as Fights First step' },
+      { text: 'Units with Fights Last fight after all other units — select them only once all normal units have fought', keywords: ['FIGHTS LAST'] },
       { text: 'Pile In → Select weapon & targets → Make attacks → Consolidate' },
       { text: 'No unit can fight more than once per phase' },
       { text: 'Lance: add +1 to Wound rolls if bearer charged this turn', keywords: ['LANCE'] },
@@ -779,6 +855,8 @@ const phases = [
     title: 'End of Turn',
     items: [
       { text: 'Check unit coherency — remove models from any unit not in coherency' },
+      { text: 'Score objectives — units with Objective Secured control markers even against non-ObjSec enemies', keywords: ['OBJECTIVE SECURED'] },
+      { text: 'Check enhancements — confirm any once-per-battle Enhancement abilities were not missed', keywords: ['THE LION HELM', 'PENNANT OF REMEMBRANCE', 'RITES OF BATTLE'] },
       { text: 'Note victory points scored this turn' },
       { text: 'Pass to your opponent' },
     ]
