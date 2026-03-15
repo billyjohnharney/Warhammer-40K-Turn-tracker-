@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dark Angels — Turn Tracker</title>
+<title>40K — Turn Tracker</title>
 <link rel="manifest" href="./warhammer-manifest.json">
 <link rel="icon" href="./warhammer-icon.svg" type="image/svg+xml">
 <meta name="theme-color" content="#1a6b2e">
@@ -541,6 +541,157 @@
     padding: 16px;
     text-transform: uppercase;
   }
+
+  /* FACTION SELECTION SCREEN */
+  .faction-screen {
+    padding: 40px 0 60px;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  .faction-screen-title {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+
+  .faction-screen-sub {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-bright);
+    margin-bottom: 32px;
+    text-shadow: 0 0 20px rgba(232,236,244,0.1);
+  }
+
+  .faction-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .faction-field label {
+    display: block;
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .faction-field select {
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--border-bright);
+    color: var(--text-bright);
+    padding: 10px 12px;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235a6070'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    transition: border-color 0.2s;
+  }
+
+  .faction-field select:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 8px rgba(201,168,76,0.15);
+  }
+
+  .faction-field select option {
+    background: var(--panel);
+  }
+
+  .faction-vs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    padding-top: 24px;
+  }
+
+  .faction-start-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--green-bright);
+    color: var(--green-glow);
+    padding: 14px 24px;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+  }
+
+  .faction-start-btn:hover:not(:disabled) {
+    background: rgba(37,160,68,0.12);
+    box-shadow: 0 0 16px rgba(46,204,113,0.2);
+  }
+
+  .faction-start-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    border-color: var(--border-bright);
+    color: var(--text-dim);
+  }
+
+  .faction-start-btn:disabled:hover {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .faction-hint {
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    margin-top: 14px;
+    text-align: center;
+  }
+
+  /* FACTION BADGE in header */
+  .faction-badge {
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-top: 2px;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+
+  .faction-badge:hover {
+    color: var(--gold);
+  }
+
+  .faction-badge .vs-sep {
+    color: var(--border-bright);
+    margin: 0 6px;
+  }
+
+  .faction-badge .your-side {
+    color: var(--green-bright);
+  }
+
+  .faction-badge .enemy-side {
+    color: var(--red-bright);
+  }
+
+  /* keyword tag hidden state */
+  .keyword-tag.hidden { display: none; }
 </style>
 
 </head>
@@ -549,8 +700,8 @@
 <header>
   <div class="header-inner">
     <div class="title-block">
-      <h1>Dark Angels</h1>
-      <p>10th Edition — Turn Tracker</p>
+      <h1 id="header-title">40K Turn Tracker</h1>
+      <p id="header-subtitle" class="faction-badge">10th Edition</p>
     </div>
     <div class="stats-bar">
       <div class="stat-block">
@@ -603,6 +754,49 @@
 let stats = { cp: 0, vp: 0 };
 let checked = {};
 let activePhaseIndex = 0;
+let gameConfig = { playerFaction: '', enemyFaction: '' };
+let gameStarted = false;
+
+// ─── FACTION LIST ────────────────────────────────────────
+const factions = [
+  'Adeptus Custodes',
+  'Adeptus Mechanicus',
+  'Adepta Sororitas',
+  'Aeldari',
+  'Astra Militarum',
+  'Black Templars',
+  'Blood Angels',
+  'Chaos Daemons',
+  'Chaos Knights',
+  'Chaos Space Marines',
+  'Dark Angels',
+  'Death Guard',
+  'Deathwatch',
+  'Drukhari',
+  'Genestealer Cults',
+  'Grey Knights',
+  'Imperial Knights',
+  'Leagues of Votann',
+  'Necrons',
+  'Orks',
+  'Space Marines',
+  'Space Wolves',
+  "T'au Empire",
+  'Thousand Sons',
+  'Tyranids',
+  'World Eaters',
+];
+
+// ─── FACTION → KEYWORD MAPPING ───────────────────────────
+// Keywords not listed here are universal — visible for all factions.
+// Add faction-specific keyword entries here as they are researched.
+// Format: 'KEYWORD NAME': ['Faction A', 'Faction B', ...]
+const keywordFactions = {
+  // All keywords currently defined are universal.
+  // Faction-specific keywords will be added here.
+  // Example (not yet active):
+  // 'TRANSHUMAN PHYSIOLOGY': ['Space Marines','Dark Angels','Blood Angels','Space Wolves','Black Templars','Deathwatch','Grey Knights'],
+};
 
 // ─── KEYWORD DEFINITIONS ─────────────────────────────────
 const keywords = {
@@ -962,16 +1156,107 @@ const phases = [
   }
 ];
 
+// ─── KEYWORD VISIBILITY ──────────────────────────────────
+function isKeywordVisible(kw) {
+  // Universal keywords (not in keywordFactions) always show.
+  const factionList = keywordFactions[kw];
+  if (!factionList) return true;
+  // Faction-specific: show only if one of the active factions uses it.
+  const active = [gameConfig.playerFaction, gameConfig.enemyFaction].filter(Boolean);
+  return active.some(f => factionList.includes(f));
+}
+
 // ─── RENDER ──────────────────────────────────────────────
 function render() {
   renderStats();
-  renderPills();
-  renderPhases();
+  if (!gameStarted) {
+    renderFactionSelect();
+    document.getElementById('phase-pills').innerHTML = '';
+    document.querySelector('.scroll-hint').style.display = 'none';
+  } else {
+    renderPills();
+    renderPhases();
+    document.querySelector('.scroll-hint').style.display = '';
+  }
 }
 
 function renderStats() {
   document.getElementById('cp-display').textContent = stats.cp;
   document.getElementById('vp-display').textContent = stats.vp;
+}
+
+function renderFactionSelect() {
+  const opts = factions.map(f =>
+    `<option value="${f}" ${gameConfig.playerFaction === f ? 'selected' : ''}>${f}</option>`
+  ).join('');
+  const optsEnemy = factions.map(f =>
+    `<option value="${f}" ${gameConfig.enemyFaction === f ? 'selected' : ''}>${f}</option>`
+  ).join('');
+
+  document.getElementById('header-title').textContent = '40K Turn Tracker';
+  document.getElementById('header-subtitle').textContent = '10th Edition';
+
+  document.getElementById('phases-container').innerHTML = `
+    <div class="faction-screen">
+      <div class="faction-screen-title">Warhammer 40,000 — 10th Edition</div>
+      <div class="faction-screen-sub">Select Your Factions</div>
+      <div class="faction-row">
+        <div class="faction-field">
+          <label>Your Army</label>
+          <select id="sel-player" onchange="onFactionChange()">
+            <option value="">— Choose faction —</option>
+            ${opts}
+          </select>
+        </div>
+        <div class="faction-vs">VS</div>
+        <div class="faction-field">
+          <label>Enemy Army</label>
+          <select id="sel-enemy" onchange="onFactionChange()">
+            <option value="">— Choose faction —</option>
+            ${optsEnemy}
+          </select>
+        </div>
+      </div>
+      <button class="faction-start-btn" id="start-btn"
+        onclick="startGame()"
+        ${(!gameConfig.playerFaction || !gameConfig.enemyFaction) ? 'disabled' : ''}>
+        Start Game
+      </button>
+      <div class="faction-hint">
+        Keywords will be filtered to abilities relevant to both armies
+      </div>
+    </div>`;
+}
+
+function onFactionChange() {
+  gameConfig.playerFaction = document.getElementById('sel-player').value;
+  gameConfig.enemyFaction = document.getElementById('sel-enemy').value;
+  const btn = document.getElementById('start-btn');
+  if (btn) btn.disabled = (!gameConfig.playerFaction || !gameConfig.enemyFaction);
+}
+
+function startGame() {
+  if (!gameConfig.playerFaction || !gameConfig.enemyFaction) return;
+  gameStarted = true;
+  checked = {};
+  activePhaseIndex = 0;
+  updateHeaderFactions();
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateHeaderFactions() {
+  document.getElementById('header-title').textContent = gameConfig.playerFaction;
+  document.getElementById('header-subtitle').innerHTML =
+    `<span class="your-side">${gameConfig.playerFaction}</span>` +
+    `<span class="vs-sep">vs</span>` +
+    `<span class="enemy-side">${gameConfig.enemyFaction}</span>` +
+    ` <span style="margin-left:8px;opacity:0.5;cursor:pointer" onclick="changeFactions()" title="Change factions">✎</span>`;
+}
+
+function changeFactions() {
+  gameStarted = false;
+  render();
 }
 
 function renderPills() {
@@ -1008,13 +1293,14 @@ function renderPhases() {
       ${phase.items.map((item, j) => {
         const key = `${phase.id}-${j}`;
         const isChecked = checked[key];
-        const hasKw = item.keywords && item.keywords.length > 0;
+        const visibleKws = (item.keywords || []).filter(isKeywordVisible);
+        const hasKw = visibleKws.length > 0;
         return `
           <div class="check-item ${isChecked ? 'checked' : ''} ${hasKw ? 'has-keyword' : ''}" onclick="toggleCheck('${phase.id}',${j})">
             <div class="checkbox"></div>
             <div class="item-content">
               <div class="item-text">${item.text}</div>
-              ${hasKw ? `<div class="keyword-tags">${item.keywords.map(kw =>
+              ${hasKw ? `<div class="keyword-tags">${visibleKws.map(kw =>
                 `<span class="keyword-tag" onclick="event.stopPropagation();showKeyword('${kw}')">${kw}</span>`
               ).join('')}</div>` : ''}
             </div>
@@ -1054,6 +1340,7 @@ function adjustStat(key, delta) {
 function resetTurn() {
   checked = {};
   activePhaseIndex = 0;
+  if (gameStarted) updateHeaderFactions();
   render();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
