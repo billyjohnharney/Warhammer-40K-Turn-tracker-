@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dark Angels — Turn Tracker</title>
+<link rel="manifest" href="./warhammer-manifest.json">
+<link rel="icon" href="./warhammer-icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#1a6b2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DA Tracker">
+<link href="<https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Share+Tech+Mono&display=swap>" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a;
+    --dark: #111214;
+    --panel: #16181c;
+    --border: #2a2d35;
+    --border-bright: #3d4250;
+    --green: #1a6b2e;
+    --green-bright: #25a044;
+    --green-glow: #2ecc71;
+    --gold: #c9a84c;
+    --gold-dim: #7a6430;
+    --red: #8b1a1a;
+    --red-bright: #c0392b;
+    --text: #c8cdd8;
+    --text-dim: #5a6070;
+    --text-bright: #e8ecf4;
+    --highlight: #1e2940;
+    --highlight-border: #2a3d6b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--black);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 20% 0%, rgba(26,107,46,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 100%, rgba(201,168,76,0.04) 0%, transparent 50%);
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(180deg, #0d1a10 0%, var(--dark) 100%);
+    border-bottom: 1px solid var(--green);
+    padding: 20px 24px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+  }
+
+  .header-inner {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .title-block h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--green-glow);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    text-shadow: 0 0 20px rgba(46,204,113,0.3);
+  }
+
+  .title-block p {
+    font-size: 10px;
+    color: var(--gold);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* STATS BAR */
+  .stats-bar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .stat-block {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 120px;
+  }
+
+  .stat-label {
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .stat-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .stat-value {
+    font-family: 'Cinzel', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--gold);
+    min-width: 30px;
+    text-align: center;
+  }
+
+  .stat-btn {
+    background: var(--border);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .stat-btn:hover {
+    background: var(--green);
+    border-color: var(--green-bright);
+    color: white;
+  }
+
+  .stat-btn.minus:hover {
+    background: var(--red);
+    border-color: var(--red-bright);
+  }
+
+  /* TURN INDICATOR */
+  .turn-bar {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 24px;
+  }
+
+  .turn-bar-inner {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .phase-pills {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .phase-pill {
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .phase-pill.active {
+    border-color: var(--green-bright);
+    color: var(--green-glow);
+    background: rgba(37,160,68,0.1);
+    box-shadow: 0 0 8px rgba(46,204,113,0.15);
+  }
+
+  .phase-pill.done {
+    border-color: var(--green);
+    color: var(--green);
+    background: rgba(26,107,46,0.08);
+  }
+
+  /* RESET BUTTON */
+  .reset-btn {
+    background: transparent;
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+    padding: 6px 16px;
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .reset-btn:hover {
+    background: rgba(201,168,76,0.1);
+    border-color: var(--gold);
+    box-shadow: 0 0 12px rgba(201,168,76,0.2);
+  }
+
+  /* MAIN CONTENT */
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px 24px 60px;
+  }
+
+  /* PHASE SECTIONS */
+  .phase-section {
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .phase-section.active {
+    border-color: var(--green);
+    box-shadow: 0 0 16px rgba(26,107,46,0.2);
+  }
+
+  .phase-section.completed {
+    border-color: rgba(26,107,46,0.4);
+    opacity: 0.7;
+  }
+
+  .phase-header {
+    background: var(--panel);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+
+  .phase-header:hover {
+    background: #1c1f25;
+  }
+
+  .phase-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .phase-number {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    min-width: 24px;
+  }
+
+  .phase-title {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-bright);
+  }
+
+  .phase-section.active .phase-title {
+    color: var(--green-glow);
+  }
+
+  .phase-progress {
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  .phase-chevron {
+    color: var(--text-dim);
+    font-size: 10px;
+    transition: transform 0.2s;
+    margin-left: 8px;
+  }
+
+  .phase-section.open .phase-chevron {
+    transform: rotate(180deg);
+  }
+
+  /* CHECKLIST ITEMS */
+  .phase-body {
+    display: none;
+    padding: 4px 0 8px;
+    background: var(--dark);
+  }
+
+  .phase-section.open .phase-body {
+    display: block;
+  }
+
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 16px 8px 20px;
+    cursor: pointer;
+    transition: background 0.1s;
+    border-left: 2px solid transparent;
+  }
+
+  .check-item:hover {
+    background: rgba(255,255,255,0.02);
+  }
+
+  .check-item.checked {
+    opacity: 0.5;
+    border-left-color: var(--green);
+  }
+
+  .check-item.checked .item-text {
+    text-decoration: line-through;
+    color: var(--text-dim);
+  }
+
+  /* KEYWORD HIGHLIGHT */
+  .check-item.has-keyword {
+    border-left-color: rgba(201,168,76,0.3);
+  }
+
+  .check-item.has-keyword:hover {
+    background: rgba(201,168,76,0.03);
+  }
+
+  .check-item.checked.has-keyword {
+    border-left-color: var(--green);
+  }
+
+  .checkbox {
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--border-bright);
+    flex-shrink: 0;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    background: var(--black);
+  }
+
+  .check-item:hover .checkbox {
+    border-color: var(--green-bright);
+  }
+
+  .check-item.checked .checkbox {
+    background: var(--green);
+    border-color: var(--green-bright);
+  }
+
+  .checkbox::after {
+    content: '✓';
+    font-size: 9px;
+    color: white;
+    display: none;
+  }
+
+  .check-item.checked .checkbox::after {
+    display: block;
+  }
+
+  .item-content {
+    flex: 1;
+  }
+
+  .item-text {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text);
+    letter-spacing: 0.3px;
+  }
+
+  /* KEYWORD TAGS */
+  .keyword-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 5px;
+  }
+
+  .keyword-tag {
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+    background: rgba(201,168,76,0.05);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .keyword-tag:hover {
+    background: rgba(201,168,76,0.12);
+    border-color: var(--gold);
+    box-shadow: 0 0 6px rgba(201,168,76,0.2);
+  }
+
+  /* SUB-ITEMS */
+  .sub-items {
+    padding-left: 26px;
+    border-left: 1px solid var(--border);
+    margin-left: 32px;
+    margin-top: 2px;
+  }
+
+  .sub-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 5px 16px 5px 0;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .sub-item:hover { background: rgba(255,255,255,0.02); }
+
+  .sub-item.checked { opacity: 0.5; }
+  .sub-item.checked .item-text { text-decoration: line-through; color: var(--text-dim); }
+
+  .sub-checkbox {
+    width: 10px;
+    height: 10px;
+    border: 1px solid var(--border-bright);
+    flex-shrink: 0;
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--black);
+    transition: all 0.15s;
+  }
+
+  .sub-item.checked .sub-checkbox {
+    background: var(--green);
+    border-color: var(--green-bright);
+  }
+
+  .sub-checkbox::after {
+    content: '✓';
+    font-size: 7px;
+    color: white;
+    display: none;
+  }
+
+  .sub-item.checked .sub-checkbox::after { display: block; }
+
+  /* KEYWORD TOOLTIP PANEL */
+  .keyword-panel {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 280px;
+    background: var(--panel);
+    border: 1px solid var(--gold);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 20px rgba(201,168,76,0.1);
+    z-index: 200;
+    display: none;
+    animation: slideIn 0.2s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .keyword-panel.visible { display: block; }
+
+  .keyword-panel-header {
+    background: rgba(201,168,76,0.1);
+    border-bottom: 1px solid var(--gold-dim);
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .keyword-panel-name {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .keyword-panel-close {
+    cursor: pointer;
+    color: var(--gold);
+    font-size: 16px;
+    line-height: 1;
+    background: none;
+    border: none;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .keyword-panel-body {
+    padding: 12px 14px;
+    font-size: 11px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  .keyword-panel-body .rule-line {
+    padding: 3px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .keyword-panel-body .rule-line:last-child { border-bottom: none; }
+
+  /* SECTION DIVIDERS */
+  .section-label {
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 10px 20px 4px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+  }
+
+  /* PHASE NAVIGATION ROW */
+  .phase-nav-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 16px 4px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+  }
+
+  .phase-nav-arrow {
+    background: transparent;
+    border: 1px solid var(--border-bright);
+    color: var(--text-dim);
+    padding: 6px 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .phase-nav-arrow:hover {
+    border-color: var(--green-bright);
+    color: var(--green-glow);
+  }
+
+  .phase-nav-arrow--next {
+    border-color: var(--green);
+    color: var(--green-bright);
+  }
+
+  .phase-nav-arrow--next:hover {
+    background: rgba(37,160,68,0.1);
+    box-shadow: 0 0 8px rgba(46,204,113,0.15);
+  }
+
+  /* SCROLL INDICATOR */
+  .scroll-hint {
+    text-align: center;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    padding: 16px;
+    text-transform: uppercase;
+  }
+</style>
+
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="title-block">
+      <h1>Dark Angels</h1>
+      <p>10th Edition — Turn Tracker</p>
+    </div>
+    <div class="stats-bar">
+      <div class="stat-block">
+        <div>
+          <div class="stat-label">Command Pts</div>
+          <div class="stat-controls">
+            <button class="stat-btn minus" onclick="adjustStat('cp', -1)">−</button>
+            <div class="stat-value" id="cp-display">0</div>
+            <button class="stat-btn" onclick="adjustStat('cp', 1)">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="stat-block">
+        <div>
+          <div class="stat-label">Victory Pts</div>
+          <div class="stat-controls">
+            <button class="stat-btn minus" onclick="adjustStat('vp', -1)">−</button>
+            <div class="stat-value" id="vp-display">0</div>
+            <button class="stat-btn" onclick="adjustStat('vp', 1)">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="turn-bar">
+  <div class="turn-bar-inner">
+    <div class="phase-pills" id="phase-pills"></div>
+    <button class="reset-btn" onclick="resetTurn()">↺ New Turn</button>
+  </div>
+</div>
+
+<main>
+  <div id="phases-container"></div>
+  <div class="scroll-hint">Click any weapon keyword to see its rules</div>
+</main>
+
+<!-- Keyword Info Panel -->
+<div class="keyword-panel" id="keyword-panel">
+  <div class="keyword-panel-header">
+    <span class="keyword-panel-name" id="kp-name"></span>
+    <button class="keyword-panel-close" onclick="closeKeywordPanel()">✕</button>
+  </div>
+  <div class="keyword-panel-body" id="kp-body"></div>
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────
+let stats = { cp: 0, vp: 0 };
+let checked = {};
+let activePhaseIndex = 0;
+
+// ─── KEYWORD DEFINITIONS ─────────────────────────────────
+const keywords = {
+  'ASSAULT': [
+    'Can shoot even if unit Advanced this turn.',
+    'When Advancing, can only resolve attacks using Assault weapons.'
+  ],
+  'RAPID FIRE X': [
+    'When targeting a unit within half the weapon\'s range, increase Attacks by X.',
+    'e.g. Rapid Fire 1 at half range = +1 Attack.'
+  ],
+  'HEAVY': [
+    'If the bearer\'s unit Remained Stationary this turn, add +1 to Hit rolls.',
+  ],
+  'PISTOL': [
+    'Can shoot while within Engagement Range of enemies.',
+    'Must target one of the enemy units in Engagement Range.',
+    'Cannot be used alongside other non-Pistol weapons (unless Monster or Vehicle).'
+  ],
+  'TORRENT': [
+    'Attacks automatically hit — no Hit roll required.'
+  ],
+  'BLAST': [
+    'Add 1 to Attacks for every 5 models in the target unit (round down).',
+    'Cannot target units within Engagement Range of your own units.'
+  ],
+  'MELTA X': [
+    'When targeting a unit within half the weapon\'s range, increase Damage by X.',
+    'e.g. Melta 2 with D6 Damage = D6+2 at half range.'
+  ],
+  'TWIN-LINKED': [
+    'You may re-roll the Wound roll for each attack made with this weapon.'
+  ],
+  'LETHAL HITS': [
+    'A Critical Hit (unmodified 6 to hit) automatically wounds.',
+    'No Wound roll is made — proceed directly to saving throw.'
+  ],
+  'SUSTAINED HITS X': [
+    'A Critical Hit scores X additional hits on the target.',
+    'e.g. Sustained Hits 2 on a Critical Hit = 3 total hits.'
+  ],
+  'DEVASTATING WOUNDS': [
+    'A Critical Wound (unmodified 6 to wound) inflicts mortal wounds equal to the weapon\'s Damage.',
+    'The attack sequence ends — no saving throw.'
+  ],
+  'ANTI-KEYWORD X+': [
+    'Against targets with the matching keyword, an unmodified Wound roll of X+ counts as a Critical Wound.',
+    'e.g. Anti-Vehicle 4+ scores a Critical Wound vs Vehicles on a 4+.'
+  ],
+  'PRECISION': [
+    'When targeting an Attached unit, you can allocate the attack to a visible Character model in that unit.'
+  ],
+  'INDIRECT FIRE': [
+    'Can target units not visible to the attacking model.',
+    'If no models in the target are visible: -1 to Hit rolls and target has Benefit of Cover.'
+  ],
+  'IGNORES COVER': [
+    'Target cannot use Benefit of Cover against attacks from this weapon.'
+  ],
+  'LANCE': [
+    'If the bearer made a Charge move this turn, add +1 to Wound rolls.'
+  ],
+  'HAZARDOUS': [
+    'After unit finishes shooting or fighting, roll 1D6 per Hazardous weapon used.',
+    'On a 1: one model with that weapon is destroyed.',
+    'Characters, Monsters, and Vehicles suffer 3 mortal wounds instead of being destroyed.'
+  ],
+  'EXTRA ATTACKS': [
+    'The bearer attacks with this weapon in addition to any other melee weapon it uses.',
+    'Number of attacks cannot be modified by other rules.'
+  ],
+  'FIGHTS FIRST': [
+    'Unit fights in the Fights First step of the Fight phase.',
+    'All units that make a Charge move this turn gain Fights First until end of turn.'
+  ],
+  'DEEP STRIKE': [
+    'Unit can be set up in Reserves instead of on the battlefield.',
+    'In the Reinforcements step, set up more than 9" horizontally away from all enemy models.'
+  ]
+};
+
+// ─── PHASE DATA ──────────────────────────────────────────
+const phases = [
+  {
+    id: 'command',
+    title: 'Command Phase',
+    items: [
+      { text: 'Both players gain 1CP' },
+      { text: 'Resolve any other Command phase rules' },
+      { text: 'For each unit below half-strength, roll 2D6 — equal or beat Leadership to pass' },
+      { text: 'Failed Battle-shock test: unit OC becomes 0, Stratagems cannot affect them until next Command phase' },
+    ]
+  },
+  {
+    id: 'movement',
+    title: 'Movement Phase',
+    items: [
+      { text: 'Select each unit and choose: Normal Move, Advance, Remain Stationary, or Fall Back' },
+      { text: 'Units in Engagement Range can only Remain Stationary or Fall Back' },
+      { text: 'Units that Advance cannot shoot or charge this turn', keywords: ['ASSAULT'] },
+      { text: 'Units that Remain Stationary get +1 to Hit rolls for Heavy weapons this turn', keywords: ['HEAVY'] },
+      { text: 'Units that Fall Back cannot shoot or charge this turn' },
+      { text: 'Reinforcements step: set up any units arriving from Deep Strike or Reserves', keywords: ['DEEP STRIKE'] },
+    ]
+  },
+  {
+    id: 'shooting',
+    title: 'Shooting Phase',
+    items: [
+      { text: 'Skip units that Advanced or Fell Back — unless using Assault weapons', keywords: ['ASSAULT'] },
+      { text: 'Declare all targets before rolling — target must be visible and in range', keywords: ['INDIRECT FIRE'] },
+      { text: 'Units in Engagement Range cannot shoot — exceptions: Monsters, Vehicles, Pistol weapons', keywords: ['PISTOL'] },
+      { text: 'Pistol: must target a unit in Engagement Range, cannot mix with non-Pistol weapons', keywords: ['PISTOL'] },
+      { text: 'Torrent: attacks automatically hit, skip Hit roll', keywords: ['TORRENT'] },
+      { text: 'Rapid Fire X: check if target is within half range, if so add X to Attacks', keywords: ['RAPID FIRE X'] },
+      { text: 'Blast: add 1 to Attacks per 5 models in target unit. Cannot use vs units in Engagement Range of your own', keywords: ['BLAST'] },
+      { text: 'Heavy: add +1 to Hit rolls if unit Remained Stationary this turn', keywords: ['HEAVY'] },
+      { text: 'Indirect Fire with no visible target: -1 to Hit rolls, target has Benefit of Cover', keywords: ['INDIRECT FIRE'] },
+      { text: 'Roll Hit rolls → check unmodified 6s (Critical Hits)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'] },
+      { text: 'Roll Wound rolls → check unmodified 6s (Critical Wounds)', keywords: ['DEVASTATING WOUNDS', 'ANTI-KEYWORD X+'] },
+      { text: 'Apply AP to saving throws — Invulnerable saves are never modified by AP' },
+      { text: 'Ignores Cover: target cannot use Benefit of Cover', keywords: ['IGNORES COVER'] },
+      { text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'] },
+      { text: 'Melta X: check if target is within half range, if so add X to Damage', keywords: ['MELTA X'] },
+      { text: 'After shooting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'] },
+    ]
+  },
+  {
+    id: 'charge',
+    title: 'Charge Phase',
+    items: [
+      { text: 'Eligible units: within 12" of enemy, haven\'t Advanced or Fell Back, not in Engagement Range' },
+      { text: 'Targets do not need to be visible' },
+      { text: 'Roll 2D6 for Charge roll — must reach all targets or charge fails' },
+      { text: 'Successful charge gives unit Fights First this turn', keywords: ['FIGHTS FIRST'] },
+    ]
+  },
+  {
+    id: 'fight1',
+    title: 'Fight Phase — Fights First',
+    items: [
+      { text: 'Units with Fights First ability fight now (including all units that charged)', keywords: ['FIGHTS FIRST'] },
+      { text: 'Players alternate selecting units — opponent goes first' },
+      { text: 'Pile In: move each model up to 3" closer to nearest enemy' },
+      { text: 'Lance: add +1 to Wound rolls if bearer charged this turn', keywords: ['LANCE'] },
+      { text: 'Extra Attacks: bearer attacks with this weapon in addition to other melee weapons', keywords: ['EXTRA ATTACKS'] },
+      { text: 'Precision: when targeting Attached unit, can allocate attack to visible Character', keywords: ['PRECISION'] },
+      { text: 'Roll Hit rolls → check unmodified 6s (Critical Hits)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'] },
+      { text: 'Roll Wound rolls → check unmodified 6s (Critical Wounds)', keywords: ['DEVASTATING WOUNDS', 'ANTI-KEYWORD X+'] },
+      { text: 'Apply AP to saving throws — Invulnerable saves never modified by AP' },
+      { text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'] },
+      { text: 'After fighting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'] },
+      { text: 'Consolidate: move each model up to 3" closer to nearest enemy' },
+    ]
+  },
+  {
+    id: 'fight2',
+    title: 'Fight Phase — Remaining Combats',
+    items: [
+      { text: 'All remaining eligible units fight — same sequence as Fights First step' },
+      { text: 'Pile In → Select weapon & targets → Make attacks → Consolidate' },
+      { text: 'No unit can fight more than once per phase' },
+      { text: 'Lance: add +1 to Wound rolls if bearer charged this turn', keywords: ['LANCE'] },
+      { text: 'Extra Attacks: bearer attacks with this weapon in addition to other melee weapons', keywords: ['EXTRA ATTACKS'] },
+      { text: 'Roll Hit rolls → check unmodified 6s (Critical Hits)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'] },
+      { text: 'Roll Wound rolls → check unmodified 6s (Critical Wounds)', keywords: ['DEVASTATING WOUNDS', 'ANTI-KEYWORD X+'] },
+      { text: 'Apply AP to saving throws — Invulnerable saves never modified by AP' },
+      { text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'] },
+      { text: 'After fighting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'] },
+    ]
+  },
+  {
+    id: 'end',
+    title: 'End of Turn',
+    items: [
+      { text: 'Check unit coherency — remove models from any unit not in coherency' },
+      { text: 'Note victory points scored this turn' },
+      { text: 'Pass to your opponent' },
+    ]
+  }
+];
+
+// ─── RENDER ──────────────────────────────────────────────
+function render() {
+  renderStats();
+  renderPills();
+  renderPhases();
+}
+
+function renderStats() {
+  document.getElementById('cp-display').textContent = stats.cp;
+  document.getElementById('vp-display').textContent = stats.vp;
+}
+
+function renderPills() {
+  const container = document.getElementById('phase-pills');
+  container.innerHTML = phases.map((p, i) => {
+    const total = p.items.length;
+    const done = p.items.filter((_, j) => checked[`${<p.id>}-${j}`]).length;
+    const isComplete = done === total;
+    const cls = isComplete ? 'done' : i === activePhaseIndex ? 'active' : '';
+    return `<div class="phase-pill ${cls}" onclick="goToPhase(${i})">${p.title.split('—')[0].trim().replace(' Phase','').replace(' of Turn','')}</div>`;
+  }).join('');
+}
+
+function renderPhases() {
+  const container = document.getElementById('phases-container');
+  container.innerHTML = phases.map((phase, pi) => {
+    const total = phase.items.length;
+    const done = phase.items.filter((_, j) => checked[`${<phase.id>}-${j}`]).length;
+    const isComplete = done === total;
+    const isActive = pi === activePhaseIndex;
+
+    const sectionCls = [
+      'phase-section',
+      isComplete ? 'completed' : '',
+      isActive ? 'active open' : '',
+    ].filter(Boolean).join(' ');
+
+    return `
+      <div class="${sectionCls}" id="phase-${<phase.id>}">
+        <div class="phase-header" onclick="goToPhase(${pi})">
+          <div class="phase-header-left">
+            <span class="phase-number">${String(pi + 1).padStart(2,'0')}</span>
+            <span class="phase-title">${phase.title}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="phase-progress">${done}/${total}</span>
+            ${isComplete ? '<span style="color:var(--green);font-size:11px">✓</span>' : `<span class="phase-chevron">${isActive ? '▲' : '▼'}</span>`}
+          </div>
+        </div>
+        ${isActive ? `<div class="phase-body">
+          ${phase.items.map((item, j) => {
+            const key = `${<phase.id>}-${j}`;
+            const isChecked = checked[key];
+            const hasKw = item.keywords && item.keywords.length > 0;
+            return `
+              <div class="check-item ${isChecked ? 'checked' : ''} ${hasKw ? 'has-keyword' : ''}" onclick="toggleCheck('${<phase.id>}',${j})">
+                <div class="checkbox"></div>
+                <div class="item-content">
+                  <div class="item-text">${item.text}</div>
+                  ${hasKw ? `<div class="keyword-tags">${item.keywords.map(kw =>
+                    `<span class="keyword-tag" onclick="event.stopPropagation();showKeyword('${kw}')">${kw}</span>`
+                  ).join('')}</div>` : ''}
+                </div>
+              </div>`;
+          }).join('')}
+          <div class="phase-nav-row">
+            ${pi > 0 ? `<button class="phase-nav-arrow" onclick="goToPhase(${pi - 1})">← ${phases[pi - 1].title.split('—')[0].trim()}</button>` : '<span></span>'}
+            ${pi < phases.length - 1 ? `<button class="phase-nav-arrow phase-nav-arrow--next" onclick="goToPhase(${pi + 1})">${phases[pi + 1].title.split('—')[0].trim()} →</button>` : '<span></span>'}
+          </div>
+        </div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+// ─── INTERACTIONS ─────────────────────────────────────────
+function toggleCheck(phaseId, itemIndex) {
+  const key = `${phaseId}-${itemIndex}`;
+  checked[key] = !checked[key];
+  // Auto-advance when all items in the active phase are checked
+  const phase = phases[activePhaseIndex];
+  const allDone = phase.items.every((_, j) => checked[`${<phase.id>}-${j}`]);
+  if (allDone && activePhaseIndex < phases.length - 1) {
+    activePhaseIndex++;
+  }
+  render();
+}
+
+function goToPhase(index) {
+  activePhaseIndex = index;
+  render();
+  const el = document.getElementById(`phase-${phases[index].id}`);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function adjustStat(key, delta) {
+  stats[key] = Math.max(0, stats[key] + delta);
+  renderStats();
+}
+
+function resetTurn() {
+  checked = {};
+  activePhaseIndex = 0;
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showKeyword(kw) {
+  const panel = document.getElementById('keyword-panel');
+  const name = document.getElementById('kp-name');
+  const body = document.getElementById('kp-body');
+  const rules = keywords[kw];
+  if (!rules) return;
+  name.textContent = kw;
+  body.innerHTML = rules.map(r => `<div class="rule-line">${r}</div>`).join('');
+  panel.classList.add('visible');
+}
+
+function closeKeywordPanel() {
+  document.getElementById('keyword-panel').classList.remove('visible');
+}
+
+// ─── INIT ─────────────────────────────────────────────────
+render();
+
+// ─── SERVICE WORKER ───────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./warhammer-sw.js');
+}
+</script>
+
+</body>
+</html>
