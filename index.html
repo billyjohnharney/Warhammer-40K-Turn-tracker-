@@ -697,24 +697,40 @@
   /* ── ROSTER SLOTS ───────────────────────────────────────── */
   .roster-slot {
     border: 1px solid var(--border);
+    border-left: 3px solid var(--border-bright);
     padding: 16px;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
     background: rgba(255,255,255,0.01);
+  }
+
+  .roster-slot.player-slot {
+    border-left-color: var(--green-bright);
+    background: rgba(37,160,68,0.03);
+  }
+
+  .roster-slot.enemy-slot {
+    border-left-color: var(--red-bright);
+    background: rgba(192,57,43,0.03);
   }
 
   .roster-slot-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
   }
 
   .roster-slot-label {
-    font-size: 10px;
+    font-size: 11px;
+    font-weight: 700;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: var(--text-dim);
   }
+
+  .player-slot .roster-slot-label { color: var(--green-bright); }
+  .enemy-slot  .roster-slot-label { color: var(--red-bright); }
 
   .roster-slot-loaded {
     font-size: 9px;
@@ -1829,7 +1845,7 @@ function renderRosterSlot(side) {
     </div>`;
 
   return `
-    <div class="roster-slot">
+    <div class="roster-slot ${side}-slot">
       <div class="roster-slot-header">
         <span class="roster-slot-label">${label}</span>
         ${headerRight}
