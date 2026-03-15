@@ -694,6 +694,43 @@
   /* keyword tag hidden state */
   .keyword-tag.hidden { display: none; }
 
+  /* ── ROSTER SLOTS ───────────────────────────────────────── */
+  .roster-slot {
+    border: 1px solid var(--border);
+    padding: 16px;
+    margin-bottom: 16px;
+    background: rgba(255,255,255,0.01);
+  }
+
+  .roster-slot-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .roster-slot-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .roster-slot-loaded {
+    font-size: 9px;
+    color: var(--green-bright);
+    letter-spacing: 1px;
+  }
+
+  .roster-slot-clear {
+    color: var(--text-dim);
+    cursor: pointer;
+    margin-left: 6px;
+    transition: color 0.15s;
+  }
+
+  .roster-slot-clear:hover { color: var(--red-bright); }
+
   /* ── ROSTER SCREEN ─────────────────────────────────────── */
   .roster-screen {
     padding: 32px 0 60px;
@@ -1021,11 +1058,16 @@ let activePhaseIndex = 0;
 let gameConfig = { playerFaction: '', enemyFaction: '' };
 let step = 'faction'; // 'faction' | 'roster' | 'game'
 
-// Roster state
-let roster = { loaded: false, units: [], activeKeywords: new Set() };
-let rosterInputMode = 'file';   // 'file' | 'text'
-let rosterParsed   = null;      // parsed preview before user confirms
-let rosterError    = '';        // error message string
+// Keyed roster state — access via rs('player') / rs('enemy')
+const rsState = {
+  player: { inputMode: 'file', parsed: null, error: '' },
+  enemy:  { inputMode: 'file', parsed: null, error: '' },
+};
+function rs(side) { return rsState[side]; }
+
+// Confirmed rosters (populated on launch)
+let roster      = { loaded: false, units: [], activeKeywords: new Set() }; // player
+let enemyRoster = { loaded: false, units: [], activeKeywords: new Set() };
 
 // ─── FACTION LIST ────────────────────────────────────────
 const factions = [
@@ -1338,8 +1380,10 @@ const phases = [
       { text: 'Declare all targets before rolling — Indirect Fire weapons may target units not visible', keywords: ['INDIRECT FIRE'], playerOnly: true },
       { text: 'Units in Engagement Range cannot shoot — exceptions: Monsters, Vehicles, Pistol weapons', keywords: ['PISTOL'], playerOnly: true },
       { text: 'Pistol: must target a unit in Engagement Range, cannot mix with non-Pistol weapons', keywords: ['PISTOL'], playerOnly: true },
-      { text: 'Lone Operative: cannot be targeted by ranged attacks unless the attacker is within 12"', keywords: ['LONE OPERATIVE'], playerOnly: true },
-      { text: 'Stealth: enemies shooting at this unit from more than 12" away suffer -1 to Hit rolls', keywords: ['STEALTH'], playerOnly: true },
+      { text: 'Your Lone Operative units cannot be targeted by ranged attacks from more than 12" away', keywords: ['LONE OPERATIVE'], playerOnly: true },
+      { text: 'Enemy Lone Operative: you cannot target enemy units with this ability from more than 12" away', keywords: ['LONE OPERATIVE'], enemyOnly: true },
+      { text: 'Your Stealth: enemies shooting at your units with Stealth from more than 12" suffer -1 to Hit rolls', keywords: ['STEALTH'], playerOnly: true },
+      { text: 'Enemy Stealth: apply -1 to your Hit rolls when targeting an enemy unit with Stealth from more than 12"', keywords: ['STEALTH'], enemyOnly: true },
       { text: 'Psychic: weapons/abilities tagged [PSYCHIC] are resolved in this phase — no separate Psychic phase', keywords: ['PSYCHIC'], playerOnly: true },
       { text: 'One Shot: track any One Shot weapons used this turn — they cannot be fired again this battle', keywords: ['ONE SHOT'], playerOnly: true },
       { text: 'Smoke Stratagem (1CP): when a SMOKE unit is targeted, it gains Benefit of Cover and Stealth until end of phase', keywords: ['SMOKE', 'SMOKESCREEN'], playerOnly: true },
@@ -1355,12 +1399,14 @@ const phases = [
       { text: 'Roll Hit rolls → check unmodified 6s (Critical Hits)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'], playerOnly: true },
       { text: 'Roll Wound rolls → check unmodified 6s (Critical Wounds)', keywords: ['DEVASTATING WOUNDS', 'ANTI-[KEYWORD] X+'], playerOnly: true },
       { text: 'Apply AP to saving throws — Invulnerable saves are never modified by AP' },
-      { text: 'Feel No Pain: after saves, eligible models roll Feel No Pain to negate wounds not saved', keywords: ['FEEL NO PAIN X+'], playerOnly: true },
+      { text: 'Your Feel No Pain: your models with FNP may roll to negate wounds after saves', keywords: ['FEEL NO PAIN X+'], playerOnly: true },
+      { text: 'Enemy Feel No Pain: after your attacks wound, enemy models with FNP may roll to negate those wounds', keywords: ['FEEL NO PAIN X+'], enemyOnly: true },
       { text: 'Ignores Cover: target cannot use Benefit of Cover', keywords: ['IGNORES COVER'], playerOnly: true },
       { text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'], playerOnly: true },
       { text: 'Melta X: check if target is within half range, if so add X to Damage', keywords: ['MELTA X'], playerOnly: true },
       { text: 'After shooting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'], playerOnly: true },
-      { text: 'Deadly Demise: when a model with this ability is destroyed, roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'] },
+      { text: 'Your Deadly Demise: if your models with this ability are destroyed (e.g. from Hazardous), roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], playerOnly: true },
+      { text: 'Enemy Deadly Demise: when you destroy an enemy model with this ability, roll D6 — on a 6 your nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], enemyOnly: true },
     ]
   },
   {
@@ -1389,11 +1435,13 @@ const phases = [
       { text: 'Roll Hit rolls → check unmodified 6s (Critical Hits)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'], playerOnly: true },
       { text: 'Roll Wound rolls → check unmodified 6s (Critical Wounds)', keywords: ['DEVASTATING WOUNDS', 'ANTI-[KEYWORD] X+'], playerOnly: true },
       { text: 'Apply AP to saving throws — Invulnerable saves never modified by AP' },
-      { text: 'Feel No Pain: after saves, eligible models roll Feel No Pain to negate wounds not saved', keywords: ['FEEL NO PAIN X+'], playerOnly: true },
+      { text: 'Your Feel No Pain: your models with FNP may roll to negate wounds after saves', keywords: ['FEEL NO PAIN X+'], playerOnly: true },
+      { text: 'Enemy Feel No Pain: after your attacks wound, enemy models with FNP may roll to negate those wounds', keywords: ['FEEL NO PAIN X+'], enemyOnly: true },
       { text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'], playerOnly: true },
       { text: 'Epic Challenge (1CP): one Character model\'s melee attacks gain Precision for this phase', keywords: ['EPIC CHALLENGE'] },
       { text: 'After fighting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'], playerOnly: true },
-      { text: 'Deadly Demise: when a model with this ability is destroyed, roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'] },
+      { text: 'Your Deadly Demise: if your models with this ability are destroyed in this fight, roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], playerOnly: true },
+      { text: 'Enemy Deadly Demise: when you destroy an enemy model with this ability, roll D6 — on a 6 your nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], enemyOnly: true },
       { text: 'Consolidate: move each model up to 3" closer to nearest enemy' },
     ]
   },
@@ -1411,11 +1459,13 @@ const phases = [
       { text: 'Roll Hit rolls → check unmodified 6s (Critical Hits)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'], playerOnly: true },
       { text: 'Roll Wound rolls → check unmodified 6s (Critical Wounds)', keywords: ['DEVASTATING WOUNDS', 'ANTI-[KEYWORD] X+'], playerOnly: true },
       { text: 'Apply AP to saving throws — Invulnerable saves never modified by AP' },
-      { text: 'Feel No Pain: after saves, eligible models roll Feel No Pain to negate wounds not saved', keywords: ['FEEL NO PAIN X+'], playerOnly: true },
+      { text: 'Your Feel No Pain: your models with FNP may roll to negate wounds after saves', keywords: ['FEEL NO PAIN X+'], playerOnly: true },
+      { text: 'Enemy Feel No Pain: after your attacks wound, enemy models with FNP may roll to negate those wounds', keywords: ['FEEL NO PAIN X+'], enemyOnly: true },
       { text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'], playerOnly: true },
       { text: 'Epic Challenge (1CP): one Character model\'s melee attacks gain Precision for this phase', keywords: ['EPIC CHALLENGE'] },
       { text: 'After fighting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'], playerOnly: true },
-      { text: 'Deadly Demise: when a model with this ability is destroyed, roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'] },
+      { text: 'Your Deadly Demise: if your models with this ability are destroyed in this fight, roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], playerOnly: true },
+      { text: 'Enemy Deadly Demise: when you destroy an enemy model with this ability, roll D6 — on a 6 your nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], enemyOnly: true },
     ]
   },
   {
@@ -1432,7 +1482,7 @@ const phases = [
 ];
 
 // ─── ALWAYS-VISIBLE KEYWORDS ─────────────────────────────
-// These are shown regardless of roster contents — they apply to every game.
+// Shown regardless of roster — core stratagems and rules every game needs.
 const coreAlwaysVisible = new Set([
   'BATTLE-SHOCK','COMMAND RE-ROLL','INSANE BRAVERY','COUNTER-OFFENSIVE',
   'EPIC CHALLENGE','FIRE OVERWATCH','GO TO GROUND','GRENADE',
@@ -1441,33 +1491,45 @@ const coreAlwaysVisible = new Set([
 ]);
 
 // ─── KEYWORD VISIBILITY ──────────────────────────────────
-function isKeywordVisible(kw) {
-  // Core keywords are always shown.
+// kwForPlayer / kwForEnemy: used by shouldShowItem to decide item visibility.
+// isKeywordVisible: used to decide whether a tag pill is shown on a step.
+
+function _factionAllows(kw, faction) {
+  const fl = keywordFactions[kw];
+  return !fl || fl.includes(faction);
+}
+
+function kwForPlayer(kw) {
   if (coreAlwaysVisible.has(kw)) return true;
-
-  // Faction filter: if the keyword is faction-specific, only show for relevant factions.
-  const factionList = keywordFactions[kw];
-  if (factionList) {
-    const active = [gameConfig.playerFaction, gameConfig.enemyFaction].filter(Boolean);
-    if (!active.some(f => factionList.includes(f))) return false;
-  }
-
-  // Roster filter: if a roster was loaded, only show keywords found in that roster.
+  if (!_factionAllows(kw, gameConfig.playerFaction)) return false;
   if (roster.loaded) return roster.activeKeywords.has(kw);
-
   return true;
 }
 
+function kwForEnemy(kw) {
+  if (coreAlwaysVisible.has(kw)) return true;
+  if (!_factionAllows(kw, gameConfig.enemyFaction)) return false;
+  if (enemyRoster.loaded) return enemyRoster.activeKeywords.has(kw);
+  return true;
+}
+
+// Tag pill visible if relevant to either side.
+function isKeywordVisible(kw) {
+  return kwForPlayer(kw) || kwForEnemy(kw);
+}
+
 // ─── ITEM VISIBILITY ─────────────────────────────────────
-// Returns false only when ALL of these are true:
-//   • item.playerOnly === true  (step is about the player's own units)
-//   • a roster has been loaded
-//   • none of the item's keywords appear in that roster
-// Items with no keywords are never hidden by this rule.
+// playerOnly: hidden when player roster is loaded and has none of the keywords.
+// enemyOnly:  hidden when enemy roster is loaded and has none of the keywords.
+// No flag:    always shown (universal steps, or steps relevant to either side).
+// Items without keywords are never hidden by either roster.
 function shouldShowItem(item) {
-  if (!item.playerOnly || !roster.loaded) return true;
-  if (!item.keywords || item.keywords.length === 0) return true;
-  return item.keywords.some(kw => isKeywordVisible(kw));
+  const kws = item.keywords || [];
+  if (item.playerOnly && roster.loaded && kws.length)
+    return kws.some(kwForPlayer);
+  if (item.enemyOnly && enemyRoster.loaded && kws.length)
+    return kws.some(kwForEnemy);
+  return true;
 }
 
 // ─── ROSTER PARSING ──────────────────────────────────────
@@ -1561,31 +1623,29 @@ function parseTextRoster(text) {
   return { units: units.slice(0, 40), activeKeywords };
 }
 
-// Attempt to load a file (handles .ros text or .rosz zip via JSZip).
-async function processRosterFile(file) {
-  rosterError = '';
-  rosterParsed = null;
+// Load a .ros/.rosz file for the given side ('player' or 'enemy').
+async function processRosterFile(file, side) {
+  const s = rs(side);
+  s.error = '';
+  s.parsed = null;
 
   try {
     const ext = file.name.split('.').pop().toLowerCase();
-
     if (ext === 'ros') {
-      const text = await file.text();
-      rosterParsed = parseRosXml(text);
+      s.parsed = parseRosXml(await file.text());
     } else if (ext === 'rosz') {
-      if (typeof JSZip === 'undefined') throw new Error('JSZip not loaded yet — try again in a moment, or use a .ros file.');
-      const buf = await file.arrayBuffer();
-      const zip = await JSZip.loadAsync(buf);
+      if (typeof JSZip === 'undefined')
+        throw new Error('JSZip not loaded yet — try again in a moment, or use a .ros file.');
+      const zip = await JSZip.loadAsync(await file.arrayBuffer());
       const rosFile = Object.values(zip.files).find(f => f.name.endsWith('.ros'));
       if (!rosFile) throw new Error('No .ros file found inside the .rosz archive.');
-      const text = await rosFile.async('text');
-      rosterParsed = parseRosXml(text);
+      s.parsed = parseRosXml(await rosFile.async('text'));
     } else {
-      throw new Error('Please upload a .ros or .rosz file exported from Battlescribe or New Recruit.');
+      throw new Error('Upload a .ros or .rosz file exported from Battlescribe or New Recruit.');
     }
   } catch (e) {
-    rosterError = e.message || 'Failed to read roster file.';
-    rosterParsed = null;
+    s.error = e.message || 'Failed to read file.';
+    s.parsed = null;
   }
 
   renderRosterStep();
@@ -1668,40 +1728,128 @@ function onFactionChange() {
 
 function startGame() {
   if (!gameConfig.playerFaction || !gameConfig.enemyFaction) return;
-  // Go to roster step (not straight to game)
   step = 'roster';
-  rosterParsed = null;
-  rosterError = '';
-  rosterInputMode = 'file';
+  rsState.player = { inputMode: 'file', parsed: null, error: '' };
+  rsState.enemy  = { inputMode: 'file', parsed: null, error: '' };
   render();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function renderRosterStep() {
-  const tabFile = rosterInputMode === 'file';
+// ── Roster slot helpers ───────────────────────────────────
 
-  const previewHtml = rosterParsed ? (() => {
-    const kws = [...rosterParsed.activeKeywords].sort();
+function setRosterMode(side, mode) {
+  rs(side).inputMode = mode;
+  rs(side).parsed = null;
+  rs(side).error = '';
+  renderRosterStep();
+}
+
+function handleFileDrop(event, side) {
+  event.preventDefault();
+  const file = event.dataTransfer.files[0];
+  if (file) processRosterFile(file, side);
+}
+
+function handleFileInput(input, side) {
+  const file = input.files[0];
+  if (file) processRosterFile(file, side);
+}
+
+function parseAndPreviewText(side) {
+  const id = `roster-text-${side}`;
+  const text = (document.getElementById(id) || {}).value || '';
+  if (!text.trim()) {
+    rs(side).error = 'Please paste your army list above.';
+    renderRosterStep();
+    return;
+  }
+  rs(side).error = '';
+  rs(side).parsed = parseTextRoster(text);
+  renderRosterStep();
+}
+
+function clearRosterSlot(side) {
+  rsState[side] = { inputMode: 'file', parsed: null, error: '' };
+  renderRosterStep();
+}
+
+// ── Roster slot renderer (shared for both sides) ──────────
+
+function renderRosterSlot(side) {
+  const s = rs(side);
+  const faction = side === 'player' ? gameConfig.playerFaction : gameConfig.enemyFaction;
+  const label   = side === 'player' ? `★ Your Army — ${faction}` : `⚔ Enemy Army — ${faction}`;
+  const tabFile = s.inputMode === 'file';
+
+  const headerRight = s.parsed
+    ? `<span class="roster-slot-loaded">
+        ✓ ${s.parsed.units.length} units · ${s.parsed.activeKeywords.size} keywords
+        &nbsp;<span class="roster-slot-clear" onclick="clearRosterSlot('${side}')">Clear</span>
+       </span>`
+    : '';
+
+  const previewHtml = s.parsed ? (() => {
+    const kws = [...s.parsed.activeKeywords].sort();
     return `
       <div class="roster-preview">
-        <div class="roster-preview-header">
-          <span class="roster-preview-check">✓</span>
-          <span class="roster-preview-title">Roster Analysed</span>
-        </div>
         <div class="roster-stats">
-          <div class="roster-stat"><strong>${rosterParsed.units.length}</strong>Units detected</div>
-          <div class="roster-stat"><strong>${kws.length}</strong>Keyword abilities found</div>
+          <div class="roster-stat"><strong>${s.parsed.units.length}</strong>Units</div>
+          <div class="roster-stat"><strong>${kws.length}</strong>Keywords</div>
         </div>
         <div class="roster-units-scroll">
-          ${rosterParsed.units.map(u => `<div class="roster-unit-item">· ${u}</div>`).join('')}
+          ${s.parsed.units.map(u => `<div class="roster-unit-item">· ${u}</div>`).join('')}
         </div>
-        ${kws.length ? `<div class="roster-kw-list">${kws.map(k => `<span class="roster-kw-chip">${k}</span>`).join('')}</div>` : ''}
-        <button class="roster-confirm-btn" onclick="confirmRoster()">Confirm Roster &amp; Start Game</button>
+        ${kws.length ? `<div class="roster-kw-list">${kws.map(k =>
+          `<span class="roster-kw-chip">${k}</span>`).join('')}</div>` : ''}
       </div>`;
   })() : '';
 
-  const errorHtml = rosterError
-    ? `<div class="roster-error">${rosterError}</div>` : '';
+  const errorHtml = s.error ? `<div class="roster-error">${s.error}</div>` : '';
+
+  const inputHtml = s.parsed ? '' : (tabFile ? `
+    <div class="drop-zone"
+      ondragover="event.preventDefault();this.classList.add('drag-over')"
+      ondragleave="this.classList.remove('drag-over')"
+      ondrop="this.classList.remove('drag-over');handleFileDrop(event,'${side}')">
+      <input type="file" accept=".ros,.rosz" onchange="handleFileInput(this,'${side}')">
+      <div class="drop-zone-icon">📋</div>
+      <div class="drop-zone-label">Drop .ros or .rosz file here, or click to browse</div>
+      <div class="drop-zone-hint">Battlescribe · New Recruit · OPR Army Forge</div>
+    </div>
+  ` : `
+    <textarea class="roster-textarea" id="roster-text-${side}"
+      placeholder="Paste army list here…"></textarea>
+    <button class="roster-parse-btn" onclick="parseAndPreviewText('${side}')">Analyse List</button>
+  `);
+
+  const tabsHtml = s.parsed ? '' : `
+    <div class="roster-tabs">
+      <div class="roster-tab ${tabFile ? 'active' : ''}" onclick="setRosterMode('${side}','file')">Upload File</div>
+      <div class="roster-tab ${!tabFile ? 'active' : ''}" onclick="setRosterMode('${side}','text')">Paste List</div>
+    </div>`;
+
+  return `
+    <div class="roster-slot">
+      <div class="roster-slot-header">
+        <span class="roster-slot-label">${label}</span>
+        ${headerRight}
+      </div>
+      ${tabsHtml}
+      ${inputHtml}
+      ${errorHtml}
+      ${previewHtml}
+    </div>`;
+}
+
+// ── Main roster screen ────────────────────────────────────
+
+function renderRosterStep() {
+  const pLoaded = !!rsState.player.parsed;
+  const eLoaded = !!rsState.enemy.parsed;
+  const btnLabel = pLoaded && eLoaded ? 'Start Game — Both Rosters Loaded'
+    : pLoaded ? 'Start Game — Your Roster Loaded'
+    : eLoaded ? 'Start Game — Enemy Roster Loaded'
+    : 'Start Game — No Rosters (use faction keywords)';
 
   document.getElementById('header-title').textContent = gameConfig.playerFaction;
   document.getElementById('header-subtitle').innerHTML =
@@ -1711,79 +1859,23 @@ function renderRosterStep() {
 
   document.getElementById('phases-container').innerHTML = `
     <div class="roster-screen">
-      <div class="roster-context">Army Roster — Optional</div>
-      <div class="roster-heading">Upload Your Roster</div>
-      <div class="roster-sub">Upload your army list to filter keyword reminders to only the abilities your units actually have in play.</div>
-
-      <div class="roster-tabs">
-        <div class="roster-tab ${tabFile ? 'active' : ''}" onclick="setRosterMode('file')">Upload File</div>
-        <div class="roster-tab ${!tabFile ? 'active' : ''}" onclick="setRosterMode('text')">Paste List</div>
-      </div>
-
-      ${tabFile ? `
-        <div class="drop-zone" id="drop-zone"
-          ondragover="event.preventDefault();this.classList.add('drag-over')"
-          ondragleave="this.classList.remove('drag-over')"
-          ondrop="this.classList.remove('drag-over');handleFileDrop(event)">
-          <input type="file" accept=".ros,.rosz" onchange="handleFileInput(this)">
-          <div class="drop-zone-icon">📋</div>
-          <div class="drop-zone-label">Drop .ros or .rosz file here, or click to browse</div>
-          <div class="drop-zone-hint">Battlescribe · New Recruit · OPR Army Forge</div>
-        </div>
-      ` : `
-        <textarea class="roster-textarea" id="roster-text"
-          placeholder="Paste your army list here…&#10;&#10;++ Patrol Detachment ++&#10;+ HQ +&#10;Captain&#10;+ Troops +&#10;Intercessor Squad&#10;  Bolt Rifle (Rapid Fire 1)&#10;…"
-        ></textarea>
-        <button class="roster-parse-btn" onclick="parseAndPreviewText()">Analyse List</button>
-      `}
-
-      ${errorHtml}
-      ${previewHtml}
-
-      <div class="roster-skip" onclick="skipRoster()">
-        Skip — use faction-level keywords only →
-      </div>
+      <div class="roster-context">Army Rosters — Optional</div>
+      <div class="roster-heading">Upload Rosters</div>
+      <div class="roster-sub">Both rosters are optional. Upload one or both to filter checklist steps to only the abilities in play for each army.</div>
+      ${renderRosterSlot('player')}
+      ${renderRosterSlot('enemy')}
+      <button class="faction-start-btn" onclick="launchGame()">${btnLabel}</button>
     </div>`;
 }
 
-function setRosterMode(mode) {
-  rosterInputMode = mode;
-  rosterParsed = null;
-  rosterError = '';
-  renderRosterStep();
-}
-
-function handleFileDrop(event) {
-  event.preventDefault();
-  const file = event.dataTransfer.files[0];
-  if (file) processRosterFile(file);
-}
-
-function handleFileInput(input) {
-  const file = input.files[0];
-  if (file) processRosterFile(file);
-}
-
-function parseAndPreviewText() {
-  const text = (document.getElementById('roster-text') || {}).value || '';
-  if (!text.trim()) { rosterError = 'Please paste your army list above.'; renderRosterStep(); return; }
-  rosterError = '';
-  rosterParsed = parseTextRoster(text);
-  renderRosterStep();
-}
-
-function confirmRoster() {
-  if (!rosterParsed) return;
-  roster = { loaded: true, units: rosterParsed.units, activeKeywords: rosterParsed.activeKeywords };
-  launchGame();
-}
-
-function skipRoster() {
-  roster = { loaded: false, units: [], activeKeywords: new Set() };
-  launchGame();
-}
-
 function launchGame() {
+  // Commit both rosters from their parsed previews (or leave unloaded).
+  const p = rsState.player.parsed;
+  const e = rsState.enemy.parsed;
+  roster      = p ? { loaded: true, units: p.units, activeKeywords: p.activeKeywords }
+                  : { loaded: false, units: [], activeKeywords: new Set() };
+  enemyRoster = e ? { loaded: true, units: e.units, activeKeywords: e.activeKeywords }
+                  : { loaded: false, units: [], activeKeywords: new Set() };
   step = 'game';
   checked = {};
   activePhaseIndex = 0;
@@ -1803,7 +1895,8 @@ function updateHeaderFactions() {
 
 function changeFactions() {
   step = 'faction';
-  roster = { loaded: false, units: [], activeKeywords: new Set() };
+  roster      = { loaded: false, units: [], activeKeywords: new Set() };
+  enemyRoster = { loaded: false, units: [], activeKeywords: new Set() };
   render();
 }
 
