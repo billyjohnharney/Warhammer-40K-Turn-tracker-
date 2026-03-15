@@ -1,8 +1,7 @@
-const CACHE = 'da-tracker-v3';
+const CACHE = 'wh40k-tracker-v6';
 const ASSETS = [
   './index.html',
   './warhammer-icon.svg',
-  '<https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Share+Tech+Mono&display=swap>'
 ];
 
 self.addEventListener('install', event => {
