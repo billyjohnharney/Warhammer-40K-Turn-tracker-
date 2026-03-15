@@ -10,7 +10,8 @@
 <meta name="theme-color" content="#1a6b2e">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="DA Tracker">
+<meta name="apple-mobile-web-app-title" content="40K Tracker">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" async></script>
 <style>
   :root {
     --black: #0a0a0a;
@@ -692,6 +693,269 @@
 
   /* keyword tag hidden state */
   .keyword-tag.hidden { display: none; }
+
+  /* ── ROSTER SCREEN ─────────────────────────────────────── */
+  .roster-screen {
+    padding: 32px 0 60px;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  .roster-context {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+
+  .roster-heading {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-bright);
+    margin-bottom: 6px;
+  }
+
+  .roster-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
+  /* Tabs */
+  .roster-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+    gap: 0;
+  }
+
+  .roster-tab {
+    padding: 8px 20px;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.15s;
+    user-select: none;
+  }
+
+  .roster-tab:hover { color: var(--text); }
+
+  .roster-tab.active {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+  }
+
+  /* Drop zone */
+  .drop-zone {
+    border: 1px dashed var(--border-bright);
+    padding: 36px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.04);
+  }
+
+  .drop-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .drop-zone-icon {
+    font-size: 28px;
+    margin-bottom: 10px;
+    opacity: 0.5;
+  }
+
+  .drop-zone-label {
+    font-size: 12px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .drop-zone-hint {
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  /* Text paste area */
+  .roster-textarea {
+    width: 100%;
+    min-height: 160px;
+    background: var(--panel);
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    padding: 12px;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    line-height: 1.6;
+    resize: vertical;
+    transition: border-color 0.2s;
+  }
+
+  .roster-textarea:focus {
+    outline: none;
+    border-color: var(--gold);
+  }
+
+  .roster-textarea::placeholder { color: var(--text-dim); }
+
+  .roster-parse-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    padding: 10px;
+    font-family: Arial, sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: all 0.15s;
+  }
+
+  .roster-parse-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  /* Preview block */
+  .roster-preview {
+    border: 1px solid var(--border);
+    background: rgba(46,204,113,0.03);
+    padding: 16px;
+    margin-top: 20px;
+    animation: slideIn 0.2s ease;
+  }
+
+  .roster-preview-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .roster-preview-check {
+    color: var(--green-glow);
+    font-size: 14px;
+  }
+
+  .roster-preview-title {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--green-glow);
+  }
+
+  .roster-stats {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  .roster-stat {
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  .roster-stat strong {
+    color: var(--gold);
+    font-size: 18px;
+    display: block;
+    letter-spacing: 0;
+    font-weight: 700;
+  }
+
+  .roster-units-scroll {
+    max-height: 90px;
+    overflow-y: auto;
+    margin-bottom: 12px;
+  }
+
+  .roster-unit-item {
+    font-size: 10px;
+    color: var(--text-dim);
+    padding: 2px 0;
+    letter-spacing: 0.5px;
+  }
+
+  .roster-kw-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 14px;
+  }
+
+  .roster-kw-chip {
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border: 1px solid var(--green);
+    color: var(--green-bright);
+    background: rgba(26,107,46,0.08);
+  }
+
+  .roster-confirm-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--green-bright);
+    color: var(--green-glow);
+    padding: 12px;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .roster-confirm-btn:hover {
+    background: rgba(37,160,68,0.1);
+    box-shadow: 0 0 12px rgba(46,204,113,0.2);
+  }
+
+  /* Skip / error */
+  .roster-skip {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+
+  .roster-skip:hover { color: var(--text); }
+
+  .roster-error {
+    font-size: 10px;
+    color: var(--red-bright);
+    letter-spacing: 1px;
+    margin-top: 10px;
+    padding: 8px 10px;
+    border: 1px solid var(--red);
+    background: rgba(139,26,26,0.08);
+  }
 </style>
 
 </head>
@@ -755,7 +1019,13 @@ let stats = { cp: 0, vp: 0 };
 let checked = {};
 let activePhaseIndex = 0;
 let gameConfig = { playerFaction: '', enemyFaction: '' };
-let gameStarted = false;
+let step = 'faction'; // 'faction' | 'roster' | 'game'
+
+// Roster state
+let roster = { loaded: false, units: [], activeKeywords: new Set() };
+let rosterInputMode = 'file';   // 'file' | 'text'
+let rosterParsed   = null;      // parsed preview before user confirms
+let rosterError    = '';        // error message string
 
 // ─── FACTION LIST ────────────────────────────────────────
 const factions = [
@@ -1156,27 +1426,171 @@ const phases = [
   }
 ];
 
+// ─── ALWAYS-VISIBLE KEYWORDS ─────────────────────────────
+// These are shown regardless of roster contents — they apply to every game.
+const coreAlwaysVisible = new Set([
+  'BATTLE-SHOCK','COMMAND RE-ROLL','INSANE BRAVERY','COUNTER-OFFENSIVE',
+  'EPIC CHALLENGE','FIRE OVERWATCH','GO TO GROUND','GRENADE',
+  'HEROIC INTERVENTION','NEW ORDERS','RAPID INGRESS','SMOKESCREEN','TANK SHOCK',
+  'OBJECTIVE SECURED','LEADER','ATTACHED UNIT','FIGHTS FIRST','FIGHTS LAST',
+]);
+
 // ─── KEYWORD VISIBILITY ──────────────────────────────────
 function isKeywordVisible(kw) {
-  // Universal keywords (not in keywordFactions) always show.
+  // Core keywords are always shown.
+  if (coreAlwaysVisible.has(kw)) return true;
+
+  // Faction filter: if the keyword is faction-specific, only show for relevant factions.
   const factionList = keywordFactions[kw];
-  if (!factionList) return true;
-  // Faction-specific: show only if one of the active factions uses it.
-  const active = [gameConfig.playerFaction, gameConfig.enemyFaction].filter(Boolean);
-  return active.some(f => factionList.includes(f));
+  if (factionList) {
+    const active = [gameConfig.playerFaction, gameConfig.enemyFaction].filter(Boolean);
+    if (!active.some(f => factionList.includes(f))) return false;
+  }
+
+  // Roster filter: if a roster was loaded, only show keywords found in that roster.
+  if (roster.loaded) return roster.activeKeywords.has(kw);
+
+  return true;
+}
+
+// ─── ROSTER PARSING ──────────────────────────────────────
+
+// Normalise a raw keyword string (e.g. "Rapid Fire 1") to a dict key (e.g. "RAPID FIRE X").
+function normalizeKeyword(raw) {
+  const t = raw.trim().toUpperCase();
+  if (keywords[t]) return t;
+  const patterns = [
+    [/^RAPID FIRE \d+$/,            'RAPID FIRE X'],
+    [/^SUSTAINED HITS \d+$/,        'SUSTAINED HITS X'],
+    [/^MELTA \d+$/,                 'MELTA X'],
+    [/^SCOUTS \d+"?$/,              'SCOUTS X"'],
+    [/^FEEL NO PAIN \d\+$/,         'FEEL NO PAIN X+'],
+    [/^DEADLY DEMISE (?:D\d+|\d+)$/,'DEADLY DEMISE X'],
+    [/^ANTI-.+ \d\+$/,              'ANTI-[KEYWORD] X+'],
+    [/^FIRING DECK \d+$/,           'FIRING DECK X'],
+  ];
+  for (const [re, mapped] of patterns) if (re.test(t)) return mapped;
+  return null;
+}
+
+// Scan a block of upper-cased text and add any recognised keywords to the set.
+function scanTextForKeywords(upperText, into) {
+  for (const kw of Object.keys(keywords)) {
+    // Build a search string: strip variable suffix so "RAPID FIRE X" matches "RAPID FIRE 1"
+    const base = kw.replace(/ X\+?$/, '').replace(/ X"$/, '').replace(/\[KEYWORD\] /, '');
+    if (upperText.includes(base)) into.add(kw);
+  }
+}
+
+// Parse a Battlescribe .ros XML string.
+function parseRosXml(xmlText) {
+  const doc = new DOMParser().parseFromString(xmlText, 'application/xml');
+  if (doc.querySelector('parsererror')) throw new Error('Could not parse XML — is this a valid .ros file?');
+
+  const units = [];
+  const activeKeywords = new Set();
+
+  // Top-level selections = units
+  doc.querySelectorAll('forces > force > selections > selection').forEach(el => {
+    const name = el.getAttribute('name');
+    if (name) units.push(name);
+  });
+
+  // Weapon keyword characteristics (comma-separated list)
+  doc.querySelectorAll('characteristic[name="Keywords"]').forEach(el => {
+    const text = el.textContent.trim();
+    if (!text || text === '-') return;
+    text.split(',').forEach(kw => {
+      const match = normalizeKeyword(kw);
+      if (match) activeKeywords.add(match);
+    });
+  });
+
+  // Rule names and description text
+  doc.querySelectorAll('rule').forEach(el => {
+    const match = normalizeKeyword(el.getAttribute('name') || '');
+    if (match) activeKeywords.add(match);
+    const desc = el.querySelector('description');
+    if (desc) scanTextForKeywords(desc.textContent.toUpperCase(), activeKeywords);
+  });
+
+  // Ability profile characteristic values
+  doc.querySelectorAll('profile').forEach(el => {
+    el.querySelectorAll('characteristic').forEach(ch => {
+      scanTextForKeywords(ch.textContent.toUpperCase(), activeKeywords);
+    });
+    const match = normalizeKeyword(el.getAttribute('name') || '');
+    if (match) activeKeywords.add(match);
+  });
+
+  return { units, activeKeywords };
+}
+
+// Parse a plain-text army list (paste from any app).
+function parseTextRoster(text) {
+  const activeKeywords = new Set();
+  scanTextForKeywords(text.toUpperCase(), activeKeywords);
+
+  // Extract plausible unit name lines
+  const units = [];
+  text.split('\n').forEach(line => {
+    line = line.trim().replace(/^\d+x\s*/i, '');
+    if (line && !line.startsWith('=') && !line.startsWith('+') &&
+        !line.match(/^\d+\s*pts?$/i) && line.length >= 4 && line.length <= 60) {
+      units.push(line);
+    }
+  });
+
+  return { units: units.slice(0, 40), activeKeywords };
+}
+
+// Attempt to load a file (handles .ros text or .rosz zip via JSZip).
+async function processRosterFile(file) {
+  rosterError = '';
+  rosterParsed = null;
+
+  try {
+    const ext = file.name.split('.').pop().toLowerCase();
+
+    if (ext === 'ros') {
+      const text = await file.text();
+      rosterParsed = parseRosXml(text);
+    } else if (ext === 'rosz') {
+      if (typeof JSZip === 'undefined') throw new Error('JSZip not loaded yet — try again in a moment, or use a .ros file.');
+      const buf = await file.arrayBuffer();
+      const zip = await JSZip.loadAsync(buf);
+      const rosFile = Object.values(zip.files).find(f => f.name.endsWith('.ros'));
+      if (!rosFile) throw new Error('No .ros file found inside the .rosz archive.');
+      const text = await rosFile.async('text');
+      rosterParsed = parseRosXml(text);
+    } else {
+      throw new Error('Please upload a .ros or .rosz file exported from Battlescribe or New Recruit.');
+    }
+  } catch (e) {
+    rosterError = e.message || 'Failed to read roster file.';
+    rosterParsed = null;
+  }
+
+  renderRosterStep();
 }
 
 // ─── RENDER ──────────────────────────────────────────────
 function render() {
   renderStats();
-  if (!gameStarted) {
+  const hint = document.querySelector('.scroll-hint');
+  const pills = document.getElementById('phase-pills');
+  if (step === 'faction') {
     renderFactionSelect();
-    document.getElementById('phase-pills').innerHTML = '';
-    document.querySelector('.scroll-hint').style.display = 'none';
+    pills.innerHTML = '';
+    hint.style.display = 'none';
+  } else if (step === 'roster') {
+    renderRosterStep();
+    pills.innerHTML = '';
+    hint.style.display = 'none';
   } else {
     renderPills();
     renderPhases();
-    document.querySelector('.scroll-hint').style.display = '';
+    hint.style.display = '';
   }
 }
 
@@ -1237,7 +1651,123 @@ function onFactionChange() {
 
 function startGame() {
   if (!gameConfig.playerFaction || !gameConfig.enemyFaction) return;
-  gameStarted = true;
+  // Go to roster step (not straight to game)
+  step = 'roster';
+  rosterParsed = null;
+  rosterError = '';
+  rosterInputMode = 'file';
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderRosterStep() {
+  const tabFile = rosterInputMode === 'file';
+
+  const previewHtml = rosterParsed ? (() => {
+    const kws = [...rosterParsed.activeKeywords].sort();
+    return `
+      <div class="roster-preview">
+        <div class="roster-preview-header">
+          <span class="roster-preview-check">✓</span>
+          <span class="roster-preview-title">Roster Analysed</span>
+        </div>
+        <div class="roster-stats">
+          <div class="roster-stat"><strong>${rosterParsed.units.length}</strong>Units detected</div>
+          <div class="roster-stat"><strong>${kws.length}</strong>Keyword abilities found</div>
+        </div>
+        <div class="roster-units-scroll">
+          ${rosterParsed.units.map(u => `<div class="roster-unit-item">· ${u}</div>`).join('')}
+        </div>
+        ${kws.length ? `<div class="roster-kw-list">${kws.map(k => `<span class="roster-kw-chip">${k}</span>`).join('')}</div>` : ''}
+        <button class="roster-confirm-btn" onclick="confirmRoster()">Confirm Roster &amp; Start Game</button>
+      </div>`;
+  })() : '';
+
+  const errorHtml = rosterError
+    ? `<div class="roster-error">${rosterError}</div>` : '';
+
+  document.getElementById('header-title').textContent = gameConfig.playerFaction;
+  document.getElementById('header-subtitle').innerHTML =
+    `<span class="your-side">${gameConfig.playerFaction}</span>` +
+    `<span class="vs-sep">vs</span>` +
+    `<span class="enemy-side">${gameConfig.enemyFaction}</span>`;
+
+  document.getElementById('phases-container').innerHTML = `
+    <div class="roster-screen">
+      <div class="roster-context">Army Roster — Optional</div>
+      <div class="roster-heading">Upload Your Roster</div>
+      <div class="roster-sub">Upload your army list to filter keyword reminders to only the abilities your units actually have in play.</div>
+
+      <div class="roster-tabs">
+        <div class="roster-tab ${tabFile ? 'active' : ''}" onclick="setRosterMode('file')">Upload File</div>
+        <div class="roster-tab ${!tabFile ? 'active' : ''}" onclick="setRosterMode('text')">Paste List</div>
+      </div>
+
+      ${tabFile ? `
+        <div class="drop-zone" id="drop-zone"
+          ondragover="event.preventDefault();this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="this.classList.remove('drag-over');handleFileDrop(event)">
+          <input type="file" accept=".ros,.rosz" onchange="handleFileInput(this)">
+          <div class="drop-zone-icon">📋</div>
+          <div class="drop-zone-label">Drop .ros or .rosz file here, or click to browse</div>
+          <div class="drop-zone-hint">Battlescribe · New Recruit · OPR Army Forge</div>
+        </div>
+      ` : `
+        <textarea class="roster-textarea" id="roster-text"
+          placeholder="Paste your army list here…&#10;&#10;++ Patrol Detachment ++&#10;+ HQ +&#10;Captain&#10;+ Troops +&#10;Intercessor Squad&#10;  Bolt Rifle (Rapid Fire 1)&#10;…"
+        ></textarea>
+        <button class="roster-parse-btn" onclick="parseAndPreviewText()">Analyse List</button>
+      `}
+
+      ${errorHtml}
+      ${previewHtml}
+
+      <div class="roster-skip" onclick="skipRoster()">
+        Skip — use faction-level keywords only →
+      </div>
+    </div>`;
+}
+
+function setRosterMode(mode) {
+  rosterInputMode = mode;
+  rosterParsed = null;
+  rosterError = '';
+  renderRosterStep();
+}
+
+function handleFileDrop(event) {
+  event.preventDefault();
+  const file = event.dataTransfer.files[0];
+  if (file) processRosterFile(file);
+}
+
+function handleFileInput(input) {
+  const file = input.files[0];
+  if (file) processRosterFile(file);
+}
+
+function parseAndPreviewText() {
+  const text = (document.getElementById('roster-text') || {}).value || '';
+  if (!text.trim()) { rosterError = 'Please paste your army list above.'; renderRosterStep(); return; }
+  rosterError = '';
+  rosterParsed = parseTextRoster(text);
+  renderRosterStep();
+}
+
+function confirmRoster() {
+  if (!rosterParsed) return;
+  roster = { loaded: true, units: rosterParsed.units, activeKeywords: rosterParsed.activeKeywords };
+  launchGame();
+}
+
+function skipRoster() {
+  roster = { loaded: false, units: [], activeKeywords: new Set() };
+  launchGame();
+}
+
+function launchGame() {
+  step = 'game';
   checked = {};
   activePhaseIndex = 0;
   updateHeaderFactions();
@@ -1255,7 +1785,8 @@ function updateHeaderFactions() {
 }
 
 function changeFactions() {
-  gameStarted = false;
+  step = 'faction';
+  roster = { loaded: false, units: [], activeKeywords: new Set() };
   render();
 }
 
@@ -1340,7 +1871,7 @@ function adjustStat(key, delta) {
 function resetTurn() {
   checked = {};
   activePhaseIndex = 0;
-  if (gameStarted) updateHeaderFactions();
+  if (step === 'game') updateHeaderFactions();
   render();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
