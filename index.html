@@ -222,37 +222,18 @@
     padding: 20px 24px 60px;
   }
 
-  /* PHASE SECTIONS */
-  .phase-section {
-    margin-bottom: 8px;
-    border: 1px solid var(--border);
-    overflow: hidden;
-    transition: border-color 0.2s;
+  /* PHASE VIEW (flat — no card) */
+  .phase-view {
+    padding: 0 0 16px;
   }
 
-  .phase-section.active {
-    border-color: var(--green);
-    box-shadow: 0 0 16px rgba(26,107,46,0.2);
-  }
-
-  .phase-section.completed {
-    border-color: rgba(26,107,46,0.4);
-    opacity: 0.7;
-  }
-
-  .phase-header {
-    background: var(--panel);
-    padding: 12px 16px;
+  .phase-view-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    cursor: pointer;
-    user-select: none;
-    transition: background 0.15s;
-  }
-
-  .phase-header:hover {
-    background: #1c1f25;
+    padding: 16px 0 12px;
+    border-bottom: 1px solid var(--green);
+    margin-bottom: 4px;
   }
 
   .phase-header-left {
@@ -271,15 +252,12 @@
 
   .phase-title {
     font-family: Arial, sans-serif;
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 700;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: var(--text-bright);
-  }
-
-  .phase-section.active .phase-title {
     color: var(--green-glow);
+    text-shadow: 0 0 12px rgba(46,204,113,0.25);
   }
 
   .phase-progress {
@@ -288,33 +266,11 @@
     letter-spacing: 1px;
   }
 
-  .phase-chevron {
-    color: var(--text-dim);
-    font-size: 10px;
-    transition: transform 0.2s;
-    margin-left: 8px;
-  }
-
-  .phase-section.open .phase-chevron {
-    transform: rotate(180deg);
-  }
-
-  /* CHECKLIST ITEMS */
-  .phase-body {
-    display: none;
-    padding: 4px 0 8px;
-    background: var(--dark);
-  }
-
-  .phase-section.open .phase-body {
-    display: block;
-  }
-
   .check-item {
     display: flex;
     align-items: flex-start;
     gap: 12px;
-    padding: 8px 16px 8px 20px;
+    padding: 10px 8px 10px 4px;
     cursor: pointer;
     transition: background 0.1s;
     border-left: 2px solid transparent;
@@ -854,53 +810,44 @@ function renderPills() {
 
 function renderPhases() {
   const container = document.getElementById('phases-container');
-  container.innerHTML = phases.map((phase, pi) => {
-    const total = phase.items.length;
-    const done = phase.items.filter((_, j) => checked[`${phase.id}-${j}`]).length;
-    const isComplete = done === total;
-    const isActive = pi === activePhaseIndex;
+  const pi = activePhaseIndex;
+  const phase = phases[pi];
+  const total = phase.items.length;
+  const done = phase.items.filter((_, j) => checked[`${phase.id}-${j}`]).length;
+  const isComplete = done === total;
 
-    const sectionCls = [
-      'phase-section',
-      isComplete ? 'completed' : '',
-      isActive ? 'active open' : '',
-    ].filter(Boolean).join(' ');
-
-    return `
-      <div class="${sectionCls}" id="phase-${phase.id}">
-        <div class="phase-header" onclick="goToPhase(${pi})">
-          <div class="phase-header-left">
-            <span class="phase-number">${String(pi + 1).padStart(2,'0')}</span>
-            <span class="phase-title">${phase.title}</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span class="phase-progress">${done}/${total}</span>
-            ${isComplete ? '<span style="color:var(--green);font-size:11px">✓</span>' : `<span class="phase-chevron">${isActive ? '▲' : '▼'}</span>`}
-          </div>
+  container.innerHTML = `
+    <div class="phase-view" id="phase-${phase.id}">
+      <div class="phase-view-header">
+        <div class="phase-header-left">
+          <span class="phase-number">${String(pi + 1).padStart(2,'0')}</span>
+          <span class="phase-title">${phase.title}</span>
         </div>
-        ${isActive ? `<div class="phase-body">
-          ${phase.items.map((item, j) => {
-            const key = `${phase.id}-${j}`;
-            const isChecked = checked[key];
-            const hasKw = item.keywords && item.keywords.length > 0;
-            return `
-              <div class="check-item ${isChecked ? 'checked' : ''} ${hasKw ? 'has-keyword' : ''}" onclick="toggleCheck('${phase.id}',${j})">
-                <div class="checkbox"></div>
-                <div class="item-content">
-                  <div class="item-text">${item.text}</div>
-                  ${hasKw ? `<div class="keyword-tags">${item.keywords.map(kw =>
-                    `<span class="keyword-tag" onclick="event.stopPropagation();showKeyword('${kw}')">${kw}</span>`
-                  ).join('')}</div>` : ''}
-                </div>
-              </div>`;
-          }).join('')}
-          <div class="phase-nav-row">
-            ${pi > 0 ? `<button class="phase-nav-arrow" onclick="goToPhase(${pi - 1})">← ${phases[pi - 1].title.split('—')[0].trim()}</button>` : '<span></span>'}
-            ${pi < phases.length - 1 ? `<button class="phase-nav-arrow phase-nav-arrow--next" onclick="goToPhase(${pi + 1})">${phases[pi + 1].title.split('—')[0].trim()} →</button>` : '<span></span>'}
-          </div>
-        </div>` : ''}
-      </div>`;
-  }).join('');
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="phase-progress">${done}/${total}</span>
+          ${isComplete ? '<span style="color:var(--green-glow);font-size:11px;letter-spacing:1px">✓ DONE</span>' : ''}
+        </div>
+      </div>
+      ${phase.items.map((item, j) => {
+        const key = `${phase.id}-${j}`;
+        const isChecked = checked[key];
+        const hasKw = item.keywords && item.keywords.length > 0;
+        return `
+          <div class="check-item ${isChecked ? 'checked' : ''} ${hasKw ? 'has-keyword' : ''}" onclick="toggleCheck('${phase.id}',${j})">
+            <div class="checkbox"></div>
+            <div class="item-content">
+              <div class="item-text">${item.text}</div>
+              ${hasKw ? `<div class="keyword-tags">${item.keywords.map(kw =>
+                `<span class="keyword-tag" onclick="event.stopPropagation();showKeyword('${kw}')">${kw}</span>`
+              ).join('')}</div>` : ''}
+            </div>
+          </div>`;
+      }).join('')}
+      <div class="phase-nav-row">
+        ${pi > 0 ? `<button class="phase-nav-arrow" onclick="goToPhase(${pi - 1})">← ${phases[pi - 1].title.split('—')[0].trim()}</button>` : '<span></span>'}
+        ${pi < phases.length - 1 ? `<button class="phase-nav-arrow phase-nav-arrow--next" onclick="goToPhase(${pi + 1})">${phases[pi + 1].title.split('—')[0].trim()} →</button>` : '<span></span>'}
+      </div>
+    </div>`;
 }
 
 // ─── INTERACTIONS ─────────────────────────────────────────
@@ -919,8 +866,7 @@ function toggleCheck(phaseId, itemIndex) {
 function goToPhase(index) {
   activePhaseIndex = index;
   render();
-  const el = document.getElementById(`phase-${phases[index].id}`);
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function adjustStat(key, delta) {
