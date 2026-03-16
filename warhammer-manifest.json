@@ -1,7 +1,7 @@
 {
-  "name": "Dark Angels Turn Tracker",
-  "short_name": "DA Tracker",
-  "description": "Warhammer 40K 10th Edition turn-by-turn checklist for Dark Angels",
+  "name": "Tacticum",
+  "short_name": "Tacticum",
+  "description": "Tacticum — Warhammer 40K 10th Edition turn-by-turn phase tracker",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait-primary",
