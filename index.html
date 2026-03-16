@@ -1520,6 +1520,18 @@ function parseRosXml(xmlText) {
     if (name) units.push(name);
   });
 
+  // Unit keywords — stored as <category> elements in Battlescribe XML
+  doc.querySelectorAll('category').forEach(el => {
+    const name = (el.getAttribute('name') || '').trim();
+    if (!name) return;
+    const upper = name.toUpperCase();
+    // Direct match against known keyword keys (e.g. "DEEP STRIKE", "SMOKE")
+    if (keywords[upper]) activeKeywords.add(upper);
+    // Pattern-normalised match (e.g. "Scouts 6"" → "SCOUTS X"")
+    const norm = normalizeKeyword(name);
+    if (norm) activeKeywords.add(norm);
+  });
+
   // Weapon keyword characteristics (comma-separated list)
   doc.querySelectorAll('characteristic[name="Keywords"]').forEach(el => {
     const text = el.textContent.trim();
