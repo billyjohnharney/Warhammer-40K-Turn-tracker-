@@ -84,72 +84,6 @@
     margin-top: 2px;
   }
 
-  /* STATS BAR */
-  .stats-bar {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-
-  .stat-block {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    padding: 8px 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 120px;
-  }
-
-  .stat-label {
-    font-size: 9px;
-    color: var(--text-dim);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
-
-  .stat-controls {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .stat-value {
-    font-family: Arial, sans-serif;
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--gold);
-    min-width: 30px;
-    text-align: center;
-  }
-
-  .stat-btn {
-    background: var(--border);
-    border: 1px solid var(--border-bright);
-    color: var(--text);
-    width: 24px;
-    height: 24px;
-    cursor: pointer;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s;
-    font-family: Arial, sans-serif;
-  }
-
-  .stat-btn:hover {
-    background: var(--green);
-    border-color: var(--green-bright);
-    color: white;
-  }
-
-  .stat-btn.minus:hover {
-    background: var(--red);
-    border-color: var(--red-bright);
-  }
-
   /* TURN INDICATOR */
   .turn-bar {
     background: var(--panel);
@@ -342,7 +276,7 @@
   }
 
   .item-text {
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1.5;
     color: var(--text);
     letter-spacing: 0.3px;
@@ -512,9 +446,12 @@
   .phase-nav-row {
     display: flex;
     justify-content: space-between;
-    padding: 12px 16px 4px;
+    padding: 12px 16px;
     border-top: 1px solid var(--border);
-    margin-top: 4px;
+    position: sticky;
+    bottom: 0;
+    background: var(--panel);
+    z-index: 10;
   }
 
   .phase-nav-arrow {
@@ -1032,28 +969,6 @@
       <h1 id="header-title">Tacticum</h1>
       <p id="header-subtitle" class="faction-badge">10th Edition</p>
     </div>
-    <div class="stats-bar">
-      <div class="stat-block">
-        <div>
-          <div class="stat-label">Command Pts</div>
-          <div class="stat-controls">
-            <button class="stat-btn minus" onclick="adjustStat('cp', -1)">−</button>
-            <div class="stat-value" id="cp-display">0</div>
-            <button class="stat-btn" onclick="adjustStat('cp', 1)">+</button>
-          </div>
-        </div>
-      </div>
-      <div class="stat-block">
-        <div>
-          <div class="stat-label">Victory Pts</div>
-          <div class="stat-controls">
-            <button class="stat-btn minus" onclick="adjustStat('vp', -1)">−</button>
-            <div class="stat-value" id="vp-display">0</div>
-            <button class="stat-btn" onclick="adjustStat('vp', 1)">+</button>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </header>
 
@@ -1080,7 +995,6 @@
 
 <script>
 // ─── STATE ───────────────────────────────────────────────
-let stats = { cp: 0, vp: 0 };
 let checked = {};
 let activePhaseIndex = 0;
 let gameConfig = { playerFaction: '', enemyFaction: '' };
@@ -1657,7 +1571,6 @@ async function processRosterFile(file, side) {
 
 // ─── RENDER ──────────────────────────────────────────────
 function render() {
-  renderStats();
   const hint = document.querySelector('.scroll-hint');
   const pills = document.getElementById('phase-pills');
   if (step === 'faction') {
@@ -1675,10 +1588,6 @@ function render() {
   }
 }
 
-function renderStats() {
-  document.getElementById('cp-display').textContent = stats.cp;
-  document.getElementById('vp-display').textContent = stats.vp;
-}
 
 function renderFactionSelect() {
   const opts = factions.map(f =>
@@ -1991,10 +1900,6 @@ function goToPhase(index) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function adjustStat(key, delta) {
-  stats[key] = Math.max(0, stats[key] + delta);
-  renderStats();
-}
 
 function resetTurn() {
   checked = {};
