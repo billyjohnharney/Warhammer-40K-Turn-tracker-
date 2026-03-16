@@ -156,10 +156,13 @@
 
   /* RESET BUTTON */
   .reset-btn {
+    flex: 1;
+    aspect-ratio: 1;
     background: transparent;
     border: 1px solid var(--gold-dim);
     color: var(--gold);
-    padding: 6px 16px;
+    padding: 6px 4px;
+    min-width: 0;
     font-family: Arial, sans-serif;
     font-size: 10px;
     letter-spacing: 2px;
@@ -1517,6 +1520,18 @@ function parseRosXml(xmlText) {
     if (name) units.push(name);
   });
 
+  // Unit keywords — stored as <category> elements in Battlescribe XML
+  doc.querySelectorAll('category').forEach(el => {
+    const name = (el.getAttribute('name') || '').trim();
+    if (!name) return;
+    const upper = name.toUpperCase();
+    // Direct match against known keyword keys (e.g. "DEEP STRIKE", "SMOKE")
+    if (keywords[upper]) activeKeywords.add(upper);
+    // Pattern-normalised match (e.g. "Scouts 6"" → "SCOUTS X"")
+    const norm = normalizeKeyword(name);
+    if (norm) activeKeywords.add(norm);
+  });
+
   // Weapon keyword characteristics (comma-separated list)
   doc.querySelectorAll('characteristic[name="Keywords"]').forEach(el => {
     const text = el.textContent.trim();
@@ -1896,7 +1911,6 @@ function renderPills() {
     const meta = PHASE_ICONS[p.id] || { svg: '', label: p.id };
     return `<div class="phase-pill ${cls}" onclick="goToPhase(${i})">
       <span class="pill-icon">${meta.svg}</span>
-      <span class="pill-label">${meta.label}</span>
     </div>`;
   }).join('');
 }
