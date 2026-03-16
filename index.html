@@ -88,7 +88,7 @@
   .turn-bar {
     background: var(--panel);
     border-bottom: 1px solid var(--border);
-    padding: 8px 24px;
+    padding: 8px 12px;
   }
 
   .turn-bar-inner {
@@ -96,25 +96,41 @@
     margin: 0 auto;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
+    gap: 8px;
   }
 
   .phase-pills {
     display: flex;
+    flex: 1;
     gap: 4px;
-    flex-wrap: wrap;
   }
 
   .phase-pill {
-    font-size: 9px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    padding: 4px 10px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    aspect-ratio: 1;
     border: 1px solid var(--border);
     color: var(--text-dim);
     cursor: pointer;
     transition: all 0.2s;
+    padding: 6px 4px;
+    min-width: 0;
+  }
+
+  .phase-pill .pill-icon {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .phase-pill .pill-label {
+    font-size: 7px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    white-space: nowrap;
   }
 
   .phase-pill.active {
@@ -1813,6 +1829,15 @@ function changeFactions() {
   render();
 }
 
+const PHASE_ICONS = {
+  command:  { icon: '⚡', label: 'Command' },
+  movement: { icon: '➤', label: 'Movement' },
+  shooting: { icon: '🎯', label: 'Shooting' },
+  charge:   { icon: '⚔', label: 'Charge' },
+  fight:    { icon: '🗡', label: 'Fight' },
+  end:      { icon: '⏹', label: 'End' },
+};
+
 function renderPills() {
   const container = document.getElementById('phase-pills');
   container.innerHTML = phases.map((p, i) => {
@@ -1820,7 +1845,11 @@ function renderPills() {
     const done = p.items.filter((_, j) => checked[`${p.id}-${j}`]).length;
     const isComplete = done === total;
     const cls = isComplete ? 'done' : i === activePhaseIndex ? 'active' : '';
-    return `<div class="phase-pill ${cls}" onclick="goToPhase(${i})">${p.title.split('—')[0].trim().replace(' Phase','').replace(' of Turn','')}</div>`;
+    const meta = PHASE_ICONS[p.id] || { icon: '◼', label: p.id };
+    return `<div class="phase-pill ${cls}" onclick="goToPhase(${i})">
+      <span class="pill-icon">${meta.icon}</span>
+      <span class="pill-label">${meta.label}</span>
+    </div>`;
   }).join('');
 }
 
@@ -1834,22 +1863,8 @@ function renderPhases() {
     .map((item, j) => ({ item, j }))
     .filter(({ item }) => shouldShowItem(item));
 
-  const total = visible.length;
-  const done  = visible.filter(({ j }) => checked[`${phase.id}-${j}`]).length;
-  const isComplete = done === total;
-
   container.innerHTML = `
     <div class="phase-view" id="phase-${phase.id}">
-      <div class="phase-view-header">
-        <div class="phase-header-left">
-          <span class="phase-number">${String(pi + 1).padStart(2,'0')}</span>
-          <span class="phase-title">${phase.title}</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="phase-progress">${done}/${total}</span>
-          ${isComplete ? '<span style="color:var(--green-glow);font-size:11px;letter-spacing:1px">✓ DONE</span>' : ''}
-        </div>
-      </div>
       ${visible.map(({ item, j }) => {
         const key = `${phase.id}-${j}`;
         const isChecked = checked[key];
