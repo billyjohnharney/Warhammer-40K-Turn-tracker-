@@ -511,6 +511,78 @@
     margin-bottom: 2px;
   }
 
+  /* SPLASH SCREEN */
+  .splash-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--black);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    cursor: pointer;
+    animation: splashFadeIn 0.6s ease forwards;
+  }
+
+  .splash-screen.fading-out {
+    animation: splashFadeOut 0.5s ease forwards;
+  }
+
+  @keyframes splashFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @keyframes splashFadeOut {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+  }
+
+  .splash-logo {
+    font-size: 52px;
+    font-weight: 700;
+    letter-spacing: 10px;
+    text-transform: uppercase;
+    color: var(--gold);
+    text-shadow: 0 0 40px rgba(201,168,76,0.4), 0 0 80px rgba(201,168,76,0.15);
+    animation: splashGlow 2.5s ease-in-out infinite alternate;
+    margin-bottom: 18px;
+  }
+
+  @keyframes splashGlow {
+    from { text-shadow: 0 0 30px rgba(201,168,76,0.3), 0 0 60px rgba(201,168,76,0.1); }
+    to   { text-shadow: 0 0 50px rgba(201,168,76,0.55), 0 0 100px rgba(201,168,76,0.25); }
+  }
+
+  .splash-rule {
+    width: 120px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    margin-bottom: 18px;
+  }
+
+  .splash-subtitle {
+    font-size: 11px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 60px;
+  }
+
+  .splash-cta {
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--border-bright);
+    animation: splashBlink 1.4s ease-in-out infinite;
+  }
+
+  @keyframes splashBlink {
+    0%, 100% { opacity: 0.4; }
+    50%       { opacity: 1; }
+  }
+
   /* SCROLL INDICATOR */
   .scroll-hint {
     text-align: center;
@@ -672,58 +744,65 @@
   /* keyword tag hidden state */
   .keyword-tag.hidden { display: none; }
 
-  /* ── ROSTER SLOTS ───────────────────────────────────────── */
-  .roster-slot {
+  /* ── SIDE COMPONENTS (combined faction + roster) ────────── */
+  .side-component {
     border: 1px solid var(--border);
     border-left: 3px solid var(--border-bright);
     padding: 16px;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     background: rgba(255,255,255,0.01);
   }
 
-  .roster-slot.player-slot {
+  .side-component.player-side {
     border-left-color: var(--green-bright);
     background: rgba(37,160,68,0.03);
   }
 
-  .roster-slot.enemy-slot {
+  .side-component.enemy-side {
     border-left-color: var(--red-bright);
     background: rgba(192,57,43,0.03);
   }
 
-  .roster-slot-header {
+  .side-component-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 14px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
   }
 
-  .roster-slot-label {
+  .side-label {
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 2px;
     text-transform: uppercase;
   }
 
-  .player-slot .roster-slot-label { color: var(--green-bright); }
-  .enemy-slot  .roster-slot-label { color: var(--red-bright); }
+  .player-side .side-label { color: var(--green-bright); }
+  .enemy-side  .side-label { color: var(--red-bright); }
 
-  .roster-slot-loaded {
+  .side-loaded {
     font-size: 9px;
     color: var(--green-bright);
     letter-spacing: 1px;
   }
 
-  .roster-slot-clear {
+  .side-clear {
     color: var(--text-dim);
     cursor: pointer;
     margin-left: 6px;
     transition: color 0.15s;
   }
 
-  .roster-slot-clear:hover { color: var(--red-bright); }
+  .side-clear:hover { color: var(--red-bright); }
+
+  .setup-vs-sep {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-align: center;
+    padding: 8px 0 16px;
+  }
 
   /* ── ROSTER SCREEN ─────────────────────────────────────── */
   .roster-screen {
@@ -1028,7 +1107,7 @@ let checked = {};
 let activePhaseIndex = 0;
 let turnNumber = 1;
 let gameConfig = { playerFaction: '', enemyFaction: '' };
-let step = 'setup'; // 'setup' | 'game'
+let step = 'splash'; // 'splash' | 'setup' | 'game'
 
 // Keyed roster state — access via rs('player') / rs('enemy')
 const rsState = {
@@ -1611,31 +1690,67 @@ async function processRosterFile(file, side) {
   render();
 }
 
-// ─── RENDER ──────────────────────────────────────────────
-function render() {
+// ─── SPLASH ───────────────────────────────────────────────
+function renderSplash() {
   const hint = document.querySelector('.scroll-hint');
   const turnBar = document.getElementById('turn-bar');
+  turnBar.style.display = 'none';
+  hint.style.display = 'none';
+
+  const el = document.createElement('div');
+  el.className = 'splash-screen';
+  el.id = 'splash-screen';
+  el.innerHTML = `
+    <div class="splash-logo">Tacticum</div>
+    <div class="splash-rule"></div>
+    <div class="splash-subtitle">The rule of engagement</div>
+    <div class="splash-cta">Tap to begin</div>`;
+  el.addEventListener('click', dismissSplash);
+  document.body.appendChild(el);
+
+  // Auto-dismiss after 3 s
+  setTimeout(dismissSplash, 3000);
+}
+
+let _splashDismissed = false;
+function dismissSplash() {
+  if (_splashDismissed) return;
+  _splashDismissed = true;
+  const el = document.getElementById('splash-screen');
+  if (!el) return;
+  el.classList.add('fading-out');
+  el.addEventListener('animationend', () => {
+    el.remove();
+    step = 'setup';
+    render();
+  }, { once: true });
+}
+
+// ─── RENDER ──────────────────────────────────────────────
+function render() {
+  const hint    = document.querySelector('.scroll-hint');
+  const turnBar = document.getElementById('turn-bar');
+  const header  = document.querySelector('header');
+  if (step === 'splash') {
+    // renderSplash handles its own DOM — nothing else to do here
+    return;
+  }
   if (step === 'setup') {
     renderSetupPage();
+    header.style.display  = 'none';
     turnBar.style.display = 'none';
-    hint.style.display = 'none';
+    hint.style.display    = 'none';
   } else {
     renderPills();
     renderPhases();
+    header.style.display  = '';
     turnBar.style.display = '';
-    hint.style.display = '';
+    hint.style.display    = '';
   }
 }
 
 
 function renderSetupPage() {
-  const opts = factions.map(f =>
-    `<option value="${f}" ${gameConfig.playerFaction === f ? 'selected' : ''}>${f}</option>`
-  ).join('');
-  const optsEnemy = factions.map(f =>
-    `<option value="${f}" ${gameConfig.enemyFaction === f ? 'selected' : ''}>${f}</option>`
-  ).join('');
-
   document.getElementById('header-title').textContent = 'Tacticum';
   document.getElementById('header-subtitle').textContent = '10th Edition';
 
@@ -1644,31 +1759,10 @@ function renderSetupPage() {
   document.getElementById('phases-container').innerHTML = `
     <div class="faction-screen">
       <div class="faction-screen-title">Tacticum — Warhammer 40,000 10th Edition</div>
-
-      <div class="faction-screen-sub">Select Factions</div>
-      <div class="faction-row">
-        <div class="faction-field">
-          <label>Your Army</label>
-          <select id="sel-player" onchange="onFactionChange()">
-            <option value="">— Choose faction —</option>
-            ${opts}
-          </select>
-        </div>
-        <div class="faction-vs">VS</div>
-        <div class="faction-field">
-          <label>Enemy Army</label>
-          <select id="sel-enemy" onchange="onFactionChange()">
-            <option value="">— Choose faction —</option>
-            ${optsEnemy}
-          </select>
-        </div>
-      </div>
-
-      <div class="faction-screen-sub" style="margin-top:36px">Upload Rosters — Optional</div>
-      <p class="roster-sub" style="margin-bottom:16px">Upload one or both to filter checklist steps to only the abilities in play for each army.</p>
-      ${renderRosterSlot('player')}
-      ${renderRosterSlot('enemy')}
-
+      <div class="faction-screen-sub">New Game</div>
+      ${renderSideComponent('player')}
+      <div class="setup-vs-sep">VS</div>
+      ${renderSideComponent('enemy')}
       <button class="faction-start-btn" id="start-btn"
         onclick="launchGame()"
         ${canStart ? '' : 'disabled'}>
@@ -1722,18 +1816,23 @@ function clearRosterSlot(side) {
   render();
 }
 
-// ── Roster slot renderer (shared for both sides) ──────────
+// ── Combined side component (faction selector + roster) ───
 
-function renderRosterSlot(side) {
+function renderSideComponent(side) {
   const s = rs(side);
-  const faction = side === 'player' ? gameConfig.playerFaction : gameConfig.enemyFaction;
-  const label   = side === 'player' ? `★ Your Army — ${faction}` : `⚔ Enemy Army — ${faction}`;
-  const tabFile = s.inputMode === 'file';
+  const isPlayer = side === 'player';
+  const faction  = isPlayer ? gameConfig.playerFaction : gameConfig.enemyFaction;
+  const selId    = isPlayer ? 'sel-player' : 'sel-enemy';
+  const tabFile  = s.inputMode === 'file';
+
+  const opts = factions.map(f =>
+    `<option value="${f}" ${faction === f ? 'selected' : ''}>${f}</option>`
+  ).join('');
 
   const headerRight = s.parsed
-    ? `<span class="roster-slot-loaded">
+    ? `<span class="side-loaded">
         ✓ ${s.parsed.units.length} units · ${s.parsed.activeKeywords.size} keywords
-        &nbsp;<span class="roster-slot-clear" onclick="clearRosterSlot('${side}')">Clear</span>
+        &nbsp;<span class="side-clear" onclick="clearRosterSlot('${side}')">✕</span>
        </span>`
     : '';
 
@@ -1778,10 +1877,16 @@ function renderRosterSlot(side) {
     </div>`;
 
   return `
-    <div class="roster-slot ${side}-slot">
-      <div class="roster-slot-header">
-        <span class="roster-slot-label">${label}</span>
+    <div class="side-component ${isPlayer ? 'player-side' : 'enemy-side'}">
+      <div class="side-component-header">
+        <span class="side-label">${isPlayer ? '★ Your Army' : '⚔ Enemy Army'}</span>
         ${headerRight}
+      </div>
+      <div class="faction-field" style="margin-bottom:14px">
+        <select id="${selId}" onchange="onFactionChange()">
+          <option value="">— Choose faction —</option>
+          ${opts}
+        </select>
       </div>
       ${tabsHtml}
       ${inputHtml}
@@ -1990,7 +2095,7 @@ function closeKeywordPanel() {
 }
 
 // ─── INIT ─────────────────────────────────────────────────
-render();
+renderSplash();
 
 // ─── SERVICE WORKER ───────────────────────────────────────
 if ('serviceWorker' in navigator) {
