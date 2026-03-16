@@ -1518,20 +1518,18 @@ const coreAlwaysVisible = new Set([
 ]);
 
 // ─── KEYWORD VISIBILITY ──────────────────────────────────
-// kwForPlayer / kwForEnemy: tag-pill visibility only.
-//   coreAlwaysVisible keywords always render as pills so players
-//   are reminded those stratagems exist.
-// kwMatchesPlayer / kwMatchesEnemy: item visibility.
-//   No coreAlwaysVisible bypass — items must be in the loaded
-//   roster (or no roster) AND allowed by the faction mapping.
-// isKeywordVisible: union for pills.
+// kwForPlayer / kwForEnemy: drives both tag-pill visibility and
+//   playerOnly / enemyOnly item visibility.
+//   • coreAlwaysVisible → always true (universal stratagems shown to all)
+//   • _factionAllows   → false if keyword is faction-restricted
+//   • roster.loaded    → must be in roster when one is provided
+// isKeywordVisible: union — pill shown if relevant to either side.
 
 function _factionAllows(kw, faction) {
   const fl = keywordFactions[kw];
   return !fl || fl.includes(faction);
 }
 
-// ── tag-pill visibility ───────────────────────────────────
 function kwForPlayer(kw) {
   if (coreAlwaysVisible.has(kw)) return true;
   if (!_factionAllows(kw, gameConfig.playerFaction)) return false;
@@ -1550,33 +1548,18 @@ function isKeywordVisible(kw) {
   return kwForPlayer(kw) || kwForEnemy(kw);
 }
 
-// ── item visibility (no coreAlwaysVisible bypass) ─────────
-function kwMatchesPlayer(kw) {
-  if (!_factionAllows(kw, gameConfig.playerFaction)) return false;
-  if (roster.loaded) return roster.activeKeywords.has(kw);
-  return true;
-}
-
-function kwMatchesEnemy(kw) {
-  if (!_factionAllows(kw, gameConfig.enemyFaction)) return false;
-  if (enemyRoster.loaded) return enemyRoster.activeKeywords.has(kw);
-  return true;
-}
-
 // ─── ITEM VISIBILITY ─────────────────────────────────────
-// playerOnly: hidden when player roster loaded and no keyword matches.
-// enemyOnly:  hidden when enemy roster loaded and no keyword matches.
-// No flag + keywords: hidden when both rosters loaded and no keyword
-//   is relevant to either side.
-// No keywords: always shown (universal game steps).
+// playerOnly: show if any keyword passes kwForPlayer
+//   (coreAlwaysVisible items always pass — universal stratagems always show).
+// enemyOnly:  same via kwForEnemy.
+// No flag:    always shown (universal game steps).
+// No keywords: always shown.
 function shouldShowItem(item) {
   const kws = item.keywords || [];
   if (!kws.length) return true;
-  if (item.playerOnly) return kws.some(kwMatchesPlayer);
-  if (item.enemyOnly) return kws.some(kwMatchesEnemy);
-  // Universal items: show if visible to either side
-  // (isKeywordVisible is true for all kws when no roster loaded)
-  return kws.some(isKeywordVisible);
+  if (item.playerOnly) return kws.some(kwForPlayer);
+  if (item.enemyOnly)  return kws.some(kwForEnemy);
+  return true;
 }
 
 // ─── ROSTER PARSING ──────────────────────────────────────
