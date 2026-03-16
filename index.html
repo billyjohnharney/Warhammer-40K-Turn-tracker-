@@ -1896,7 +1896,6 @@ function renderPills() {
     const meta = PHASE_ICONS[p.id] || { svg: '', label: p.id };
     return `<div class="phase-pill ${cls}" onclick="goToPhase(${i})">
       <span class="pill-icon">${meta.svg}</span>
-      <span class="pill-label">${meta.label}</span>
     </div>`;
   }).join('');
 }
