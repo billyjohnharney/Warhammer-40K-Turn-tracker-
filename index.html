@@ -511,6 +511,78 @@
     margin-bottom: 2px;
   }
 
+  /* SPLASH SCREEN */
+  .splash-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--black);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    cursor: pointer;
+    animation: splashFadeIn 0.6s ease forwards;
+  }
+
+  .splash-screen.fading-out {
+    animation: splashFadeOut 0.5s ease forwards;
+  }
+
+  @keyframes splashFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @keyframes splashFadeOut {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+  }
+
+  .splash-logo {
+    font-size: 52px;
+    font-weight: 700;
+    letter-spacing: 10px;
+    text-transform: uppercase;
+    color: var(--gold);
+    text-shadow: 0 0 40px rgba(201,168,76,0.4), 0 0 80px rgba(201,168,76,0.15);
+    animation: splashGlow 2.5s ease-in-out infinite alternate;
+    margin-bottom: 18px;
+  }
+
+  @keyframes splashGlow {
+    from { text-shadow: 0 0 30px rgba(201,168,76,0.3), 0 0 60px rgba(201,168,76,0.1); }
+    to   { text-shadow: 0 0 50px rgba(201,168,76,0.55), 0 0 100px rgba(201,168,76,0.25); }
+  }
+
+  .splash-rule {
+    width: 120px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    margin-bottom: 18px;
+  }
+
+  .splash-subtitle {
+    font-size: 11px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 60px;
+  }
+
+  .splash-cta {
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--border-bright);
+    animation: splashBlink 1.4s ease-in-out infinite;
+  }
+
+  @keyframes splashBlink {
+    0%, 100% { opacity: 0.4; }
+    50%       { opacity: 1; }
+  }
+
   /* SCROLL INDICATOR */
   .scroll-hint {
     text-align: center;
@@ -1028,7 +1100,7 @@ let checked = {};
 let activePhaseIndex = 0;
 let turnNumber = 1;
 let gameConfig = { playerFaction: '', enemyFaction: '' };
-let step = 'setup'; // 'setup' | 'game'
+let step = 'splash'; // 'splash' | 'setup' | 'game'
 
 // Keyed roster state — access via rs('player') / rs('enemy')
 const rsState = {
@@ -1611,10 +1683,50 @@ async function processRosterFile(file, side) {
   render();
 }
 
+// ─── SPLASH ───────────────────────────────────────────────
+function renderSplash() {
+  const hint = document.querySelector('.scroll-hint');
+  const turnBar = document.getElementById('turn-bar');
+  turnBar.style.display = 'none';
+  hint.style.display = 'none';
+
+  const el = document.createElement('div');
+  el.className = 'splash-screen';
+  el.id = 'splash-screen';
+  el.innerHTML = `
+    <div class="splash-logo">Tacticum</div>
+    <div class="splash-rule"></div>
+    <div class="splash-subtitle">The rule of engagement</div>
+    <div class="splash-cta">Tap to begin</div>`;
+  el.addEventListener('click', dismissSplash);
+  document.body.appendChild(el);
+
+  // Auto-dismiss after 3 s
+  setTimeout(dismissSplash, 3000);
+}
+
+let _splashDismissed = false;
+function dismissSplash() {
+  if (_splashDismissed) return;
+  _splashDismissed = true;
+  const el = document.getElementById('splash-screen');
+  if (!el) return;
+  el.classList.add('fading-out');
+  el.addEventListener('animationend', () => {
+    el.remove();
+    step = 'setup';
+    render();
+  }, { once: true });
+}
+
 // ─── RENDER ──────────────────────────────────────────────
 function render() {
   const hint = document.querySelector('.scroll-hint');
   const turnBar = document.getElementById('turn-bar');
+  if (step === 'splash') {
+    // renderSplash handles its own DOM — nothing else to do here
+    return;
+  }
   if (step === 'setup') {
     renderSetupPage();
     turnBar.style.display = 'none';
@@ -1990,7 +2102,7 @@ function closeKeywordPanel() {
 }
 
 // ─── INIT ─────────────────────────────────────────────────
-render();
+renderSplash();
 
 // ─── SERVICE WORKER ───────────────────────────────────────
 if ('serviceWorker' in navigator) {
