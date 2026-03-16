@@ -21,6 +21,20 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
+  // Network-first for HTML so updates are picked up immediately
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          const clone = response.clone();
+          caches.open(CACHE).then(cache => cache.put(event.request, clone));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+  // Cache-first for all other assets (icons, etc.)
   event.respondWith(
     caches.match(event.request).then(cached => cached || fetch(event.request))
   );
