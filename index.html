@@ -348,6 +348,18 @@
     letter-spacing: 0.3px;
   }
 
+  .item-prefix {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    margin-right: 4px;
+  }
+  .item-prefix.action    { color: var(--green-bright); }
+  .item-prefix.note      { color: var(--gold); }
+  .item-prefix.stratagem { color: #9b59b6; }
+
   /* KEYWORD TAGS */
   .keyword-tags {
     display: flex;
@@ -1367,132 +1379,132 @@ const phases = [
     id: 'command',
     title: 'Command Phase',
     items: [
-      { text: 'Both players gain 1CP' },
-      { text: 'Resolve any other Command phase rules, including detachment and army abilities that trigger here' },
-      { text: 'For each unit Below Half-strength, roll 2D6 — equal or beat Leadership to pass', keywords: ['BATTLE-SHOCK', 'INSANE BRAVERY'] },
-      { text: 'Failed Battle-shock: unit OC becomes 0, cannot use Stratagems until next Command phase. Battle-shocked units take Desperate Escape tests when Falling Back', keywords: ['BATTLE-SHOCK'] },
+      { type: 'action', text: 'Both players gain 1CP' },
+      { type: 'action', text: 'Resolve any other Command phase rules, including detachment and army abilities that trigger here' },
+      { type: 'action', text: 'For each unit Below Half-strength, roll 2D6 — equal or beat Leadership to pass', keywords: ['BATTLE-SHOCK', 'INSANE BRAVERY'] },
+      { type: 'note',   text: 'Failed Battle-shock: unit OC becomes 0, cannot use Stratagems until next Command phase. Battle-shocked units take Desperate Escape tests when Falling Back', keywords: ['BATTLE-SHOCK'] },
     ]
   },
   {
     id: 'movement',
     title: 'Movement Phase',
     items: [
-      { text: 'Select each unit and choose: Normal Move, Advance, Remain Stationary, or Fall Back' },
-      { text: 'Units in Engagement Range can only Remain Stationary or Fall Back' },
-      { text: 'Units that Advance cannot shoot or charge this turn — exception: Assault weapons can still fire', keywords: ['ASSAULT'], playerOnly: true },
-      { text: 'Units that Remain Stationary get +1 to Hit rolls for Heavy weapons this turn', keywords: ['HEAVY'], playerOnly: true },
-      { text: 'Units that Fall Back cannot shoot or charge this turn. Battle-shocked units must take Desperate Escape tests', keywords: ['BATTLE-SHOCK'] },
-      { text: 'LEADER: Attached units (Character + bodyguard) move together as a single unit — they cannot separate', keywords: ['LEADER', 'ATTACHED UNIT'] },
-      { text: 'SCOUTS: eligible units may make their pre-battle Scout move before the first battle round begins', keywords: ['SCOUTS X"'], playerOnly: true },
-      { text: 'HOVER: declare Hover mode now if needed — model loses AIRCRAFT rules, Move becomes 20"', keywords: ['HOVER'], playerOnly: true },
-      { text: 'Reinforcements step: set up any units arriving from Deep Strike or Reserves', keywords: ['DEEP STRIKE'], playerOnly: true },
+      { type: 'action', text: 'Select each unit and choose: Normal Move, Advance, Remain Stationary, or Fall Back' },
+      { type: 'note',   text: 'Units in Engagement Range can only Remain Stationary or Fall Back' },
+      { type: 'note',   text: 'Units that Advance cannot shoot or charge this turn — exception: Assault weapons can still fire', keywords: ['ASSAULT'], playerOnly: true },
+      { type: 'note',   text: 'Units that Remain Stationary get +1 to Hit rolls for Heavy weapons this turn', keywords: ['HEAVY'], playerOnly: true },
+      { type: 'note',   text: 'Units that Fall Back cannot shoot or charge this turn. Battle-shocked units must take Desperate Escape tests', keywords: ['BATTLE-SHOCK'] },
+      { type: 'note',   text: 'LEADER: Attached units (Character + bodyguard) move together as a single unit — they cannot separate', keywords: ['LEADER', 'ATTACHED UNIT'] },
+      { type: 'note',   text: 'SCOUTS: eligible units may make their pre-battle Scout move before the first battle round begins', keywords: ['SCOUTS X"'], playerOnly: true },
+      { type: 'note',   text: 'HOVER: declare Hover mode now if needed — model loses AIRCRAFT rules, Move becomes 20"', keywords: ['HOVER'], playerOnly: true },
+      { type: 'action', text: 'Reinforcements step: set up any units arriving from Deep Strike or Reserves', keywords: ['DEEP STRIKE'], playerOnly: true },
     ]
   },
   {
     id: 'shooting',
     title: 'Shooting Phase',
     items: [
-      { text: 'Skip units that Advanced or Fell Back — unless using Assault weapons', keywords: ['ASSAULT'], playerOnly: true },
-      { text: 'Declare all targets before rolling — Indirect Fire weapons may target units not visible', keywords: ['INDIRECT FIRE'], playerOnly: true },
-      { text: 'Units in Engagement Range cannot shoot — exceptions: Monsters, Vehicles, Pistol weapons', keywords: ['PISTOL'], playerOnly: true },
-      { text: 'Pistol: must target a unit in Engagement Range, cannot mix with non-Pistol weapons', keywords: ['PISTOL'], playerOnly: true },
-      { text: 'Your Lone Operative units cannot be targeted by ranged attacks from more than 12" away', keywords: ['LONE OPERATIVE'], playerOnly: true },
-      { text: 'Enemy Lone Operative: you cannot target enemy units with this ability from more than 12" away', keywords: ['LONE OPERATIVE'], enemyOnly: true },
-      { text: 'Your Stealth: enemies shooting at your units with Stealth from more than 12" suffer -1 to Hit rolls', keywords: ['STEALTH'], playerOnly: true },
-      { text: 'Enemy Stealth: apply -1 to your Hit rolls when targeting an enemy unit with Stealth from more than 12"', keywords: ['STEALTH'], enemyOnly: true },
-      { text: 'Psychic: weapons/abilities tagged [PSYCHIC] are resolved in this phase — no separate Psychic phase', keywords: ['PSYCHIC'], playerOnly: true },
-      { text: 'One Shot: track any One Shot weapons used this turn — they cannot be fired again this battle', keywords: ['ONE SHOT'], playerOnly: true },
-      { text: 'Smoke Stratagem (1CP): when a SMOKE unit is targeted, it gains Benefit of Cover and Stealth until end of phase', keywords: ['SMOKE', 'SMOKESCREEN'], playerOnly: true },
-      { text: 'Overwatch Stratagem (1CP): shoot at an enemy moving or arriving — hits only on unmodified 6s', keywords: ['FIRE OVERWATCH'] },
-      { text: 'Go to Ground (1CP): targeted INFANTRY unit gains 6+ invulnerable save and Benefit of Cover until end of phase', keywords: ['GO TO GROUND'] },
-      { text: 'Grenade (1CP): a GRENADES unit rolls 6D6 against a visible enemy within 8" — each 4+ deals 1 mortal wound', keywords: ['GRENADE'], playerOnly: true },
-      { text: 'FIRING DECK: TRANSPORT models with Firing Deck may shoot using embarked models\' weapons', keywords: ['FIRING DECK X'], playerOnly: true },
-      { text: 'Torrent: attacks automatically hit, skip Hit roll', keywords: ['TORRENT'], playerOnly: true },
-      { text: 'Rapid Fire X: check if target is within half range, if so add X to Attacks', keywords: ['RAPID FIRE X'], playerOnly: true },
-      { text: 'Blast: add 1 to Attacks per 5 models in target unit. Cannot use vs units in Engagement Range of your own', keywords: ['BLAST'], playerOnly: true },
-      { text: 'Heavy: add +1 to Hit rolls if unit Remained Stationary this turn', keywords: ['HEAVY'], playerOnly: true },
-      { text: 'Indirect Fire with no visible target: -1 to Hit rolls, target has Benefit of Cover', keywords: ['INDIRECT FIRE'], playerOnly: true },
-      { text: 'Roll Hit rolls → check unmodified 6s (Critical Hits)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'], playerOnly: true },
-      { text: 'Roll Wound rolls → check unmodified 6s (Critical Wounds)', keywords: ['DEVASTATING WOUNDS', 'ANTI-[KEYWORD] X+'], playerOnly: true },
-      { text: 'Apply AP to saving throws — Invulnerable saves are never modified by AP' },
-      { text: 'Your Feel No Pain: your models with FNP may roll to negate wounds after saves', keywords: ['FEEL NO PAIN X+'], playerOnly: true },
-      { text: 'Enemy Feel No Pain: after your attacks wound, enemy models with FNP may roll to negate those wounds', keywords: ['FEEL NO PAIN X+'], enemyOnly: true },
-      { text: 'Ignores Cover: target cannot use Benefit of Cover', keywords: ['IGNORES COVER'], playerOnly: true },
-      { text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'], playerOnly: true },
-      { text: 'Melta X: check if target is within half range, if so add X to Damage', keywords: ['MELTA X'], playerOnly: true },
-      { text: 'After shooting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'], playerOnly: true },
-      { text: 'Your Deadly Demise: if your models with this ability are destroyed (e.g. from Hazardous), roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], playerOnly: true },
-      { text: 'Enemy Deadly Demise: when you destroy an enemy model with this ability, roll D6 — on a 6 your nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], enemyOnly: true },
+      { type: 'note',      text: 'Skip units that Advanced or Fell Back — unless using Assault weapons', keywords: ['ASSAULT'], playerOnly: true },
+      { type: 'action',    text: 'Declare all targets before rolling — Indirect Fire weapons may target units not visible', keywords: ['INDIRECT FIRE'], playerOnly: true },
+      { type: 'note',      text: 'Units in Engagement Range cannot shoot — exceptions: Monsters, Vehicles, Pistol weapons', keywords: ['PISTOL'], playerOnly: true },
+      { type: 'note',      text: 'Pistol: must target a unit in Engagement Range, cannot mix with non-Pistol weapons', keywords: ['PISTOL'], playerOnly: true },
+      { type: 'note',      text: 'Your Lone Operative units cannot be targeted by ranged attacks from more than 12" away', keywords: ['LONE OPERATIVE'], playerOnly: true },
+      { type: 'note',      text: 'Enemy Lone Operative: you cannot target enemy units with this ability from more than 12" away', keywords: ['LONE OPERATIVE'], enemyOnly: true },
+      { type: 'note',      text: 'Your Stealth: enemies shooting at your units with Stealth from more than 12" suffer -1 to Hit rolls', keywords: ['STEALTH'], playerOnly: true },
+      { type: 'note',      text: 'Enemy Stealth: apply -1 to your Hit rolls when targeting an enemy unit with Stealth from more than 12"', keywords: ['STEALTH'], enemyOnly: true },
+      { type: 'note',      text: 'Psychic: weapons/abilities tagged [PSYCHIC] are resolved in this phase — no separate Psychic phase', keywords: ['PSYCHIC'], playerOnly: true },
+      { type: 'note',      text: 'One Shot: track any One Shot weapons used this turn — they cannot be fired again this battle', keywords: ['ONE SHOT'], playerOnly: true },
+      { type: 'stratagem', text: 'Smoke Stratagem (1CP): when a SMOKE unit is targeted, it gains Benefit of Cover and Stealth until end of phase', keywords: ['SMOKE', 'SMOKESCREEN'], playerOnly: true },
+      { type: 'stratagem', text: 'Overwatch Stratagem (1CP): shoot at an enemy moving or arriving — hits only on unmodified 6s', keywords: ['FIRE OVERWATCH'] },
+      { type: 'stratagem', text: 'Go to Ground (1CP): targeted INFANTRY unit gains 6+ invulnerable save and Benefit of Cover until end of phase', keywords: ['GO TO GROUND'] },
+      { type: 'stratagem', text: 'Grenade (1CP): a GRENADES unit rolls 6D6 against a visible enemy within 8" — each 4+ deals 1 mortal wound', keywords: ['GRENADE'], playerOnly: true },
+      { type: 'note',      text: 'FIRING DECK: TRANSPORT models with Firing Deck may shoot using embarked models\' weapons', keywords: ['FIRING DECK X'], playerOnly: true },
+      { type: 'note',      text: 'Torrent: attacks automatically hit, skip Hit roll', keywords: ['TORRENT'], playerOnly: true },
+      { type: 'note',      text: 'Rapid Fire X: check if target is within half range, if so add X to Attacks', keywords: ['RAPID FIRE X'], playerOnly: true },
+      { type: 'note',      text: 'Blast: add 1 to Attacks per 5 models in target unit. Cannot use vs units in Engagement Range of your own', keywords: ['BLAST'], playerOnly: true },
+      { type: 'note',      text: 'Heavy: add +1 to Hit rolls if unit Remained Stationary this turn', keywords: ['HEAVY'], playerOnly: true },
+      { type: 'note',      text: 'Indirect Fire with no visible target: -1 to Hit rolls, target has Benefit of Cover', keywords: ['INDIRECT FIRE'], playerOnly: true },
+      { type: 'action',    text: 'Roll Hit rolls → check unmodified 6s (Critical Hits)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'], playerOnly: true },
+      { type: 'action',    text: 'Roll Wound rolls → check unmodified 6s (Critical Wounds)', keywords: ['DEVASTATING WOUNDS', 'ANTI-[KEYWORD] X+'], playerOnly: true },
+      { type: 'action',    text: 'Apply AP to saving throws — Invulnerable saves are never modified by AP' },
+      { type: 'note',      text: 'Your Feel No Pain: your models with FNP may roll to negate wounds after saves', keywords: ['FEEL NO PAIN X+'], playerOnly: true },
+      { type: 'note',      text: 'Enemy Feel No Pain: after your attacks wound, enemy models with FNP may roll to negate those wounds', keywords: ['FEEL NO PAIN X+'], enemyOnly: true },
+      { type: 'note',      text: 'Ignores Cover: target cannot use Benefit of Cover', keywords: ['IGNORES COVER'], playerOnly: true },
+      { type: 'note',      text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'], playerOnly: true },
+      { type: 'note',      text: 'Melta X: check if target is within half range, if so add X to Damage', keywords: ['MELTA X'], playerOnly: true },
+      { type: 'note',      text: 'After shooting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'], playerOnly: true },
+      { type: 'note',      text: 'Your Deadly Demise: if your models with this ability are destroyed (e.g. from Hazardous), roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], playerOnly: true },
+      { type: 'note',      text: 'Enemy Deadly Demise: when you destroy an enemy model with this ability, roll D6 — on a 6 your nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], enemyOnly: true },
     ]
   },
   {
     id: 'charge',
     title: 'Charge Phase',
     items: [
-      { text: 'Eligible units: within 12" of enemy, haven\'t Advanced or Fell Back, not in Engagement Range' },
-      { text: 'Targets do not need to be visible' },
-      { text: 'Roll 2D6 for Charge roll — must reach all targets or charge fails. Use Command Re-roll if needed', keywords: ['COMMAND RE-ROLL'] },
-      { text: 'Successful charge gives unit Fights First this turn', keywords: ['FIGHTS FIRST'] },
-      { text: 'Tank Shock (1CP): after a VEHICLE charges, roll vs one enemy in Engagement Range — each 5+ deals 1 mortal wound', keywords: ['TANK SHOCK'], playerOnly: true },
-      { text: 'Heroic Intervention (2CP): a friendly unit within 6" of the charging enemy can make an immediate charge against it', keywords: ['HEROIC INTERVENTION'] },
+      { type: 'action',    text: 'Eligible units: within 12" of enemy, haven\'t Advanced or Fell Back, not in Engagement Range' },
+      { type: 'note',      text: 'Targets do not need to be visible' },
+      { type: 'action',    text: 'Roll 2D6 for Charge roll — must reach all targets or charge fails. Use Command Re-roll if needed', keywords: ['COMMAND RE-ROLL'] },
+      { type: 'note',      text: 'Successful charge gives unit Fights First this turn', keywords: ['FIGHTS FIRST'] },
+      { type: 'stratagem', text: 'Tank Shock (1CP): after a VEHICLE charges, roll vs one enemy in Engagement Range — each 5+ deals 1 mortal wound', keywords: ['TANK SHOCK'], playerOnly: true },
+      { type: 'stratagem', text: 'Heroic Intervention (2CP): a friendly unit within 6" of the charging enemy can make an immediate charge against it', keywords: ['HEROIC INTERVENTION'] },
     ]
   },
   {
     id: 'fight1',
     title: 'Fight Phase — Fights First',
     items: [
-      { text: 'Units with Fights First ability fight now (including all units that charged)', keywords: ['FIGHTS FIRST'] },
-      { text: 'Units with Fights Last fight after all other units — select them only once all normal units have fought', keywords: ['FIGHTS LAST'] },
-      { text: 'Players alternate selecting units — defending player picks first. Counter-Offensive (2CP) can interrupt the sequence', keywords: ['COUNTER-OFFENSIVE'] },
-      { text: 'Pile In: move each model up to 3" closer to nearest enemy' },
-      { text: 'Lance: add +1 to Wound rolls if bearer charged this turn', keywords: ['LANCE'], playerOnly: true },
-      { text: 'Extra Attacks: bearer attacks with this weapon in addition to other melee weapons', keywords: ['EXTRA ATTACKS'], playerOnly: true },
-      { text: 'Precision: when targeting Attached unit, can allocate attack to visible Character', keywords: ['PRECISION'], playerOnly: true },
-      { text: 'Roll Hit rolls → check unmodified 6s (Critical Hits)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'], playerOnly: true },
-      { text: 'Roll Wound rolls → check unmodified 6s (Critical Wounds)', keywords: ['DEVASTATING WOUNDS', 'ANTI-[KEYWORD] X+'], playerOnly: true },
-      { text: 'Apply AP to saving throws — Invulnerable saves never modified by AP' },
-      { text: 'Your Feel No Pain: your models with FNP may roll to negate wounds after saves', keywords: ['FEEL NO PAIN X+'], playerOnly: true },
-      { text: 'Enemy Feel No Pain: after your attacks wound, enemy models with FNP may roll to negate those wounds', keywords: ['FEEL NO PAIN X+'], enemyOnly: true },
-      { text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'], playerOnly: true },
-      { text: 'Epic Challenge (1CP): one Character model\'s melee attacks gain Precision for this phase', keywords: ['EPIC CHALLENGE'] },
-      { text: 'After fighting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'], playerOnly: true },
-      { text: 'Your Deadly Demise: if your models with this ability are destroyed in this fight, roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], playerOnly: true },
-      { text: 'Enemy Deadly Demise: when you destroy an enemy model with this ability, roll D6 — on a 6 your nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], enemyOnly: true },
-      { text: 'Consolidate: move each model up to 3" closer to nearest enemy' },
+      { type: 'note',      text: 'Units with Fights First ability fight now (including all units that charged)', keywords: ['FIGHTS FIRST'] },
+      { type: 'note',      text: 'Units with Fights Last fight after all other units — select them only once all normal units have fought', keywords: ['FIGHTS LAST'] },
+      { type: 'action',    text: 'Players alternate selecting units — defending player picks first. Counter-Offensive (2CP) can interrupt the sequence', keywords: ['COUNTER-OFFENSIVE'] },
+      { type: 'action',    text: 'Pile In: move each model up to 3" closer to nearest enemy' },
+      { type: 'note',      text: 'Lance: add +1 to Wound rolls if bearer charged this turn', keywords: ['LANCE'], playerOnly: true },
+      { type: 'note',      text: 'Extra Attacks: bearer attacks with this weapon in addition to other melee weapons', keywords: ['EXTRA ATTACKS'], playerOnly: true },
+      { type: 'note',      text: 'Precision: when targeting Attached unit, can allocate attack to visible Character', keywords: ['PRECISION'], playerOnly: true },
+      { type: 'action',    text: 'Roll Hit rolls → check unmodified 6s (Critical Hits)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'], playerOnly: true },
+      { type: 'action',    text: 'Roll Wound rolls → check unmodified 6s (Critical Wounds)', keywords: ['DEVASTATING WOUNDS', 'ANTI-[KEYWORD] X+'], playerOnly: true },
+      { type: 'action',    text: 'Apply AP to saving throws — Invulnerable saves never modified by AP' },
+      { type: 'note',      text: 'Your Feel No Pain: your models with FNP may roll to negate wounds after saves', keywords: ['FEEL NO PAIN X+'], playerOnly: true },
+      { type: 'note',      text: 'Enemy Feel No Pain: after your attacks wound, enemy models with FNP may roll to negate those wounds', keywords: ['FEEL NO PAIN X+'], enemyOnly: true },
+      { type: 'note',      text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'], playerOnly: true },
+      { type: 'stratagem', text: 'Epic Challenge (1CP): one Character model\'s melee attacks gain Precision for this phase', keywords: ['EPIC CHALLENGE'] },
+      { type: 'note',      text: 'After fighting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'], playerOnly: true },
+      { type: 'note',      text: 'Your Deadly Demise: if your models with this ability are destroyed in this fight, roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], playerOnly: true },
+      { type: 'note',      text: 'Enemy Deadly Demise: when you destroy an enemy model with this ability, roll D6 — on a 6 your nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], enemyOnly: true },
+      { type: 'action',    text: 'Consolidate: move each model up to 3" closer to nearest enemy' },
     ]
   },
   {
     id: 'fight2',
     title: 'Fight Phase — Remaining Combats',
     items: [
-      { text: 'All remaining eligible units fight — same sequence as Fights First step' },
-      { text: 'Units with Fights Last fight after all other units — select them only once all normal units have fought', keywords: ['FIGHTS LAST'] },
-      { text: 'Players alternate selecting units — defending player picks first. Counter-Offensive (2CP) can interrupt', keywords: ['COUNTER-OFFENSIVE'] },
-      { text: 'Pile In → Select weapon & targets → Make attacks → Consolidate' },
-      { text: 'No unit can fight more than once per phase' },
-      { text: 'Lance: add +1 to Wound rolls if bearer charged this turn', keywords: ['LANCE'], playerOnly: true },
-      { text: 'Extra Attacks: bearer attacks with this weapon in addition to other melee weapons', keywords: ['EXTRA ATTACKS'], playerOnly: true },
-      { text: 'Roll Hit rolls → check unmodified 6s (Critical Hits)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'], playerOnly: true },
-      { text: 'Roll Wound rolls → check unmodified 6s (Critical Wounds)', keywords: ['DEVASTATING WOUNDS', 'ANTI-[KEYWORD] X+'], playerOnly: true },
-      { text: 'Apply AP to saving throws — Invulnerable saves never modified by AP' },
-      { text: 'Your Feel No Pain: your models with FNP may roll to negate wounds after saves', keywords: ['FEEL NO PAIN X+'], playerOnly: true },
-      { text: 'Enemy Feel No Pain: after your attacks wound, enemy models with FNP may roll to negate those wounds', keywords: ['FEEL NO PAIN X+'], enemyOnly: true },
-      { text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'], playerOnly: true },
-      { text: 'Epic Challenge (1CP): one Character model\'s melee attacks gain Precision for this phase', keywords: ['EPIC CHALLENGE'] },
-      { text: 'After fighting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'], playerOnly: true },
-      { text: 'Your Deadly Demise: if your models with this ability are destroyed in this fight, roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], playerOnly: true },
-      { text: 'Enemy Deadly Demise: when you destroy an enemy model with this ability, roll D6 — on a 6 your nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], enemyOnly: true },
+      { type: 'action',    text: 'All remaining eligible units fight — same sequence as Fights First step' },
+      { type: 'note',      text: 'Units with Fights Last fight after all other units — select them only once all normal units have fought', keywords: ['FIGHTS LAST'] },
+      { type: 'action',    text: 'Players alternate selecting units — defending player picks first. Counter-Offensive (2CP) can interrupt', keywords: ['COUNTER-OFFENSIVE'] },
+      { type: 'action',    text: 'Pile In → Select weapon & targets → Make attacks → Consolidate' },
+      { type: 'note',      text: 'No unit can fight more than once per phase' },
+      { type: 'note',      text: 'Lance: add +1 to Wound rolls if bearer charged this turn', keywords: ['LANCE'], playerOnly: true },
+      { type: 'note',      text: 'Extra Attacks: bearer attacks with this weapon in addition to other melee weapons', keywords: ['EXTRA ATTACKS'], playerOnly: true },
+      { type: 'action',    text: 'Roll Hit rolls → check unmodified 6s (Critical Hits)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'], playerOnly: true },
+      { type: 'action',    text: 'Roll Wound rolls → check unmodified 6s (Critical Wounds)', keywords: ['DEVASTATING WOUNDS', 'ANTI-[KEYWORD] X+'], playerOnly: true },
+      { type: 'action',    text: 'Apply AP to saving throws — Invulnerable saves never modified by AP' },
+      { type: 'note',      text: 'Your Feel No Pain: your models with FNP may roll to negate wounds after saves', keywords: ['FEEL NO PAIN X+'], playerOnly: true },
+      { type: 'note',      text: 'Enemy Feel No Pain: after your attacks wound, enemy models with FNP may roll to negate those wounds', keywords: ['FEEL NO PAIN X+'], enemyOnly: true },
+      { type: 'note',      text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'], playerOnly: true },
+      { type: 'stratagem', text: 'Epic Challenge (1CP): one Character model\'s melee attacks gain Precision for this phase', keywords: ['EPIC CHALLENGE'] },
+      { type: 'note',      text: 'After fighting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'], playerOnly: true },
+      { type: 'note',      text: 'Your Deadly Demise: if your models with this ability are destroyed in this fight, roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], playerOnly: true },
+      { type: 'note',      text: 'Enemy Deadly Demise: when you destroy an enemy model with this ability, roll D6 — on a 6 your nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], enemyOnly: true },
     ]
   },
   {
     id: 'end',
     title: 'End of Turn',
     items: [
-      { text: 'Check unit coherency — remove models from any unit not in coherency' },
-      { text: 'Score objectives — units with Objective Secured control markers even against non-ObjSec enemies', keywords: ['OBJECTIVE SECURED'] },
-      { text: 'New Orders (1CP): discard current Secondary Mission card and draw a new one (once per battle)', keywords: ['NEW ORDERS'] },
-      { text: 'Note victory points scored this turn' },
-      { text: 'Pass to your opponent' },
+      { type: 'action',    text: 'Check unit coherency — remove models from any unit not in coherency' },
+      { type: 'action',    text: 'Score objectives — units with Objective Secured control markers even against non-ObjSec enemies', keywords: ['OBJECTIVE SECURED'] },
+      { type: 'stratagem', text: 'New Orders (1CP): discard current Secondary Mission card and draw a new one (once per battle)', keywords: ['NEW ORDERS'] },
+      { type: 'action',    text: 'Note victory points scored this turn' },
+      { type: 'action',    text: 'Pass to your opponent' },
     ]
   }
 ];
@@ -1962,7 +1974,11 @@ function renderPhases() {
           <div class="check-item ${isChecked ? 'checked' : ''} ${hasKw ? 'has-keyword' : ''}" onclick="toggleCheck('${phase.id}',${j})">
             <div class="checkbox"></div>
             <div class="item-content">
-              <div class="item-text">${item.text}</div>
+              <div class="item-text">${
+                item.type === 'action'    ? '<span class="item-prefix action">Action:</span> ' :
+                item.type === 'stratagem' ? '<span class="item-prefix stratagem">Stratagem:</span> ' :
+                item.type === 'note'      ? '<span class="item-prefix note">Note:</span> ' : ''
+              }${item.text}</div>
               ${hasKw ? `<div class="keyword-tags">${visibleKws.map(kw =>
                 `<span class="keyword-tag" onclick="event.stopPropagation();showKeyword('${kw}')">${kw}</span>`
               ).join('')}</div>` : ''}
