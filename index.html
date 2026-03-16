@@ -2120,6 +2120,11 @@ renderSplash();
 // ─── SERVICE WORKER ───────────────────────────────────────
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./warhammer-sw.js');
+  // When a new SW activates and claims this client, reload so the
+  // network-first fetch picks up the latest HTML immediately.
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload();
+  });
 }
 </script>
 
