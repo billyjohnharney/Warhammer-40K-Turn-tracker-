@@ -1728,21 +1728,24 @@ function dismissSplash() {
 
 // ─── RENDER ──────────────────────────────────────────────
 function render() {
-  const hint = document.querySelector('.scroll-hint');
+  const hint    = document.querySelector('.scroll-hint');
   const turnBar = document.getElementById('turn-bar');
+  const header  = document.querySelector('header');
   if (step === 'splash') {
     // renderSplash handles its own DOM — nothing else to do here
     return;
   }
   if (step === 'setup') {
     renderSetupPage();
+    header.style.display  = 'none';
     turnBar.style.display = 'none';
-    hint.style.display = 'none';
+    hint.style.display    = 'none';
   } else {
     renderPills();
     renderPhases();
+    header.style.display  = '';
     turnBar.style.display = '';
-    hint.style.display = '';
+    hint.style.display    = '';
   }
 }
 
