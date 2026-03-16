@@ -501,6 +501,16 @@
     box-shadow: 0 0 8px rgba(46,204,113,0.15);
   }
 
+  /* ROUND LABEL */
+  .round-label {
+    font-size: 9px;
+    color: var(--gold);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-align: right;
+    margin-bottom: 2px;
+  }
+
   /* SCROLL INDICATOR */
   .scroll-hint {
     text-align: center;
@@ -1016,6 +1026,7 @@
 // ─── STATE ───────────────────────────────────────────────
 let checked = {};
 let activePhaseIndex = 0;
+let turnNumber = 1;
 let gameConfig = { playerFaction: '', enemyFaction: '' };
 let step = 'setup'; // 'setup' | 'game'
 
@@ -1791,6 +1802,7 @@ function launchGame() {
   step = 'game';
   checked = {};
   activePhaseIndex = 0;
+  turnNumber = 1;
   updateHeaderFactions();
   render();
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1807,6 +1819,7 @@ function updateHeaderFactions() {
 
 function changeFactions() {
   step = 'setup';
+  turnNumber = 1;
   roster      = { loaded: false, units: [], activeKeywords: new Set() };
   enemyRoster = { loaded: false, units: [], activeKeywords: new Set() };
   rsState.player = { inputMode: 'file', parsed: null, error: '' };
@@ -1887,8 +1900,20 @@ function renderPhases() {
     .map((item, j) => ({ item, j }))
     .filter(({ item }) => shouldShowItem(item));
 
+  const total = phase.items.length;
+  const done  = phase.items.filter((_, j) => checked[`${phase.id}-${j}`]).length;
+
   container.innerHTML = `
     <div class="phase-view" id="phase-${phase.id}">
+      <div class="phase-view-header">
+        <div class="phase-header-left">
+          <span class="phase-title">${phase.title}</span>
+        </div>
+        <div>
+          <div class="round-label">Round ${turnNumber}</div>
+          <div class="phase-progress">${done} / ${total}</div>
+        </div>
+      </div>
       ${visible.map(({ item, j }) => {
         const key = `${phase.id}-${j}`;
         const isChecked = checked[key];
@@ -1943,6 +1968,7 @@ function goToPhase(index) {
 function resetTurn() {
   checked = {};
   activePhaseIndex = 0;
+  turnNumber++;
   if (step === 'game') updateHeaderFactions();
   render();
   window.scrollTo({ top: 0, behavior: 'smooth' });
