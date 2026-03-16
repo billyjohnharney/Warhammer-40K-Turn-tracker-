@@ -997,7 +997,7 @@
   </div>
 </header>
 
-<div class="turn-bar">
+<div class="turn-bar" id="turn-bar">
   <div class="turn-bar-inner">
     <div class="phase-pills" id="phase-pills"></div>
     <button class="reset-btn" onclick="resetTurn()">↺ New Turn</button>
@@ -1023,7 +1023,7 @@
 let checked = {};
 let activePhaseIndex = 0;
 let gameConfig = { playerFaction: '', enemyFaction: '' };
-let step = 'faction'; // 'faction' | 'roster' | 'game'
+let step = 'setup'; // 'setup' | 'game'
 
 // Keyed roster state — access via rs('player') / rs('enemy')
 const rsState = {
@@ -1603,30 +1603,27 @@ async function processRosterFile(file, side) {
     s.parsed = null;
   }
 
-  renderRosterStep();
+  render();
 }
 
 // ─── RENDER ──────────────────────────────────────────────
 function render() {
   const hint = document.querySelector('.scroll-hint');
-  const pills = document.getElementById('phase-pills');
-  if (step === 'faction') {
-    renderFactionSelect();
-    pills.innerHTML = '';
-    hint.style.display = 'none';
-  } else if (step === 'roster') {
-    renderRosterStep();
-    pills.innerHTML = '';
+  const turnBar = document.getElementById('turn-bar');
+  if (step === 'setup') {
+    renderSetupPage();
+    turnBar.style.display = 'none';
     hint.style.display = 'none';
   } else {
     renderPills();
     renderPhases();
+    turnBar.style.display = '';
     hint.style.display = '';
   }
 }
 
 
-function renderFactionSelect() {
+function renderSetupPage() {
   const opts = factions.map(f =>
     `<option value="${f}" ${gameConfig.playerFaction === f ? 'selected' : ''}>${f}</option>`
   ).join('');
@@ -1637,10 +1634,13 @@ function renderFactionSelect() {
   document.getElementById('header-title').textContent = 'Tacticum';
   document.getElementById('header-subtitle').textContent = '10th Edition';
 
+  const canStart = !!(gameConfig.playerFaction && gameConfig.enemyFaction);
+
   document.getElementById('phases-container').innerHTML = `
     <div class="faction-screen">
-      <div class="faction-screen-title">Tacticum — Warhammer 40K 10th Edition</div>
-      <div class="faction-screen-sub">Select Your Factions</div>
+      <div class="faction-screen-title">Tacticum — Warhammer 40,000 10th Edition</div>
+
+      <div class="faction-screen-sub">Select Factions</div>
       <div class="faction-row">
         <div class="faction-field">
           <label>Your Army</label>
@@ -1658,31 +1658,25 @@ function renderFactionSelect() {
           </select>
         </div>
       </div>
+
+      <div class="faction-screen-sub" style="margin-top:36px">Upload Rosters — Optional</div>
+      <p class="roster-sub" style="margin-bottom:16px">Upload one or both to filter checklist steps to only the abilities in play for each army.</p>
+      ${renderRosterSlot('player')}
+      ${renderRosterSlot('enemy')}
+
       <button class="faction-start-btn" id="start-btn"
-        onclick="startGame()"
-        ${(!gameConfig.playerFaction || !gameConfig.enemyFaction) ? 'disabled' : ''}>
+        onclick="launchGame()"
+        ${canStart ? '' : 'disabled'}>
         Start Game
       </button>
-      <div class="faction-hint">
-        Keywords will be filtered to abilities relevant to both armies
-      </div>
+      <div class="faction-hint">Keywords will be filtered to abilities relevant to both armies</div>
     </div>`;
 }
 
 function onFactionChange() {
   gameConfig.playerFaction = document.getElementById('sel-player').value;
   gameConfig.enemyFaction = document.getElementById('sel-enemy').value;
-  const btn = document.getElementById('start-btn');
-  if (btn) btn.disabled = (!gameConfig.playerFaction || !gameConfig.enemyFaction);
-}
-
-function startGame() {
-  if (!gameConfig.playerFaction || !gameConfig.enemyFaction) return;
-  step = 'roster';
-  rsState.player = { inputMode: 'file', parsed: null, error: '' };
-  rsState.enemy  = { inputMode: 'file', parsed: null, error: '' };
   render();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ── Roster slot helpers ───────────────────────────────────
@@ -1691,7 +1685,7 @@ function setRosterMode(side, mode) {
   rs(side).inputMode = mode;
   rs(side).parsed = null;
   rs(side).error = '';
-  renderRosterStep();
+  render();
 }
 
 function handleFileDrop(event, side) {
@@ -1710,17 +1704,17 @@ function parseAndPreviewText(side) {
   const text = (document.getElementById(id) || {}).value || '';
   if (!text.trim()) {
     rs(side).error = 'Please paste your army list above.';
-    renderRosterStep();
+    render();
     return;
   }
   rs(side).error = '';
   rs(side).parsed = parseTextRoster(text);
-  renderRosterStep();
+  render();
 }
 
 function clearRosterSlot(side) {
   rsState[side] = { inputMode: 'file', parsed: null, error: '' };
-  renderRosterStep();
+  render();
 }
 
 // ── Roster slot renderer (shared for both sides) ──────────
@@ -1791,34 +1785,8 @@ function renderRosterSlot(side) {
     </div>`;
 }
 
-// ── Main roster screen ────────────────────────────────────
-
-function renderRosterStep() {
-  const pLoaded = !!rsState.player.parsed;
-  const eLoaded = !!rsState.enemy.parsed;
-  const btnLabel = pLoaded && eLoaded ? 'Start Game — Both Rosters Loaded'
-    : pLoaded ? 'Start Game — Your Roster Loaded'
-    : eLoaded ? 'Start Game — Enemy Roster Loaded'
-    : 'Start Game — No Rosters (use faction keywords)';
-
-  document.getElementById('header-title').textContent = gameConfig.playerFaction;
-  document.getElementById('header-subtitle').innerHTML =
-    `<span class="your-side">${gameConfig.playerFaction}</span>` +
-    `<span class="vs-sep">vs</span>` +
-    `<span class="enemy-side">${gameConfig.enemyFaction}</span>`;
-
-  document.getElementById('phases-container').innerHTML = `
-    <div class="roster-screen">
-      <div class="roster-context">Army Rosters — Optional</div>
-      <div class="roster-heading">Upload Rosters</div>
-      <div class="roster-sub">Both rosters are optional. Upload one or both to filter checklist steps to only the abilities in play for each army.</div>
-      ${renderRosterSlot('player')}
-      ${renderRosterSlot('enemy')}
-      <button class="faction-start-btn" onclick="launchGame()">${btnLabel}</button>
-    </div>`;
-}
-
 function launchGame() {
+  if (!gameConfig.playerFaction || !gameConfig.enemyFaction) return;
   // Commit both rosters from their parsed previews (or leave unloaded).
   const p = rsState.player.parsed;
   const e = rsState.enemy.parsed;
@@ -1844,9 +1812,11 @@ function updateHeaderFactions() {
 }
 
 function changeFactions() {
-  step = 'faction';
+  step = 'setup';
   roster      = { loaded: false, units: [], activeKeywords: new Set() };
   enemyRoster = { loaded: false, units: [], activeKeywords: new Set() };
+  rsState.player = { inputMode: 'file', parsed: null, error: '' };
+  rsState.enemy  = { inputMode: 'file', parsed: null, error: '' };
   render();
 }
 
