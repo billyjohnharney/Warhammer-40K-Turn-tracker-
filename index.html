@@ -84,72 +84,6 @@
     margin-top: 2px;
   }
 
-  /* STATS BAR */
-  .stats-bar {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-
-  .stat-block {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    padding: 8px 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 120px;
-  }
-
-  .stat-label {
-    font-size: 9px;
-    color: var(--text-dim);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
-
-  .stat-controls {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .stat-value {
-    font-family: Arial, sans-serif;
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--gold);
-    min-width: 30px;
-    text-align: center;
-  }
-
-  .stat-btn {
-    background: var(--border);
-    border: 1px solid var(--border-bright);
-    color: var(--text);
-    width: 24px;
-    height: 24px;
-    cursor: pointer;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s;
-    font-family: Arial, sans-serif;
-  }
-
-  .stat-btn:hover {
-    background: var(--green);
-    border-color: var(--green-bright);
-    color: white;
-  }
-
-  .stat-btn.minus:hover {
-    background: var(--red);
-    border-color: var(--red-bright);
-  }
-
   /* TURN INDICATOR */
   .turn-bar {
     background: var(--panel);
@@ -342,7 +276,7 @@
   }
 
   .item-text {
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1.5;
     color: var(--text);
     letter-spacing: 0.3px;
@@ -512,9 +446,12 @@
   .phase-nav-row {
     display: flex;
     justify-content: space-between;
-    padding: 12px 16px 4px;
+    padding: 12px 16px;
     border-top: 1px solid var(--border);
-    margin-top: 4px;
+    position: sticky;
+    bottom: 0;
+    background: var(--panel);
+    z-index: 10;
   }
 
   .phase-nav-arrow {
@@ -1032,28 +969,6 @@
       <h1 id="header-title">Tacticum</h1>
       <p id="header-subtitle" class="faction-badge">10th Edition</p>
     </div>
-    <div class="stats-bar">
-      <div class="stat-block">
-        <div>
-          <div class="stat-label">Command Pts</div>
-          <div class="stat-controls">
-            <button class="stat-btn minus" onclick="adjustStat('cp', -1)">−</button>
-            <div class="stat-value" id="cp-display">0</div>
-            <button class="stat-btn" onclick="adjustStat('cp', 1)">+</button>
-          </div>
-        </div>
-      </div>
-      <div class="stat-block">
-        <div>
-          <div class="stat-label">Victory Pts</div>
-          <div class="stat-controls">
-            <button class="stat-btn minus" onclick="adjustStat('vp', -1)">−</button>
-            <div class="stat-value" id="vp-display">0</div>
-            <button class="stat-btn" onclick="adjustStat('vp', 1)">+</button>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </header>
 
@@ -1080,7 +995,6 @@
 
 <script>
 // ─── STATE ───────────────────────────────────────────────
-let stats = { cp: 0, vp: 0 };
 let checked = {};
 let activePhaseIndex = 0;
 let gameConfig = { playerFaction: '', enemyFaction: '' };
@@ -1450,19 +1364,17 @@ const phases = [
     ]
   },
   {
-    id: 'fight1',
-    title: 'Fight Phase — Fights First',
+    id: 'fight',
+    title: 'Fight Phase',
     items: [
-      { type: 'note',      text: 'Units with Fights First ability fight now (including all units that charged)', keywords: ['FIGHTS FIRST'] },
-      { type: 'note',      text: 'Units with Fights Last fight after all other units — select them only once all normal units have fought', keywords: ['FIGHTS LAST'] },
-      { type: 'action',    text: 'Players alternate selecting units — defending player picks first. Counter-Offensive (2CP) can interrupt the sequence', keywords: ['COUNTER-OFFENSIVE'] },
+      { type: 'note',      text: 'Fights First step: Units with Fights First ability fight now — all units that charged this turn also fight in this step', keywords: ['FIGHTS FIRST'] },
+      { type: 'note',      text: 'Fights Last: units with this ability fight after all other units — select them only once all normal units have fought', keywords: ['FIGHTS LAST'] },
+      { type: 'action',    text: 'Players alternate selecting eligible units — defending player picks first. Counter-Offensive (2CP) can interrupt the sequence', keywords: ['COUNTER-OFFENSIVE'] },
       { type: 'action',    text: 'Pile In: move each model up to 3" closer to nearest enemy' },
       { type: 'note',      text: 'Lance: add +1 to Wound rolls if bearer charged this turn', keywords: ['LANCE'], playerOnly: true },
       { type: 'note',      text: 'Extra Attacks: bearer attacks with this weapon in addition to other melee weapons', keywords: ['EXTRA ATTACKS'], playerOnly: true },
       { type: 'note',      text: 'Precision: when targeting Attached unit, can allocate attack to visible Character', keywords: ['PRECISION'], playerOnly: true },
-      { type: 'action',    text: 'Roll Hit rolls → check unmodified 6s (Critical Hits)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'], playerOnly: true },
-      { type: 'action',    text: 'Roll Wound rolls → check unmodified 6s (Critical Wounds)', keywords: ['DEVASTATING WOUNDS', 'ANTI-[KEYWORD] X+'], playerOnly: true },
-      { type: 'action',    text: 'Apply AP to saving throws — Invulnerable saves never modified by AP' },
+      { type: 'action',    text: 'Attack: select weapon & targets → roll Hit rolls (unmodified 6s = Critical Hits) → roll Wound rolls (unmodified 6s = Critical Wounds) → apply saves (Invulnerable saves never modified by AP)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X', 'DEVASTATING WOUNDS', 'ANTI-[KEYWORD] X+'], playerOnly: true },
       { type: 'note',      text: 'Your Feel No Pain: your models with FNP may roll to negate wounds after saves', keywords: ['FEEL NO PAIN X+'], playerOnly: true },
       { type: 'note',      text: 'Enemy Feel No Pain: after your attacks wound, enemy models with FNP may roll to negate those wounds', keywords: ['FEEL NO PAIN X+'], enemyOnly: true },
       { type: 'note',      text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'], playerOnly: true },
@@ -1471,29 +1383,7 @@ const phases = [
       { type: 'note',      text: 'Your Deadly Demise: if your models with this ability are destroyed in this fight, roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], playerOnly: true },
       { type: 'note',      text: 'Enemy Deadly Demise: when you destroy an enemy model with this ability, roll D6 — on a 6 your nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], enemyOnly: true },
       { type: 'action',    text: 'Consolidate: move each model up to 3" closer to nearest enemy' },
-    ]
-  },
-  {
-    id: 'fight2',
-    title: 'Fight Phase — Remaining Combats',
-    items: [
-      { type: 'action',    text: 'All remaining eligible units fight — same sequence as Fights First step' },
-      { type: 'note',      text: 'Units with Fights Last fight after all other units — select them only once all normal units have fought', keywords: ['FIGHTS LAST'] },
-      { type: 'action',    text: 'Players alternate selecting units — defending player picks first. Counter-Offensive (2CP) can interrupt', keywords: ['COUNTER-OFFENSIVE'] },
-      { type: 'action',    text: 'Pile In → Select weapon & targets → Make attacks → Consolidate' },
-      { type: 'note',      text: 'No unit can fight more than once per phase' },
-      { type: 'note',      text: 'Lance: add +1 to Wound rolls if bearer charged this turn', keywords: ['LANCE'], playerOnly: true },
-      { type: 'note',      text: 'Extra Attacks: bearer attacks with this weapon in addition to other melee weapons', keywords: ['EXTRA ATTACKS'], playerOnly: true },
-      { type: 'action',    text: 'Roll Hit rolls → check unmodified 6s (Critical Hits)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'], playerOnly: true },
-      { type: 'action',    text: 'Roll Wound rolls → check unmodified 6s (Critical Wounds)', keywords: ['DEVASTATING WOUNDS', 'ANTI-[KEYWORD] X+'], playerOnly: true },
-      { type: 'action',    text: 'Apply AP to saving throws — Invulnerable saves never modified by AP' },
-      { type: 'note',      text: 'Your Feel No Pain: your models with FNP may roll to negate wounds after saves', keywords: ['FEEL NO PAIN X+'], playerOnly: true },
-      { type: 'note',      text: 'Enemy Feel No Pain: after your attacks wound, enemy models with FNP may roll to negate those wounds', keywords: ['FEEL NO PAIN X+'], enemyOnly: true },
-      { type: 'note',      text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'], playerOnly: true },
-      { type: 'stratagem', text: 'Epic Challenge (1CP): one Character model\'s melee attacks gain Precision for this phase', keywords: ['EPIC CHALLENGE'] },
-      { type: 'note',      text: 'After fighting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'], playerOnly: true },
-      { type: 'note',      text: 'Your Deadly Demise: if your models with this ability are destroyed in this fight, roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], playerOnly: true },
-      { type: 'note',      text: 'Enemy Deadly Demise: when you destroy an enemy model with this ability, roll D6 — on a 6 your nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], enemyOnly: true },
+      { type: 'note',      text: 'Remaining Combats: all remaining eligible units now fight — repeat the same sequence above. No unit can fight more than once per phase' },
     ]
   },
   {
@@ -1681,7 +1571,6 @@ async function processRosterFile(file, side) {
 
 // ─── RENDER ──────────────────────────────────────────────
 function render() {
-  renderStats();
   const hint = document.querySelector('.scroll-hint');
   const pills = document.getElementById('phase-pills');
   if (step === 'faction') {
@@ -1699,10 +1588,6 @@ function render() {
   }
 }
 
-function renderStats() {
-  document.getElementById('cp-display').textContent = stats.cp;
-  document.getElementById('vp-display').textContent = stats.vp;
-}
 
 function renderFactionSelect() {
   const opts = factions.map(f =>
@@ -2015,10 +1900,6 @@ function goToPhase(index) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function adjustStat(key, delta) {
-  stats[key] = Math.max(0, stats[key] + delta);
-  renderStats();
-}
 
 function resetTurn() {
   checked = {};
