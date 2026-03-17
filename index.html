@@ -501,6 +501,57 @@
     box-shadow: 0 0 8px rgba(46,204,113,0.15);
   }
 
+  /* FACTION STRATAGEMS (Wahapedia) */
+  .fs-section {
+    border-top: 1px solid var(--border);
+    padding-top: 2px;
+  }
+
+  .fs-subsection-label {
+    padding: 8px 16px 2px;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .fs-subsection-label.fs-player { color: #9b59b6; }
+  .fs-subsection-label.fs-enemy  { color: var(--red-bright); opacity: 0.75; }
+
+  .fs-empty {
+    padding: 4px 16px 8px;
+    font-size: 11px;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  .fs-status {
+    padding: 10px 16px;
+    font-size: 11px;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  .fs-attribution {
+    padding: 6px 16px 10px;
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 0.3px;
+    text-align: right;
+    opacity: 0.5;
+  }
+
+  .fs-attribution a { color: inherit; text-decoration: none; }
+  .fs-attribution a:hover { text-decoration: underline; }
+
+  .fs-detachment {
+    font-size: 9px;
+    color: var(--gold-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+
   /* ROUND LABEL */
   .round-label {
     font-size: 9px;
@@ -1120,6 +1171,10 @@ function rs(side) { return rsState[side]; }
 let roster      = { loaded: false, units: [], activeKeywords: new Set() }; // player
 let enemyRoster = { loaded: false, units: [], activeKeywords: new Set() };
 
+// Wahapedia faction-specific stratagem data
+let wahapedia = { loading: false, loaded: false, error: null, factionRows: [], stratagemRows: [] };
+let factionStrats = { player: [], enemy: [] };
+
 // ─── FACTION LIST ────────────────────────────────────────
 const factions = [
   'Adeptus Custodes',
@@ -1562,6 +1617,158 @@ function shouldShowItem(item) {
   return true;
 }
 
+// ─── WAHAPEDIA STRATAGEM INTEGRATION ─────────────────────
+
+function _parseWahapediaCsv(text) {
+  const lines = text.replace(/\r/g, '').trim().split('\n');
+  if (lines.length < 2) return [];
+  const headers = lines[0].split('|').map(h => h.trim());
+  return lines.slice(1).map(line => {
+    const vals = line.split('|');
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = (vals[i] || '').trim(); });
+    return obj;
+  });
+}
+
+function _wahapediaPhaseId(wPhase) {
+  const p = (wPhase || '').toLowerCase();
+  if (p.includes('command'))                    return 'command';
+  if (p.includes('movement') || p === 'move')  return 'movement';
+  if (p.includes('shoot'))                      return 'shooting';
+  if (p.includes('charge') || p.includes('heroic')) return 'charge';
+  if (p.includes('fight'))                      return 'fight';
+  if (p.includes('end') || p.includes('battle round') || p.includes('morale')) return 'end';
+  return 'any';
+}
+
+function _matchFactionIds(appName, factionRows) {
+  const norm = s => s.toLowerCase().replace(/['\u2019\u2018]/g, '').replace(/[^a-z0-9]/g, '');
+  const n = norm(appName);
+  const ids = new Set();
+  for (const f of factionRows) {
+    const fname = norm(f.name || '');
+    if (fname && (fname === n || fname.includes(n) || n.includes(fname))) {
+      if (f.id) ids.add(f.id);
+    }
+  }
+  return ids;
+}
+
+function _buildFactionStrats() {
+  const { factionRows, stratagemRows } = wahapedia;
+  const pIds = _matchFactionIds(gameConfig.playerFaction, factionRows);
+  const eIds = _matchFactionIds(gameConfig.enemyFaction, factionRows);
+  factionStrats.player = stratagemRows.filter(s => pIds.has(s.faction_id));
+  factionStrats.enemy  = stratagemRows.filter(s => eIds.has(s.faction_id));
+}
+
+async function loadWahapediaStratagems() {
+  const CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
+  const cacheDate = localStorage.getItem('wh_cache_date');
+  const cacheAge  = cacheDate ? Date.now() - new Date(cacheDate).getTime() : Infinity;
+  const cf = localStorage.getItem('wh_factions');
+  const cs = localStorage.getItem('wh_stratagems');
+
+  if (cf && cs && cacheAge < CACHE_TTL) {
+    wahapedia.factionRows   = _parseWahapediaCsv(cf);
+    wahapedia.stratagemRows = _parseWahapediaCsv(cs);
+    wahapedia.loaded = true;
+    _buildFactionStrats();
+    render();
+    return;
+  }
+
+  wahapedia.loading = true;
+  wahapedia.error   = null;
+  render();
+
+  try {
+    const [fr, sr] = await Promise.all([
+      fetch('https://wahapedia.ru/wh40k10ed/Factions.csv'),
+      fetch('https://wahapedia.ru/wh40k10ed/Stratagems.csv'),
+    ]);
+    if (!fr.ok || !sr.ok) throw new Error('Wahapedia returned an error response');
+    const [ft, st] = await Promise.all([fr.text(), sr.text()]);
+    localStorage.setItem('wh_factions',    ft);
+    localStorage.setItem('wh_stratagems',  st);
+    localStorage.setItem('wh_cache_date',  new Date().toISOString());
+    wahapedia.factionRows   = _parseWahapediaCsv(ft);
+    wahapedia.stratagemRows = _parseWahapediaCsv(st);
+    wahapedia.loaded = true;
+    _buildFactionStrats();
+  } catch (e) {
+    if (cf && cs) {
+      // Use stale cache rather than showing nothing
+      wahapedia.factionRows   = _parseWahapediaCsv(cf);
+      wahapedia.stratagemRows = _parseWahapediaCsv(cs);
+      wahapedia.loaded = true;
+      _buildFactionStrats();
+    } else {
+      wahapedia.error = 'Faction stratagems unavailable — check connection.';
+    }
+  }
+
+  wahapedia.loading = false;
+  render();
+}
+
+// Render the faction-specific stratagem section for the given phase.
+function renderFactionStratagemSection(phaseId) {
+  if (wahapedia.loading) {
+    return `<div class="fs-section"><div class="fs-status">Loading faction stratagems…</div></div>`;
+  }
+  if (wahapedia.error) {
+    return `<div class="fs-section"><div class="fs-status">${wahapedia.error}</div></div>`;
+  }
+  if (!wahapedia.loaded) return '';
+
+  function filterStrats(list) {
+    return list.filter(s => {
+      const p = _wahapediaPhaseId(s.phase);
+      return p === phaseId || (phaseId === 'command' && p === 'any');
+    });
+  }
+
+  function stratagemItemHtml(s, keyPrefix) {
+    const cp   = s.cp_cost ? `(${s.cp_cost}CP) ` : '';
+    const name = s.name || 'Unknown';
+    const desc = s.description || s.legend || '';
+    const det  = s.detachment && s.detachment !== '-' ? s.detachment : '';
+    const key  = `${keyPrefix}-${s.id}`;
+    const isChecked = checked[key] || false;
+    return `
+      <div class="check-item ${isChecked ? 'checked' : ''}" onclick="checked['${key}']=!checked['${key}'];this.classList.toggle('checked')">
+        <div class="checkbox"></div>
+        <div class="item-content">
+          <div class="item-text"><span class="item-prefix stratagem">Stratagem:</span> <strong>${name}</strong> ${cp}${desc ? '— ' + desc : ''}</div>
+          ${det ? `<div class="fs-detachment">${det}</div>` : ''}
+        </div>
+      </div>`;
+  }
+
+  const playerItems = filterStrats(factionStrats.player);
+  const enemyItems  = filterStrats(factionStrats.enemy);
+
+  if (!playerItems.length && !enemyItems.length) return '';
+
+  let html = '<div class="fs-section">';
+
+  if (playerItems.length) {
+    html += `<div class="fs-subsection-label fs-player">${gameConfig.playerFaction} — Stratagems</div>`;
+    html += playerItems.map(s => stratagemItemHtml(s, 'fs-p')).join('');
+  }
+
+  if (enemyItems.length) {
+    html += `<div class="fs-subsection-label fs-enemy">${gameConfig.enemyFaction} — Stratagems</div>`;
+    html += enemyItems.map(s => stratagemItemHtml(s, 'fs-e')).join('');
+  }
+
+  html += `<div class="fs-attribution">Stratagem data: <a href="https://wahapedia.ru" target="_blank" rel="noopener">Wahapedia</a></div>`;
+  html += '</div>';
+  return html;
+}
+
 // ─── ROSTER PARSING ──────────────────────────────────────
 
 // Normalise a raw keyword string (e.g. "Rapid Fire 1") to a dict key (e.g. "RAPID FIRE X").
@@ -1917,6 +2124,8 @@ function launchGame() {
   updateHeaderFactions();
   render();
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Load faction-specific stratagems from Wahapedia in the background
+  loadWahapediaStratagems();
 }
 
 function updateHeaderFactions() {
@@ -1935,6 +2144,11 @@ function changeFactions() {
   enemyRoster = { loaded: false, units: [], activeKeywords: new Set() };
   rsState.player = { inputMode: 'file', parsed: null, error: '' };
   rsState.enemy  = { inputMode: 'file', parsed: null, error: '' };
+  // Reset faction stratagem display (cached Wahapedia rows are kept for reuse)
+  wahapedia.loading = false;
+  wahapedia.loaded  = false;
+  wahapedia.error   = null;
+  factionStrats     = { player: [], enemy: [] };
   render();
 }
 
@@ -2045,6 +2259,7 @@ function renderPhases() {
             </div>
           </div>`;
       }).join('')}
+      ${renderFactionStratagemSection(phase.id)}
       <div class="phase-nav-row">
         ${pi > 0 ? `<button class="phase-nav-arrow" onclick="goToPhase(${pi - 1})">← ${phases[pi - 1].title.split('—')[0].trim()}</button>` : '<span></span>'}
         ${pi < phases.length - 1 ? `<button class="phase-nav-arrow phase-nav-arrow--next" onclick="goToPhase(${pi + 1})">${phases[pi + 1].title.split('—')[0].trim()} →</button>` : '<span></span>'}
