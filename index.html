@@ -1556,6 +1556,18 @@ function shouldShowItem(item) {
 
 // ─── WAHAPEDIA STRATAGEM INTEGRATION ─────────────────────
 
+// Fetch a URL, falling back to a CORS proxy when the direct request is blocked.
+async function _fetchText(url) {
+  try {
+    const r = await fetch(url);
+    if (r.ok) return r.text();
+  } catch (_) { /* CORS or network — try proxy */ }
+  const proxy = `https://corsproxy.io/?url=${encodeURIComponent(url)}`;
+  const r = await fetch(proxy);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.text();
+}
+
 function _parseWahapediaCsv(text) {
   const lines = text.replace(/\r/g, '').trim().split('\n');
   if (lines.length < 2) return [];
@@ -1644,12 +1656,10 @@ async function loadWahapediaStratagems() {
   render();
 
   try {
-    const [fr, sr] = await Promise.all([
-      fetch('https://wahapedia.ru/wh40k10ed/Factions.csv'),
-      fetch('https://wahapedia.ru/wh40k10ed/Stratagems.csv'),
+    const [ft, st] = await Promise.all([
+      _fetchText('https://wahapedia.ru/wh40k10ed/Factions.csv'),
+      _fetchText('https://wahapedia.ru/wh40k10ed/Stratagems.csv'),
     ]);
-    if (!fr.ok || !sr.ok) throw new Error('Wahapedia returned an error response');
-    const [ft, st] = await Promise.all([fr.text(), sr.text()]);
     localStorage.setItem('wh_factions',    ft);
     localStorage.setItem('wh_stratagems',  st);
     localStorage.setItem('wh_cache_date',  new Date().toISOString());
@@ -2106,12 +2116,10 @@ async function _prefetchWahapedia() {
   wahapedia.loading = true;
   render();
   try {
-    const [fr, sr] = await Promise.all([
-      fetch('https://wahapedia.ru/wh40k10ed/Factions.csv'),
-      fetch('https://wahapedia.ru/wh40k10ed/Stratagems.csv'),
+    const [ft, st] = await Promise.all([
+      _fetchText('https://wahapedia.ru/wh40k10ed/Factions.csv'),
+      _fetchText('https://wahapedia.ru/wh40k10ed/Stratagems.csv'),
     ]);
-    if (!fr.ok || !sr.ok) throw new Error();
-    const [ft, st] = await Promise.all([fr.text(), sr.text()]);
     localStorage.setItem('wh_factions',   ft);
     localStorage.setItem('wh_stratagems', st);
     localStorage.setItem('wh_cache_date', new Date().toISOString());
