@@ -1556,16 +1556,25 @@ function shouldShowItem(item) {
 
 // ─── WAHAPEDIA STRATAGEM INTEGRATION ─────────────────────
 
-// Fetch a URL, falling back to a CORS proxy when the direct request is blocked.
+// Fetch a URL, trying direct then multiple CORS proxies in sequence.
+// Validates the response looks like CSV data, not a proxy error page.
 async function _fetchText(url) {
-  try {
-    const r = await fetch(url);
-    if (r.ok) return r.text();
-  } catch (_) { /* CORS or network — try proxy */ }
-  const proxy = `https://corsproxy.io/?url=${encodeURIComponent(url)}`;
-  const r = await fetch(proxy);
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  return r.text();
+  const attempts = [
+    url,
+    `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    `https://thingproxy.freeboard.io/fetch/${url}`,
+  ];
+  for (const attempt of attempts) {
+    try {
+      const r = await fetch(attempt);
+      if (!r.ok) continue;
+      const text = await r.text();
+      // Reject proxy error pages — valid CSV starts with a column header line
+      if (text.trim().length > 200 && text.indexOf(',') < 80) return text;
+    } catch (_) { /* try next */ }
+  }
+  throw new Error('All fetch attempts failed');
 }
 
 function _parseWahapediaCsv(text) {
@@ -1636,6 +1645,9 @@ function getAvailableDetachments(appFactionName) {
 }
 
 async function loadWahapediaStratagems() {
+  // Already loaded by prefetch — just rebuild strats and re-render
+  if (wahapedia.loaded) { _buildFactionStrats(); render(); return; }
+
   const CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
   const cacheDate = localStorage.getItem('wh_cache_date');
   const cacheAge  = cacheDate ? Date.now() - new Date(cacheDate).getTime() : Infinity;
@@ -2298,7 +2310,8 @@ function launchGame() {
   updateHeaderFactions();
   render();
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  // Load faction-specific stratagems from Wahapedia in the background
+  // Load faction-specific stratagems (clear any prior error so a fresh attempt fires)
+  wahapedia.error = null;
   loadWahapediaStratagems();
 }
 
