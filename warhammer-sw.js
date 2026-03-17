@@ -1,7 +1,9 @@
-const CACHE = 'wh40k-tracker-v23';
+const CACHE = 'wh40k-tracker-v24';
 const ASSETS = [
   './index.html',
   './warhammer-icon.svg',
+  './Factions.csv',
+  './Stratagems.csv',
 ];
 
 self.addEventListener('install', event => {
