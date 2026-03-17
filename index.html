@@ -1572,11 +1572,12 @@ function normalizeKeyword(raw) {
     [/^RAPID FIRE \d+$/,            'RAPID FIRE X'],
     [/^SUSTAINED HITS \d+$/,        'SUSTAINED HITS X'],
     [/^MELTA \d+$/,                 'MELTA X'],
-    [/^SCOUTS \d+"?$/,              'SCOUTS X"'],
+    [/^SCOUTS? \d+"?$/,             'SCOUTS X"'],
     [/^FEEL NO PAIN \d\+$/,         'FEEL NO PAIN X+'],
     [/^DEADLY DEMISE (?:D\d+|\d+)$/,'DEADLY DEMISE X'],
     [/^ANTI-.+ \d\+$/,              'ANTI-[KEYWORD] X+'],
     [/^FIRING DECK \d+$/,           'FIRING DECK X'],
+    [/^TWIN.+/,                     'TWIN-LINKED'],
   ];
   for (const [re, mapped] of patterns) if (re.test(t)) return mapped;
   return null;
@@ -1585,9 +1586,11 @@ function normalizeKeyword(raw) {
 // Scan a block of upper-cased text and add any recognised keywords to the set.
 function scanTextForKeywords(upperText, into) {
   for (const kw of Object.keys(keywords)) {
-    // Build a search string: strip variable suffix so "RAPID FIRE X" matches "RAPID FIRE 1"
+    // Strip variable suffix so "RAPID FIRE X" matches "RAPID FIRE 1" etc.
     const base = kw.replace(/ X\+?$/, '').replace(/ X"$/, '').replace(/\[KEYWORD\] /, '');
-    if (upperText.includes(base)) into.add(kw);
+    if (upperText.includes(base)) { into.add(kw); continue; }
+    // Also try singular stem — e.g. "SCOUTS" matches unit name "Scout Squad"
+    if (base.endsWith('S') && upperText.includes(base.slice(0, -1))) into.add(kw);
   }
 }
 
