@@ -1814,7 +1814,107 @@ function parseRosXml(xmlText) {
     if (match) activeKeywords.add(match);
   });
 
-  return { units, activeKeywords };
+  const faction    = _detectFactionFromXml(doc);
+  const detachment = _detectDetachmentFromXml(doc, faction);
+  return { units, activeKeywords, faction, detachment };
+}
+
+// ─── AUTO-DETECT FACTION / DETACHMENT ────────────────────
+
+function _detectFaction(text) {
+  const upper = text.toUpperCase();
+  // Longest match first so "Chaos Space Marines" wins over "Space Marines"
+  return [...factions].sort((a, b) => b.length - a.length)
+    .find(f => upper.includes(f.toUpperCase())) || null;
+}
+
+function _detectDetachment(text, faction) {
+  // 1. Explicit "Detachment: X" line (Battlescribe / New Recruit)
+  const explicit = text.match(/detachment[:\s]+([^\n\r+\[]+)/i);
+  if (explicit) {
+    const c = explicit[1].trim();
+    if (c.length > 2) return c;
+  }
+
+  // 2. Battlescribe "++ Faction: Detachment Name [pts] ++" header
+  const bsHeader = text.match(/\+\+\s*[^:\n]+:\s*([^[+\n\r]+)/i);
+  if (bsHeader) {
+    const c = bsHeader[1].trim();
+    if (c.length > 2) return c;
+  }
+
+  // 3. Cross-reference against Wahapedia detachment names for this faction
+  if (wahapedia.loaded && faction) {
+    const dets = getAvailableDetachments(faction);
+    const upper = text.toUpperCase();
+    const match = dets.find(d => upper.includes(d.toUpperCase()));
+    if (match) return match;
+  }
+
+  return null;
+}
+
+function _detectFactionFromXml(doc) {
+  const force = doc.querySelector('forces > force');
+  if (!force) return null;
+  const catalogueName = (force.getAttribute('catalogueName') || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  return [...factions].sort((a, b) => b.length - a.length).find(f => {
+    const n = f.toLowerCase().replace(/[^a-z0-9]/g, '');
+    return n === catalogueName || catalogueName.includes(n) || n.includes(catalogueName);
+  }) || null;
+}
+
+function _detectDetachmentFromXml(doc, faction) {
+  const force = doc.querySelector('forces > force');
+  if (!force) return null;
+
+  const candidates = [];
+  force.querySelectorAll(':scope > rules > rule').forEach(r => candidates.push(r.getAttribute('name') || ''));
+  force.querySelectorAll(':scope > selections > selection').forEach(s => candidates.push(s.getAttribute('name') || ''));
+  candidates.push(force.getAttribute('name') || '');
+
+  // Cross-ref against Wahapedia detachment names
+  if (wahapedia.loaded && faction) {
+    const dets = getAvailableDetachments(faction);
+    for (const c of candidates) {
+      const match = dets.find(d => d.toLowerCase() === c.trim().toLowerCase());
+      if (match) return match;
+    }
+  }
+
+  // Fallback: heuristic name patterns common in 10th edition detachment names
+  const detPattern = /task force|warband|brotherhood|spearhead|vanguard|host|nexus|patrol|phalanx|tide|praetor|gladius|anvil|storm|firestorm|outrider/i;
+  return candidates.find(c => c && detPattern.test(c)) || null;
+}
+
+function _applyAutoDetect(side, faction, detachment, rawText) {
+  if (faction) {
+    if (side === 'player') gameConfig.playerFaction = faction;
+    else                   gameConfig.enemyFaction  = faction;
+  }
+  if (detachment) {
+    if (side === 'player') gameConfig.playerDetachment = detachment;
+    else                   gameConfig.enemyDetachment  = detachment;
+  } else if (rawText && faction && !wahapedia.loaded) {
+    // Stash for deferred detection once Wahapedia data arrives
+    rsState[side].pendingRaw = rawText;
+  }
+  if (faction) _prefetchWahapedia();
+}
+
+function _applyPendingDetachments() {
+  for (const side of ['player', 'enemy']) {
+    const raw = rsState[side].pendingRaw;
+    if (!raw) continue;
+    delete rsState[side].pendingRaw;
+    const faction = side === 'player' ? gameConfig.playerFaction : gameConfig.enemyFaction;
+    const det = _detectDetachment(raw, faction);
+    if (det) {
+      if (side === 'player') gameConfig.playerDetachment = det;
+      else                   gameConfig.enemyDetachment  = det;
+    }
+  }
+  _buildFactionStrats();
 }
 
 // Parse a plain-text army list (paste from any app).
@@ -1855,6 +1955,7 @@ async function processRosterFile(file, side) {
     } else {
       throw new Error('Upload a .ros or .rosz file exported from Battlescribe or New Recruit.');
     }
+    if (s.parsed) _applyAutoDetect(side, s.parsed.faction, s.parsed.detachment, null);
   } catch (e) {
     s.error = e.message || 'Failed to read file.';
     s.parsed = null;
@@ -1977,7 +2078,8 @@ async function _prefetchWahapedia() {
     wahapedia.factionRows   = _parseWahapediaCsv(cf);
     wahapedia.stratagemRows = _parseWahapediaCsv(cs);
     wahapedia.loaded = true;
-    render(); // re-render setup page to populate detachment dropdowns
+    _applyPendingDetachments();
+    render();
     return;
   }
 
@@ -2004,6 +2106,7 @@ async function _prefetchWahapedia() {
     }
   }
   wahapedia.loading = false;
+  _applyPendingDetachments();
   render();
 }
 
@@ -2056,8 +2159,11 @@ async function pasteAndParseRoster(side) {
       render();
       return;
     }
-    rs(side).error = '';
+    rs(side).error  = '';
     rs(side).parsed = parseTextRoster(text);
+    const faction    = _detectFaction(text);
+    const detachment = _detectDetachment(text, faction);
+    _applyAutoDetect(side, faction, detachment, text);
   } catch (_) {
     rs(side).error = 'Clipboard access denied — check browser permissions.';
   }
