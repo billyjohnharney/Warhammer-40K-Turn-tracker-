@@ -1556,6 +1556,15 @@ function shouldShowItem(item) {
 
 // ─── WAHAPEDIA STRATAGEM INTEGRATION ─────────────────────
 
+// Fetch a local (same-origin) pipe-delimited CSV file directly.
+async function _fetchLocalCsv(path) {
+  const r = await fetch(path);
+  if (!r.ok) throw new Error(r.status);
+  const text = await r.text();
+  if (!text || text.replace(/^\uFEFF/, '').trim().length < 50) throw new Error('empty');
+  return text;
+}
+
 // Fetch a URL via multiple strategies. Wahapedia returns 403 on direct
 // requests so proxies that fetch with a real browser User-Agent are tried first.
 async function _fetchText(url) {
@@ -1603,7 +1612,7 @@ async function _fetchText(url) {
 }
 
 function _parseWahapediaCsv(text) {
-  const lines = text.replace(/\r/g, '').trim().split('\n');
+  const lines = text.replace(/^\uFEFF/, '').replace(/\r/g, '').trim().split('\n');
   if (lines.length < 2) return [];
   const headers = lines[0].split('|').map(h => h.trim());
   return lines.slice(1).map(line => {
@@ -1693,9 +1702,13 @@ async function loadWahapediaStratagems() {
   render();
 
   try {
+    // Prefer bundled CSV files (always available once the app is deployed);
+    // fall back to Wahapedia proxies only if the local files cannot be fetched.
     const [ft, st] = await Promise.all([
-      _fetchText('https://wahapedia.ru/wh40k10ed/Factions.csv'),
-      _fetchText('https://wahapedia.ru/wh40k10ed/Stratagems.csv'),
+      _fetchLocalCsv('./Factions.csv')
+        .catch(() => _fetchText('https://wahapedia.ru/wh40k10ed/Factions.csv')),
+      _fetchLocalCsv('./Stratagems.csv')
+        .catch(() => _fetchText('https://wahapedia.ru/wh40k10ed/Stratagems.csv')),
     ]);
     localStorage.setItem('wh_factions',    ft);
     localStorage.setItem('wh_stratagems',  st);
@@ -2154,8 +2167,10 @@ async function _prefetchWahapedia() {
   render();
   try {
     const [ft, st] = await Promise.all([
-      _fetchText('https://wahapedia.ru/wh40k10ed/Factions.csv'),
-      _fetchText('https://wahapedia.ru/wh40k10ed/Stratagems.csv'),
+      _fetchLocalCsv('./Factions.csv')
+        .catch(() => _fetchText('https://wahapedia.ru/wh40k10ed/Factions.csv')),
+      _fetchLocalCsv('./Stratagems.csv')
+        .catch(() => _fetchText('https://wahapedia.ru/wh40k10ed/Stratagems.csv')),
     ]);
     localStorage.setItem('wh_factions',   ft);
     localStorage.setItem('wh_stratagems', st);
