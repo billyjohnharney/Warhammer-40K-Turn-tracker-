@@ -1157,7 +1157,7 @@
 let checked = {};
 let activePhaseIndex = 0;
 let turnNumber = 1;
-let gameConfig = { playerFaction: '', enemyFaction: '' };
+let gameConfig = { playerFaction: '', enemyFaction: '', playerDetachment: '', enemyDetachment: '' };
 let step = 'splash'; // 'splash' | 'setup' | 'game'
 
 // Keyed roster state — access via rs('player') / rs('enemy')
@@ -1659,8 +1659,30 @@ function _buildFactionStrats() {
   const { factionRows, stratagemRows } = wahapedia;
   const pIds = _matchFactionIds(gameConfig.playerFaction, factionRows);
   const eIds = _matchFactionIds(gameConfig.enemyFaction, factionRows);
-  factionStrats.player = stratagemRows.filter(s => pIds.has(s.faction_id));
-  factionStrats.enemy  = stratagemRows.filter(s => eIds.has(s.faction_id));
+  const pDet = gameConfig.playerDetachment;
+  const eDet = gameConfig.enemyDetachment;
+
+  function detMatches(s, chosenDet) {
+    if (!chosenDet) return true; // no filter → show all
+    const d = s.detachment || '';
+    return d === '' || d === '-' || d === chosenDet;
+  }
+
+  factionStrats.player = stratagemRows.filter(s => pIds.has(s.faction_id) && detMatches(s, pDet));
+  factionStrats.enemy  = stratagemRows.filter(s => eIds.has(s.faction_id) && detMatches(s, eDet));
+}
+
+// Return sorted list of detachment names available for a faction (from loaded Wahapedia data).
+function getAvailableDetachments(appFactionName) {
+  if (!wahapedia.loaded || !appFactionName) return [];
+  const ids = _matchFactionIds(appFactionName, wahapedia.factionRows);
+  const dets = new Set();
+  for (const s of wahapedia.stratagemRows) {
+    if (ids.has(s.faction_id) && s.detachment && s.detachment !== '-') {
+      dets.add(s.detachment);
+    }
+  }
+  return [...dets].sort();
 }
 
 async function loadWahapediaStratagems() {
@@ -1986,8 +2008,64 @@ function renderSetupPage() {
 }
 
 function onFactionChange() {
+  const prev = { p: gameConfig.playerFaction, e: gameConfig.enemyFaction };
   gameConfig.playerFaction = document.getElementById('sel-player').value;
-  gameConfig.enemyFaction = document.getElementById('sel-enemy').value;
+  gameConfig.enemyFaction  = document.getElementById('sel-enemy').value;
+  // Reset detachment when faction changes
+  if (gameConfig.playerFaction !== prev.p) gameConfig.playerDetachment = '';
+  if (gameConfig.enemyFaction  !== prev.e) gameConfig.enemyDetachment  = '';
+  render();
+  // Start loading Wahapedia data early so detachment dropdowns populate quickly
+  if (gameConfig.playerFaction || gameConfig.enemyFaction) _prefetchWahapedia();
+}
+
+function onDetachmentChange() {
+  gameConfig.playerDetachment = (document.getElementById('sel-det-player') || {}).value || '';
+  gameConfig.enemyDetachment  = (document.getElementById('sel-det-enemy')  || {}).value || '';
+  _buildFactionStrats();
+  render();
+}
+
+// Fetch Wahapedia data without triggering a full game render — used before game launch.
+async function _prefetchWahapedia() {
+  if (wahapedia.loaded || wahapedia.loading) return;
+  const CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
+  const cacheDate = localStorage.getItem('wh_cache_date');
+  const cacheAge  = cacheDate ? Date.now() - new Date(cacheDate).getTime() : Infinity;
+  const cf = localStorage.getItem('wh_factions');
+  const cs = localStorage.getItem('wh_stratagems');
+
+  if (cf && cs && cacheAge < CACHE_TTL) {
+    wahapedia.factionRows   = _parseWahapediaCsv(cf);
+    wahapedia.stratagemRows = _parseWahapediaCsv(cs);
+    wahapedia.loaded = true;
+    render(); // re-render setup page to populate detachment dropdowns
+    return;
+  }
+
+  wahapedia.loading = true;
+  render();
+  try {
+    const [fr, sr] = await Promise.all([
+      fetch('https://wahapedia.ru/wh40k10ed/Factions.csv'),
+      fetch('https://wahapedia.ru/wh40k10ed/Stratagems.csv'),
+    ]);
+    if (!fr.ok || !sr.ok) throw new Error();
+    const [ft, st] = await Promise.all([fr.text(), sr.text()]);
+    localStorage.setItem('wh_factions',   ft);
+    localStorage.setItem('wh_stratagems', st);
+    localStorage.setItem('wh_cache_date', new Date().toISOString());
+    wahapedia.factionRows   = _parseWahapediaCsv(ft);
+    wahapedia.stratagemRows = _parseWahapediaCsv(st);
+    wahapedia.loaded = true;
+  } catch (_) {
+    if (cf && cs) {
+      wahapedia.factionRows   = _parseWahapediaCsv(cf);
+      wahapedia.stratagemRows = _parseWahapediaCsv(cs);
+      wahapedia.loaded = true;
+    }
+  }
+  wahapedia.loading = false;
   render();
 }
 
@@ -2041,6 +2119,23 @@ function renderSideComponent(side) {
   const opts = factions.map(f =>
     `<option value="${f}" ${faction === f ? 'selected' : ''}>${f}</option>`
   ).join('');
+
+  // Detachment dropdown — populated from Wahapedia data once loaded
+  const detId         = `sel-det-${side}`;
+  const selectedDet   = isPlayer ? gameConfig.playerDetachment : gameConfig.enemyDetachment;
+  const detachments   = getAvailableDetachments(faction);
+  const detLoading    = faction && wahapedia.loading;
+  const showDetSelect = faction && (detachments.length > 0 || detLoading);
+  const detHtml = showDetSelect ? `
+    <div class="faction-field" style="margin-bottom:14px">
+      <select id="${detId}" onchange="onDetachmentChange()" ${detLoading ? 'disabled' : ''}>
+        <option value="">— All detachments —</option>
+        ${detLoading ? '<option disabled>Loading detachments…</option>' : ''}
+        ${detachments.map(d =>
+          `<option value="${d}" ${selectedDet === d ? 'selected' : ''}>${d}</option>`
+        ).join('')}
+      </select>
+    </div>` : '';
 
   const headerRight = s.parsed
     ? `<span class="side-loaded">
@@ -2101,6 +2196,7 @@ function renderSideComponent(side) {
           ${opts}
         </select>
       </div>
+      ${detHtml}
       ${tabsHtml}
       ${inputHtml}
       ${errorHtml}
@@ -2144,6 +2240,8 @@ function changeFactions() {
   enemyRoster = { loaded: false, units: [], activeKeywords: new Set() };
   rsState.player = { inputMode: 'file', parsed: null, error: '' };
   rsState.enemy  = { inputMode: 'file', parsed: null, error: '' };
+  gameConfig.playerDetachment = '';
+  gameConfig.enemyDetachment  = '';
   // Reset faction stratagem display (cached Wahapedia rows are kept for reuse)
   wahapedia.loading = false;
   wahapedia.loaded  = false;
