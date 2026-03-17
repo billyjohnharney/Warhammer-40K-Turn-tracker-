@@ -295,23 +295,149 @@
   }
 
   .item-text {
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1.5;
+    color: var(--text-bright);
+    letter-spacing: 0.3px;
+    font-weight: 600;
+  }
+
+  /* Legacy prefix spans — kept so any residual HTML doesn't break */
+  .item-prefix { display: none; }
+
+  /* ── PHASE TABS ──────────────────────────────────── */
+  .phase-tabs {
+    display: flex;
+    gap: 0;
+    margin: 10px 0 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .phase-tab {
+    padding: 7px 18px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.15s, border-color 0.15s;
+    user-select: none;
+  }
+
+  .phase-tab:hover { color: var(--text); }
+
+  .phase-tab.active {
+    color: var(--text-bright);
+    border-bottom-color: var(--green-bright);
+  }
+
+  .phase-tab .tab-count {
+    font-size: 9px;
+    font-weight: 400;
+    color: var(--text-dim);
+    margin-left: 5px;
+  }
+
+  .phase-tab.active .tab-count { color: var(--green-bright); }
+
+  /* ── TAB CONTENT ─────────────────────────────────── */
+  .tab-content { padding-top: 4px; }
+
+  /* ── ACTION ITEMS — primary steps ───────────────── */
+  .check-item.action-item {
+    border-left: 3px solid transparent;
+    padding-left: 3px;
+  }
+
+  .check-item.action-item .item-text {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-bright);
+  }
+
+  .check-item.action-item.checked .item-text {
+    font-weight: 400;
+    color: var(--text-dim);
+  }
+
+  .check-item.action-item.checked {
+    border-left-color: var(--green);
+  }
+
+  /* ── NOTE ITEMS — subordinate context ───────────── */
+  .note-child {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 4px 8px 5px 12px;
+    margin: 0 0 1px 26px;
+    cursor: pointer;
+    border-left: 2px solid var(--gold-dim);
+    background: rgba(201,168,76,0.03);
+    transition: background 0.1s;
+  }
+
+  .note-child:hover { background: rgba(201,168,76,0.07); }
+
+  .note-child.checked { opacity: 0.4; }
+  .note-child.checked .note-text { text-decoration: line-through; }
+
+  .note-check {
+    width: 10px;
+    height: 10px;
+    border: 1px solid var(--gold-dim);
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 4px;
+    transition: all 0.15s;
+  }
+
+  .note-child.checked .note-check {
+    background: var(--gold-dim);
+    border-color: var(--gold);
+  }
+
+  .note-text {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-dim);
+    letter-spacing: 0.2px;
+    flex: 1;
+  }
+
+  /* ── STRATAGEM ITEMS in Stratagems tab ───────────── */
+  .check-item.stratagem-item .item-text {
+    font-size: 14px;
+    font-weight: 400;
     color: var(--text);
+  }
+
+  /* ── FACTION STRATAGEM item parts ───────────────── */
+  .strat-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-bright);
     letter-spacing: 0.3px;
   }
 
-  .item-prefix {
-    font-size: 9px;
+  .strat-cp {
+    font-size: 11px;
     font-weight: 700;
+    color: var(--gold);
     letter-spacing: 1px;
-    text-transform: uppercase;
-    white-space: nowrap;
-    margin-right: 4px;
+    margin-left: 6px;
   }
-  .item-prefix.action    { color: var(--green-bright); }
-  .item-prefix.note      { color: var(--gold); }
-  .item-prefix.stratagem { color: #9b59b6; }
+
+  .strat-legend {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.4;
+    margin-top: 3px;
+    font-style: italic;
+  }
 
   /* KEYWORD TAGS */
   .keyword-tags {
@@ -1093,6 +1219,7 @@
 // ─── STATE ───────────────────────────────────────────────
 let checked = {};
 let activePhaseIndex = 0;
+let phaseTab = {}; // active tab per phase id: 'steps' | 'stratagems'
 let turnNumber = 1;
 let gameConfig = { playerFaction: '', enemyFaction: '', playerDetachment: '', enemyDetachment: '' };
 let step = 'splash'; // 'splash' | 'setup' | 'game'
@@ -1765,17 +1892,18 @@ function renderFactionStratagemSection(phaseId) {
   }
 
   function stratagemItemHtml(s, keyPrefix) {
-    const cp   = s.cp_cost ? `(${s.cp_cost}CP) ` : '';
-    const name = s.name || 'Unknown';
-    const desc = s.description || s.legend || '';
-    const det  = s.detachment && s.detachment !== '-' ? s.detachment : '';
-    const key  = `${keyPrefix}-${s.id}`;
+    const name   = s.name || 'Unknown';
+    const cp     = s.cp_cost ? `${s.cp_cost}CP` : '';
+    const legend = s.legend || '';
+    const det    = s.detachment && s.detachment !== '-' ? s.detachment : '';
+    const key    = `${keyPrefix}-${s.id}`;
     const isChecked = checked[key] || false;
     return `
-      <div class="check-item ${isChecked ? 'checked' : ''}" onclick="checked['${key}']=!checked['${key}'];this.classList.toggle('checked')">
+      <div class="check-item stratagem-item ${isChecked ? 'checked' : ''}" onclick="checked['${key}']=!checked['${key}'];this.classList.toggle('checked')">
         <div class="checkbox"></div>
         <div class="item-content">
-          <div class="item-text"><span class="item-prefix stratagem">Stratagem:</span> <strong>${name}</strong> ${cp}${desc ? '— ' + desc : ''}</div>
+          <div><span class="strat-name">${name}</span>${cp ? `<span class="strat-cp">${cp}</span>` : ''}</div>
+          ${legend ? `<div class="strat-legend">${legend}</div>` : ''}
           ${det ? `<div class="fs-detachment">${det}</div>` : ''}
         </div>
       </div>`;
@@ -2488,14 +2616,98 @@ function renderPhases() {
   const container = document.getElementById('phases-container');
   const pi = activePhaseIndex;
   const phase = phases[pi];
+  const tab = phaseTab[phase.id] || 'steps';
 
   // Pair each item with its original index so checked-state keys stay stable.
   const visible = phase.items
     .map((item, j) => ({ item, j }))
     .filter(({ item }) => shouldShowItem(item));
 
+  // Split visible items into the two tabs
+  const stepItems     = visible.filter(({ item }) => item.type !== 'stratagem');
+  const stratItems    = visible.filter(({ item }) => item.type === 'stratagem');
+
+  // Build action→notes groups for the Steps tab.
+  // Each action is the parent; consecutive notes that follow it are its children.
+  const stepGroups = [];
+  let currentGroup = null;
+  for (const { item, j } of stepItems) {
+    if (item.type === 'action') {
+      currentGroup = { action: { item, j }, notes: [] };
+      stepGroups.push(currentGroup);
+    } else {
+      // note without a preceding action — attach as orphan group
+      if (!currentGroup) { currentGroup = { action: null, notes: [] }; stepGroups.push(currentGroup); }
+      currentGroup.notes.push({ item, j });
+    }
+  }
+
+  // Count faction stratagems for the badge on the Stratagems tab
+  let fsCount = 0;
+  if (wahapedia.loaded) {
+    const fsFilter = s => { const p = _wahapediaPhaseId(s.phase); return p === phase.id || (phase.id === 'command' && p === 'any'); };
+    fsCount = factionStrats.player.filter(fsFilter).length + factionStrats.enemy.filter(fsFilter).length;
+  }
+
   const total = phase.items.length;
   const done  = phase.items.filter((_, j) => checked[`${phase.id}-${j}`]).length;
+
+  function kwTags(item) {
+    const kws = (item.keywords || []).filter(isKeywordVisible);
+    return kws.length ? `<div class="keyword-tags">${kws.map(kw =>
+      `<span class="keyword-tag" onclick="event.stopPropagation();showKeyword('${kw}')">${kw}</span>`
+    ).join('')}</div>` : '';
+  }
+
+  function renderStepsTab() {
+    return stepGroups.map(({ action, notes }) => {
+      let html = '';
+      if (action) {
+        const { item, j } = action;
+        const key = `${phase.id}-${j}`;
+        const isChecked = checked[key];
+        const hasKw = (item.keywords || []).some(isKeywordVisible);
+        html += `
+          <div class="check-item action-item ${isChecked ? 'checked' : ''} ${hasKw ? 'has-keyword' : ''}" onclick="toggleCheck('${phase.id}',${j})">
+            <div class="checkbox"></div>
+            <div class="item-content">
+              <div class="item-text">${item.text}</div>
+              ${kwTags(item)}
+            </div>
+          </div>`;
+      }
+      for (const { item, j } of notes) {
+        const key = `${phase.id}-${j}`;
+        const isChecked = checked[key];
+        html += `
+          <div class="note-child ${isChecked ? 'checked' : ''}" onclick="toggleCheck('${phase.id}',${j})">
+            <div class="note-check"></div>
+            <div class="item-content">
+              <div class="note-text">${item.text}</div>
+              ${kwTags(item)}
+            </div>
+          </div>`;
+      }
+      return html;
+    }).join('');
+  }
+
+  function renderStratagemsTab() {
+    const coreHtml = stratItems.map(({ item, j }) => {
+      const key = `${phase.id}-${j}`;
+      const isChecked = checked[key];
+      const hasKw = (item.keywords || []).some(isKeywordVisible);
+      return `
+        <div class="check-item stratagem-item ${isChecked ? 'checked' : ''} ${hasKw ? 'has-keyword' : ''}" onclick="toggleCheck('${phase.id}',${j})">
+          <div class="checkbox"></div>
+          <div class="item-content">
+            <div class="item-text">${item.text}</div>
+            ${kwTags(item)}
+          </div>
+        </div>`;
+    }).join('');
+    return coreHtml + renderFactionStratagemSection(phase.id);
+  }
 
   container.innerHTML = `
     <div class="phase-view" id="phase-${phase.id}">
@@ -2508,27 +2720,17 @@ function renderPhases() {
           <div class="phase-progress">${done} / ${total}</div>
         </div>
       </div>
-      ${visible.map(({ item, j }) => {
-        const key = `${phase.id}-${j}`;
-        const isChecked = checked[key];
-        const visibleKws = (item.keywords || []).filter(isKeywordVisible);
-        const hasKw = visibleKws.length > 0;
-        return `
-          <div class="check-item ${isChecked ? 'checked' : ''} ${hasKw ? 'has-keyword' : ''}" onclick="toggleCheck('${phase.id}',${j})">
-            <div class="checkbox"></div>
-            <div class="item-content">
-              <div class="item-text">${
-                item.type === 'action'    ? '<span class="item-prefix action">Action:</span> ' :
-                item.type === 'stratagem' ? '<span class="item-prefix stratagem">Stratagem:</span> ' :
-                item.type === 'note'      ? '<span class="item-prefix note">Note:</span> ' : ''
-              }${item.text}</div>
-              ${hasKw ? `<div class="keyword-tags">${visibleKws.map(kw =>
-                `<span class="keyword-tag" onclick="event.stopPropagation();showKeyword('${kw}')">${kw}</span>`
-              ).join('')}</div>` : ''}
-            </div>
-          </div>`;
-      }).join('')}
-      ${renderFactionStratagemSection(phase.id)}
+      <div class="phase-tabs">
+        <div class="phase-tab ${tab === 'steps' ? 'active' : ''}" onclick="setPhaseTab('${phase.id}','steps')">
+          Steps<span class="tab-count">${stepItems.length}</span>
+        </div>
+        <div class="phase-tab ${tab === 'stratagems' ? 'active' : ''}" onclick="setPhaseTab('${phase.id}','stratagems')">
+          Stratagems<span class="tab-count">${stratItems.length + fsCount}</span>
+        </div>
+      </div>
+      <div class="tab-content">
+        ${tab === 'steps' ? renderStepsTab() : renderStratagemsTab()}
+      </div>
       <div class="phase-nav-row">
         ${pi > 0 ? `<button class="phase-nav-arrow" onclick="goToPhase(${pi - 1})">← ${phases[pi - 1].title.split('—')[0].trim()}</button>` : '<span></span>'}
         ${pi < phases.length - 1 ? `<button class="phase-nav-arrow phase-nav-arrow--next" onclick="goToPhase(${pi + 1})">${phases[pi + 1].title.split('—')[0].trim()} →</button>` : '<span></span>'}
@@ -2557,6 +2759,11 @@ function goToPhase(index) {
   activePhaseIndex = index;
   render();
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function setPhaseTab(phaseId, tab) {
+  phaseTab[phaseId] = tab;
+  renderPhases();
 }
 
 
