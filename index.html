@@ -1663,9 +1663,10 @@ function _buildFactionStrats() {
   const eDet = gameConfig.enemyDetachment;
 
   function detMatches(s, chosenDet) {
-    if (!chosenDet) return true; // no filter → show all
     const d = s.detachment || '';
-    return d === '' || d === '-' || d === chosenDet;
+    const isUniversal = d === '' || d === '-';
+    if (!chosenDet) return isUniversal;       // no selection → faction-wide/universal only
+    return isUniversal || d === chosenDet;    // selection → universal + chosen detachment
   }
 
   factionStrats.player = stratagemRows.filter(s => pIds.has(s.faction_id) && detMatches(s, pDet));
