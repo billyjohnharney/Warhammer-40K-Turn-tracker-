@@ -2090,16 +2090,19 @@ function handleFileInput(input, side) {
   if (file) processRosterFile(file, side);
 }
 
-function parseAndPreviewText(side) {
-  const id = `roster-text-${side}`;
-  const text = (document.getElementById(id) || {}).value || '';
-  if (!text.trim()) {
-    rs(side).error = 'Please paste your army list above.';
-    render();
-    return;
+async function pasteAndParseRoster(side) {
+  try {
+    const text = await navigator.clipboard.readText();
+    if (!text.trim()) {
+      rs(side).error = 'Clipboard is empty — copy your army list first.';
+      render();
+      return;
+    }
+    rs(side).error = '';
+    rs(side).parsed = parseTextRoster(text);
+  } catch (_) {
+    rs(side).error = 'Clipboard access denied — check browser permissions.';
   }
-  rs(side).error = '';
-  rs(side).parsed = parseTextRoster(text);
   render();
 }
 
@@ -2174,9 +2177,7 @@ function renderSideComponent(side) {
       <div class="drop-zone-hint">Battlescribe · New Recruit · OPR Army Forge</div>
     </div>
   ` : `
-    <textarea class="roster-textarea" id="roster-text-${side}"
-      placeholder="Paste army list here…"></textarea>
-    <button class="roster-parse-btn" onclick="parseAndPreviewText('${side}')">Analyse List</button>
+    <button class="roster-parse-btn" onclick="pasteAndParseRoster('${side}')">Paste Roster</button>
   `);
 
   const tabsHtml = s.parsed ? '' : `
