@@ -1142,6 +1142,17 @@ const factions = [
   'World Eaters',
 ];
 
+// ─── SUB-FACTION MAP ─────────────────────────────────────
+// Sub-factions share their parent's faction_id(s) in Wahapedia/CSV data.
+// Keys match names in the `factions` array exactly.
+const SUB_FACTION_IDS = {
+  'Black Templars': ['SM'],
+  'Blood Angels':   ['SM'],
+  'Dark Angels':    ['SM'],
+  'Deathwatch':     ['AoI', 'SM'],
+  'Space Wolves':   ['SM'],
+};
+
 // ─── FACTION → KEYWORD MAPPING ───────────────────────────
 // Keywords not listed here are universal — visible for all factions.
 // Add faction-specific keyword entries here as they are researched.
@@ -1635,6 +1646,9 @@ function _wahapediaPhaseId(wPhase) {
 }
 
 function _matchFactionIds(appName, factionRows) {
+  // Sub-factions don't appear in Factions.csv — use the hardcoded map directly.
+  if (SUB_FACTION_IDS[appName]) return new Set(SUB_FACTION_IDS[appName]);
+
   const norm = s => s.toLowerCase().replace(/['\u2019\u2018]/g, '').replace(/[^a-z0-9]/g, '');
   const n = norm(appName);
   const ids = new Set();
@@ -1937,11 +1951,37 @@ function _detectDetachment(text, faction) {
 function _detectFactionFromXml(doc) {
   const force = doc.querySelector('forces > force');
   if (!force) return null;
-  const catalogueName = (force.getAttribute('catalogueName') || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-  return [...factions].sort((a, b) => b.length - a.length).find(f => {
-    const n = f.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const norm = s => s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const catalogueName = norm(force.getAttribute('catalogueName') || '');
+  const byName = [...factions].sort((a, b) => b.length - a.length).find(f => {
+    const n = norm(f);
     return n === catalogueName || catalogueName.includes(n) || n.includes(catalogueName);
   }) || null;
+
+  // When a generic parent-faction catalogue is detected (e.g. "Space Marines"),
+  // refine by scanning unit category keywords for sub-faction names.
+  // Battlescribe marks every unit with its chapter keyword (e.g. <category name="Dark Angels">).
+  // SUB_FACTION_PARENTS maps each sub-faction to the parent display name it may appear under.
+  const SUB_FACTION_PARENTS = {
+    'Black Templars': 'Space Marines',
+    'Blood Angels':   'Space Marines',
+    'Dark Angels':    'Space Marines',
+    'Deathwatch':     'Space Marines',
+    'Space Wolves':   'Space Marines',
+  };
+  const subFactionCandidates = Object.keys(SUB_FACTION_IDS)
+    .filter(sf => !byName || SUB_FACTION_PARENTS[sf] === byName);
+
+  if (subFactionCandidates.length) {
+    const allCategoryText = Array.from(doc.querySelectorAll('category'))
+      .map(el => norm(el.getAttribute('name') || '')).join(' ');
+    const detected = subFactionCandidates
+      .sort((a, b) => b.length - a.length)
+      .find(sf => allCategoryText.includes(norm(sf)));
+    if (detected) return detected;
+  }
+
+  return byName;
 }
 
 function _detectDetachmentFromXml(doc, faction) {
