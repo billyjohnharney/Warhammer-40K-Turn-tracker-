@@ -1556,22 +1556,47 @@ function shouldShowItem(item) {
 
 // ─── WAHAPEDIA STRATAGEM INTEGRATION ─────────────────────
 
-// Fetch a URL, trying direct then multiple CORS proxies in sequence.
-// Validates the response looks like CSV data, not a proxy error page.
+// Fetch a URL via multiple strategies. Wahapedia returns 403 on direct
+// requests so proxies that fetch with a real browser User-Agent are tried first.
 async function _fetchText(url) {
-  const attempts = [
-    url,
-    `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-    `https://thingproxy.freeboard.io/fetch/${url}`,
+  const enc = encodeURIComponent(url);
+
+  // Each strategy returns a Promise<string> or throws.
+  const strategies = [
+    // allorigins /get returns {contents, status} fetched with a real browser
+    // User-Agent — best at bypassing Wahapedia's 403 bot-protection
+    async () => {
+      const r = await fetch(`https://api.allorigins.win/get?url=${enc}`);
+      if (!r.ok) throw new Error(r.status);
+      const j = await r.json();
+      if (!j.contents) throw new Error('empty');
+      return j.contents;
+    },
+    // corsproxy.io raw passthrough
+    async () => {
+      const r = await fetch(`https://corsproxy.io/?url=${enc}`);
+      if (!r.ok) throw new Error(r.status);
+      return r.text();
+    },
+    // allorigins raw
+    async () => {
+      const r = await fetch(`https://api.allorigins.win/raw?url=${enc}`);
+      if (!r.ok) throw new Error(r.status);
+      return r.text();
+    },
+    // direct (works in permissive environments / after browser grants access)
+    async () => {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(r.status);
+      return r.text();
+    },
   ];
-  for (const attempt of attempts) {
+
+  for (const fn of strategies) {
     try {
-      const r = await fetch(attempt);
-      if (!r.ok) continue;
-      const text = await r.text();
-      // Reject proxy error pages — valid CSV starts with a column header line
-      if (text.trim().length > 200 && text.indexOf(',') < 80) return text;
+      const text = await fn();
+      // Reject proxy error pages — valid CSV has content and an early comma
+      if (text && text.trim().length > 200 && text.indexOf(',') < 80) return text;
     } catch (_) { /* try next */ }
   }
   throw new Error('All fetch attempts failed');
