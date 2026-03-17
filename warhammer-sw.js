@@ -1,4 +1,4 @@
-const CACHE = 'wh40k-tracker-v24';
+const CACHE = 'wh40k-tracker-v25';
 const ASSETS = [
   './index.html',
   './warhammer-icon.svg',
