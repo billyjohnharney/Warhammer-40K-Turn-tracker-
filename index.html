@@ -374,42 +374,25 @@
     gap: 10px;
     padding: 4px 8px 5px 12px;
     margin: 0 0 1px 26px;
-    cursor: pointer;
     border-left: 2px solid var(--gold-dim);
     background: rgba(201,168,76,0.03);
-    transition: background 0.1s;
-  }
-
-  .note-child:hover { background: rgba(201,168,76,0.07); }
-
-  .note-child.checked { opacity: 0.4; }
-  .note-child.checked .note-text { text-decoration: line-through; }
-
-  .note-check {
-    width: 10px;
-    height: 10px;
-    border: 1px solid var(--gold-dim);
-    border-radius: 50%;
-    flex-shrink: 0;
-    margin-top: 4px;
-    transition: all 0.15s;
-  }
-
-  .note-child.checked .note-check {
-    background: var(--gold-dim);
-    border-color: var(--gold);
   }
 
   .note-text {
     font-size: 13px;
     line-height: 1.5;
-    color: var(--text-dim);
+    color: var(--text-bright);
     letter-spacing: 0.2px;
     flex: 1;
   }
 
   /* ── STRATAGEM ITEMS in Stratagems tab ───────────── */
-  .check-item.stratagem-item .item-text {
+  .stratagem-item {
+    padding: 10px 8px 10px 4px;
+    border-left: 3px solid transparent;
+  }
+
+  .stratagem-item .item-text {
     font-size: 14px;
     font-weight: 400;
     color: var(--text);
@@ -433,10 +416,9 @@
 
   .strat-legend {
     font-size: 12px;
-    color: var(--text-dim);
+    color: var(--text-bright);
     line-height: 1.4;
     margin-top: 3px;
-    font-style: italic;
   }
 
   /* KEYWORD TAGS */
@@ -1891,22 +1873,39 @@ function renderFactionStratagemSection(phaseId) {
     });
   }
 
-  function stratagemItemHtml(s, keyPrefix) {
+  function stratagemItemHtml(s) {
     const name   = s.name || 'Unknown';
     const cp     = s.cp_cost ? `${s.cp_cost}CP` : '';
     const legend = s.legend || '';
-    const det    = s.detachment && s.detachment !== '-' ? s.detachment : '';
-    const key    = `${keyPrefix}-${s.id}`;
-    const isChecked = checked[key] || false;
     return `
-      <div class="check-item stratagem-item ${isChecked ? 'checked' : ''}" onclick="checked['${key}']=!checked['${key}'];this.classList.toggle('checked')">
-        <div class="checkbox"></div>
+      <div class="stratagem-item">
         <div class="item-content">
           <div><span class="strat-name">${name}</span>${cp ? `<span class="strat-cp">${cp}</span>` : ''}</div>
           ${legend ? `<div class="strat-legend">${legend}</div>` : ''}
-          ${det ? `<div class="fs-detachment">${det}</div>` : ''}
         </div>
       </div>`;
+  }
+
+  function renderFactionGroup(items, factionLabel, labelClass) {
+    if (!items.length) return '';
+    // Split into universal (no detachment) and per-detachment groups
+    const universal = items.filter(s => !s.detachment || s.detachment === '-');
+    const byDet = {};
+    for (const s of items) {
+      if (s.detachment && s.detachment !== '-') {
+        (byDet[s.detachment] = byDet[s.detachment] || []).push(s);
+      }
+    }
+    let html = '';
+    if (universal.length) {
+      html += `<div class="fs-subsection-label ${labelClass}">${factionLabel}</div>`;
+      html += universal.map(stratagemItemHtml).join('');
+    }
+    for (const [det, strats] of Object.entries(byDet)) {
+      html += `<div class="fs-subsection-label ${labelClass}">${det}</div>`;
+      html += strats.map(stratagemItemHtml).join('');
+    }
+    return html;
   }
 
   const playerItems = filterStrats(factionStrats.player);
@@ -1915,17 +1914,8 @@ function renderFactionStratagemSection(phaseId) {
   if (!playerItems.length && !enemyItems.length) return '';
 
   let html = '<div class="fs-section">';
-
-  if (playerItems.length) {
-    html += `<div class="fs-subsection-label fs-player">${gameConfig.playerFaction} — Stratagems</div>`;
-    html += playerItems.map(s => stratagemItemHtml(s, 'fs-p')).join('');
-  }
-
-  if (enemyItems.length) {
-    html += `<div class="fs-subsection-label fs-enemy">${gameConfig.enemyFaction} — Stratagems</div>`;
-    html += enemyItems.map(s => stratagemItemHtml(s, 'fs-e')).join('');
-  }
-
+  html += renderFactionGroup(playerItems, gameConfig.playerFaction, 'fs-player');
+  html += renderFactionGroup(enemyItems,  gameConfig.enemyFaction,  'fs-enemy');
   html += `<div class="fs-attribution">Stratagem data: <a href="https://wahapedia.ru" target="_blank" rel="noopener">Wahapedia</a></div>`;
   html += '</div>';
   return html;
@@ -2677,11 +2667,8 @@ function renderPhases() {
           </div>`;
       }
       for (const { item, j } of notes) {
-        const key = `${phase.id}-${j}`;
-        const isChecked = checked[key];
         html += `
-          <div class="note-child ${isChecked ? 'checked' : ''}" onclick="toggleCheck('${phase.id}',${j})">
-            <div class="note-check"></div>
+          <div class="note-child">
             <div class="item-content">
               <div class="note-text">${item.text}</div>
               ${kwTags(item)}
@@ -2694,12 +2681,9 @@ function renderPhases() {
 
   function renderStratagemsTab() {
     const coreHtml = stratItems.map(({ item, j }) => {
-      const key = `${phase.id}-${j}`;
-      const isChecked = checked[key];
       const hasKw = (item.keywords || []).some(isKeywordVisible);
       return `
-        <div class="check-item stratagem-item ${isChecked ? 'checked' : ''} ${hasKw ? 'has-keyword' : ''}" onclick="toggleCheck('${phase.id}',${j})">
-          <div class="checkbox"></div>
+        <div class="stratagem-item ${hasKw ? 'has-keyword' : ''}">
           <div class="item-content">
             <div class="item-text">${item.text}</div>
             ${kwTags(item)}
