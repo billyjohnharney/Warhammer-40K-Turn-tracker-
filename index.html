@@ -887,76 +887,33 @@
   }
 
   /* Tabs */
-  .roster-tabs {
+  /* Roster action buttons (Paste List / Upload List) */
+  .roster-btn-row {
     display: flex;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 20px;
-    gap: 0;
+    gap: 8px;
+    margin-bottom: 14px;
   }
 
-  .roster-tab {
-    padding: 8px 20px;
+  .roster-action-btn {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    padding: 10px;
+    font-family: Arial, sans-serif;
     font-size: 10px;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: var(--text-dim);
     cursor: pointer;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
     transition: all 0.15s;
-    user-select: none;
   }
 
-  .roster-tab:hover { color: var(--text); }
-
-  .roster-tab.active {
-    color: var(--gold);
-    border-bottom-color: var(--gold);
-  }
-
-  /* Drop zone */
-  .drop-zone {
-    border: 1px dashed var(--border-bright);
-    padding: 36px 20px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-  }
-
-  .drop-zone:hover, .drop-zone.drag-over {
+  .roster-action-btn:hover {
     border-color: var(--gold);
-    background: rgba(201,168,76,0.04);
+    color: var(--gold);
   }
 
-  .drop-zone input[type="file"] {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
-    width: 100%;
-    height: 100%;
-  }
-
-  .drop-zone-icon {
-    font-size: 28px;
-    margin-bottom: 10px;
-    opacity: 0.5;
-  }
-
-  .drop-zone-label {
-    font-size: 12px;
-    color: var(--text);
-    margin-bottom: 4px;
-  }
-
-  .drop-zone-hint {
-    font-size: 10px;
-    color: var(--text-dim);
-    letter-spacing: 1px;
-  }
-
-  /* Text paste area */
+  /* (legacy textarea kept for any residual references) */
   .roster-textarea {
     width: 100%;
     min-height: 160px;
@@ -977,26 +934,6 @@
   }
 
   .roster-textarea::placeholder { color: var(--text-dim); }
-
-  .roster-parse-btn {
-    width: 100%;
-    background: transparent;
-    border: 1px solid var(--border-bright);
-    color: var(--text);
-    padding: 10px;
-    font-family: Arial, sans-serif;
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    cursor: pointer;
-    margin-top: 8px;
-    transition: all 0.15s;
-  }
-
-  .roster-parse-btn:hover {
-    border-color: var(--gold);
-    color: var(--gold);
-  }
 
   /* Preview block */
   .roster-preview {
@@ -2139,7 +2076,6 @@ function renderSideComponent(side) {
   const isPlayer = side === 'player';
   const faction  = isPlayer ? gameConfig.playerFaction : gameConfig.enemyFaction;
   const selId    = isPlayer ? 'sel-player' : 'sel-enemy';
-  const tabFile  = s.inputMode === 'file';
 
   const opts = factions.map(f =>
     `<option value="${f}" ${faction === f ? 'selected' : ''}>${f}</option>`
@@ -2187,24 +2123,11 @@ function renderSideComponent(side) {
 
   const errorHtml = s.error ? `<div class="roster-error">${s.error}</div>` : '';
 
-  const inputHtml = s.parsed ? '' : (tabFile ? `
-    <div class="drop-zone"
-      ondragover="event.preventDefault();this.classList.add('drag-over')"
-      ondragleave="this.classList.remove('drag-over')"
-      ondrop="this.classList.remove('drag-over');handleFileDrop(event,'${side}')">
-      <input type="file" accept=".ros,.rosz" onchange="handleFileInput(this,'${side}')">
-      <div class="drop-zone-icon">📋</div>
-      <div class="drop-zone-label">Drop .ros or .rosz file here, or click to browse</div>
-      <div class="drop-zone-hint">Battlescribe · New Recruit · OPR Army Forge</div>
-    </div>
-  ` : `
-    <button class="roster-parse-btn" onclick="pasteAndParseRoster('${side}')">Paste Roster</button>
-  `);
-
-  const tabsHtml = s.parsed ? '' : `
-    <div class="roster-tabs">
-      <div class="roster-tab ${tabFile ? 'active' : ''}" onclick="setRosterMode('${side}','file')">Upload File</div>
-      <div class="roster-tab ${!tabFile ? 'active' : ''}" onclick="setRosterMode('${side}','text')">Paste List</div>
+  const inputHtml = s.parsed ? '' : `
+    <div class="roster-btn-row">
+      <button class="roster-action-btn" onclick="pasteAndParseRoster('${side}')">Paste List</button>
+      <button class="roster-action-btn" onclick="document.getElementById('file-${side}').click()">Upload List</button>
+      <input type="file" id="file-${side}" accept=".ros,.rosz" style="display:none" onchange="handleFileInput(this,'${side}')">
     </div>`;
 
   return `
@@ -2213,6 +2136,8 @@ function renderSideComponent(side) {
         <span class="side-label">${isPlayer ? '★ Your Army' : '⚔ Enemy Army'}</span>
         ${headerRight}
       </div>
+      ${inputHtml}
+      ${errorHtml}
       <div class="faction-field" style="margin-bottom:14px">
         <select id="${selId}" onchange="onFactionChange()">
           <option value="">— Choose faction —</option>
@@ -2220,9 +2145,6 @@ function renderSideComponent(side) {
         </select>
       </div>
       ${detHtml}
-      ${tabsHtml}
-      ${inputHtml}
-      ${errorHtml}
       ${previewHtml}
     </div>`;
 }
