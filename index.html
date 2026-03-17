@@ -2081,17 +2081,16 @@ function renderSideComponent(side) {
     `<option value="${f}" ${faction === f ? 'selected' : ''}>${f}</option>`
   ).join('');
 
-  // Detachment dropdown — populated from Wahapedia data once loaded
-  const detId         = `sel-det-${side}`;
-  const selectedDet   = isPlayer ? gameConfig.playerDetachment : gameConfig.enemyDetachment;
-  const detachments   = getAvailableDetachments(faction);
-  const detLoading    = faction && wahapedia.loading;
-  const showDetSelect = faction && (detachments.length > 0 || detLoading);
-  const detHtml = showDetSelect ? `
+  // Detachment dropdown — always shown when a faction is selected
+  const detId       = `sel-det-${side}`;
+  const selectedDet = isPlayer ? gameConfig.playerDetachment : gameConfig.enemyDetachment;
+  const detachments = getAvailableDetachments(faction);
+  const detLoading  = faction && wahapedia.loading;
+  const detHtml = faction ? `
     <div class="faction-field" style="margin-bottom:14px">
       <select id="${detId}" onchange="onDetachmentChange()" ${detLoading ? 'disabled' : ''}>
-        <option value="">— All detachments —</option>
-        ${detLoading ? '<option disabled>Loading detachments…</option>' : ''}
+        <option value="">— Choose detachment —</option>
+        ${detLoading ? '<option disabled>Loading…</option>' : ''}
         ${detachments.map(d =>
           `<option value="${d}" ${selectedDet === d ? 'selected' : ''}>${d}</option>`
         ).join('')}
