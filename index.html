@@ -1556,16 +1556,50 @@ function shouldShowItem(item) {
 
 // ─── WAHAPEDIA STRATAGEM INTEGRATION ─────────────────────
 
-// Fetch a URL, falling back to a CORS proxy when the direct request is blocked.
+// Fetch a URL via multiple strategies. Wahapedia returns 403 on direct
+// requests so proxies that fetch with a real browser User-Agent are tried first.
 async function _fetchText(url) {
-  try {
-    const r = await fetch(url);
-    if (r.ok) return r.text();
-  } catch (_) { /* CORS or network — try proxy */ }
-  const proxy = `https://corsproxy.io/?url=${encodeURIComponent(url)}`;
-  const r = await fetch(proxy);
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
-  return r.text();
+  const enc = encodeURIComponent(url);
+
+  // Each strategy returns a Promise<string> or throws.
+  const strategies = [
+    // allorigins /get returns {contents, status} fetched with a real browser
+    // User-Agent — best at bypassing Wahapedia's 403 bot-protection
+    async () => {
+      const r = await fetch(`https://api.allorigins.win/get?url=${enc}`);
+      if (!r.ok) throw new Error(r.status);
+      const j = await r.json();
+      if (!j.contents) throw new Error('empty');
+      return j.contents;
+    },
+    // corsproxy.io raw passthrough
+    async () => {
+      const r = await fetch(`https://corsproxy.io/?url=${enc}`);
+      if (!r.ok) throw new Error(r.status);
+      return r.text();
+    },
+    // allorigins raw
+    async () => {
+      const r = await fetch(`https://api.allorigins.win/raw?url=${enc}`);
+      if (!r.ok) throw new Error(r.status);
+      return r.text();
+    },
+    // direct (works in permissive environments / after browser grants access)
+    async () => {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(r.status);
+      return r.text();
+    },
+  ];
+
+  for (const fn of strategies) {
+    try {
+      const text = await fn();
+      // Reject proxy error pages — valid CSV has content and an early comma
+      if (text && text.trim().length > 200 && text.indexOf(',') < 80) return text;
+    } catch (_) { /* try next */ }
+  }
+  throw new Error('All fetch attempts failed');
 }
 
 function _parseWahapediaCsv(text) {
@@ -1636,6 +1670,9 @@ function getAvailableDetachments(appFactionName) {
 }
 
 async function loadWahapediaStratagems() {
+  // Already loaded by prefetch — just rebuild strats and re-render
+  if (wahapedia.loaded) { _buildFactionStrats(); render(); return; }
+
   const CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
   const cacheDate = localStorage.getItem('wh_cache_date');
   const cacheAge  = cacheDate ? Date.now() - new Date(cacheDate).getTime() : Infinity;
@@ -2298,7 +2335,8 @@ function launchGame() {
   updateHeaderFactions();
   render();
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  // Load faction-specific stratagems from Wahapedia in the background
+  // Load faction-specific stratagems (clear any prior error so a fresh attempt fires)
+  wahapedia.error = null;
   loadWahapediaStratagems();
 }
 
