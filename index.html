@@ -2090,11 +2090,32 @@ function handleFileInput(input, side) {
   if (file) processRosterFile(file, side);
 }
 
+function looksLikeWarhammer(text) {
+  const upper = text.toUpperCase();
+  // Common army-list structural terms
+  const terms = ['PTS', 'POINTS', ' CP', 'DETACHMENT', 'ENHANCEMENT', 'WARLORD',
+                 'DATASHEET', 'BATTLESCRIBE', 'NEW RECRUIT', 'OPR'];
+  if (terms.some(t => upper.includes(t))) return true;
+  // Any recognised faction name
+  if (factions.some(f => upper.includes(f.toUpperCase()))) return true;
+  // Any recognised keyword (use base form, stripping variable suffixes)
+  for (const kw of Object.keys(keywords)) {
+    const base = kw.replace(/ X\+?$/, '').replace(/ X"$/, '').replace(/\[KEYWORD\] /, '');
+    if (upper.includes(base)) return true;
+  }
+  return false;
+}
+
 async function pasteAndParseRoster(side) {
   try {
     const text = await navigator.clipboard.readText();
     if (!text.trim()) {
       rs(side).error = 'Clipboard is empty — copy your army list first.';
+      render();
+      return;
+    }
+    if (!looksLikeWarhammer(text)) {
+      rs(side).error = 'Mutiny! No army here.';
       render();
       return;
     }
