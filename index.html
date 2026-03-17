@@ -1220,7 +1220,7 @@ let enemyRoster = { loaded: false, units: [], activeKeywords: new Set() };
 
 // Wahapedia faction-specific stratagem data
 let wahapedia = { loading: false, loaded: false, error: null, factionRows: [], stratagemRows: [] };
-let factionStrats = { player: [], enemy: [] };
+let factionStrats = { player: [], enemy: [], universal: [] };
 
 // ─── FACTION LIST ────────────────────────────────────────
 const factions = [
@@ -1550,10 +1550,6 @@ const phases = [
       { type: 'note',      text: 'Enemy Stealth: apply -1 to your Hit rolls when targeting an enemy unit with Stealth from more than 12"', keywords: ['STEALTH'], enemyOnly: true },
       { type: 'note',      text: 'Psychic: weapons/abilities tagged [PSYCHIC] are resolved in this phase — no separate Psychic phase', keywords: ['PSYCHIC'], playerOnly: true },
       { type: 'note',      text: 'One Shot: track any One Shot weapons used this turn — they cannot be fired again this battle', keywords: ['ONE SHOT'], playerOnly: true },
-      { type: 'stratagem', name: 'Smoke',       cp: 1, legend: 'When a SMOKE unit is targeted, it gains Benefit of Cover and Stealth until end of phase', keywords: ['SMOKE', 'SMOKESCREEN'], playerOnly: true },
-      { type: 'stratagem', name: 'Overwatch',    cp: 1, legend: 'Shoot at an enemy moving or arriving — hits only on unmodified 6s', keywords: ['FIRE OVERWATCH'] },
-      { type: 'stratagem', name: 'Go to Ground', cp: 1, legend: 'Targeted INFANTRY unit gains 6+ invulnerable save and Benefit of Cover until end of phase', keywords: ['GO TO GROUND'] },
-      { type: 'stratagem', name: 'Grenade',      cp: 1, legend: 'A GRENADES unit rolls 6D6 against a visible enemy within 8" — each 4+ deals 1 mortal wound', keywords: ['GRENADE'], playerOnly: true },
       { type: 'note',      text: 'FIRING DECK: TRANSPORT models with Firing Deck may shoot using embarked models\' weapons', keywords: ['FIRING DECK X'], playerOnly: true },
       { type: 'note',      text: 'Torrent: attacks automatically hit, skip Hit roll', keywords: ['TORRENT'], playerOnly: true },
       { type: 'note',      text: 'Rapid Fire X: check if target is within half range, if so add X to Attacks', keywords: ['RAPID FIRE X'], playerOnly: true },
@@ -1581,8 +1577,6 @@ const phases = [
       { type: 'note',      text: 'Targets do not need to be visible' },
       { type: 'action',    text: 'Roll 2D6 for Charge roll — must reach all targets or charge fails. Use Command Re-roll if needed', keywords: ['COMMAND RE-ROLL'] },
       { type: 'note',      text: 'Successful charge gives unit Fights First this turn', keywords: ['FIGHTS FIRST'] },
-      { type: 'stratagem', name: 'Tank Shock',          cp: 1, legend: 'After a VEHICLE charges, roll vs one enemy in Engagement Range — each 5+ deals 1 mortal wound', keywords: ['TANK SHOCK'], playerOnly: true },
-      { type: 'stratagem', name: 'Heroic Intervention', cp: 2, legend: 'A friendly unit within 6" of the charging enemy can make an immediate charge against it', keywords: ['HEROIC INTERVENTION'] },
     ]
   },
   {
@@ -1600,7 +1594,6 @@ const phases = [
       { type: 'note',      text: 'Your Feel No Pain: your models with FNP may roll to negate wounds after saves', keywords: ['FEEL NO PAIN X+'], playerOnly: true },
       { type: 'note',      text: 'Enemy Feel No Pain: after your attacks wound, enemy models with FNP may roll to negate those wounds', keywords: ['FEEL NO PAIN X+'], enemyOnly: true },
       { type: 'note',      text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'], playerOnly: true },
-      { type: 'stratagem', name: 'Epic Challenge', cp: 1, legend: "One Character model's melee attacks gain Precision for this phase", keywords: ['EPIC CHALLENGE'] },
       { type: 'note',      text: 'After fighting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'], playerOnly: true },
       { type: 'note',      text: 'Your Deadly Demise: if your models with this ability are destroyed in this fight, roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], playerOnly: true },
       { type: 'note',      text: 'Enemy Deadly Demise: when you destroy an enemy model with this ability, roll D6 — on a 6 your nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], enemyOnly: true },
@@ -1614,7 +1607,6 @@ const phases = [
     items: [
       { type: 'action',    text: 'Check unit coherency — remove models from any unit not in coherency' },
       { type: 'action',    text: 'Score objectives — units with Objective Secured control markers even against non-ObjSec enemies', keywords: ['OBJECTIVE SECURED'] },
-      { type: 'stratagem', name: 'New Orders', cp: 1, legend: 'Discard current Secondary Mission card and draw a new one (once per battle)', keywords: ['NEW ORDERS'] },
       { type: 'action',    text: 'Note victory points scored this turn' },
       { type: 'action',    text: 'Pass to your opponent' },
     ]
@@ -1787,6 +1779,12 @@ function _buildFactionStrats() {
 
   factionStrats.player = stratagemRows.filter(s => pIds.has(s.faction_id) && detMatches(s, pDet));
   factionStrats.enemy  = stratagemRows.filter(s => eIds.has(s.faction_id) && detMatches(s, eDet));
+
+  const CORE_PREFIXES = ['Core –', 'Core Stratagem –'];
+  const coreRows = stratagemRows.filter(s =>
+    !s.faction_id && CORE_PREFIXES.some(p => (s.type || '').startsWith(p))
+  );
+  factionStrats.universal = coreRows.filter((s, i, arr) => arr.findIndex(x => x.name === s.name) === i);
 }
 
 // Return sorted list of detachment names available for a faction (from loaded Wahapedia data).
@@ -1909,12 +1907,17 @@ function renderFactionStratagemSection(phaseId) {
     return html;
   }
 
-  const playerItems = filterStrats(factionStrats.player);
-  const enemyItems  = filterStrats(factionStrats.enemy);
+  const universalItems = filterStrats(factionStrats.universal);
+  const playerItems    = filterStrats(factionStrats.player);
+  const enemyItems     = filterStrats(factionStrats.enemy);
 
-  if (!playerItems.length && !enemyItems.length) return '';
+  if (!universalItems.length && !playerItems.length && !enemyItems.length) return '';
 
   let html = '<div class="fs-section">';
+  if (universalItems.length) {
+    html += `<div class="fs-subsection-label fs-universal">Universal</div>`;
+    html += universalItems.map(stratagemItemHtml).join('');
+  }
   html += renderFactionGroup(playerItems, gameConfig.playerFaction, 'fs-player');
   html += renderFactionGroup(enemyItems,  gameConfig.enemyFaction,  'fs-enemy');
   html += `<div class="fs-attribution">Stratagem data: <a href="https://wahapedia.ru" target="_blank" rel="noopener">Wahapedia</a></div>`;
@@ -2536,7 +2539,7 @@ function changeFactions() {
   wahapedia.loading = false;
   wahapedia.loaded  = false;
   wahapedia.error   = null;
-  factionStrats     = { player: [], enemy: [] };
+  factionStrats     = { player: [], enemy: [], universal: [] };
   render();
 }
 
@@ -2614,9 +2617,8 @@ function renderPhases() {
     .map((item, j) => ({ item, j }))
     .filter(({ item }) => shouldShowItem(item));
 
-  // Split visible items into the two tabs
-  const stepItems     = visible.filter(({ item }) => item.type !== 'stratagem');
-  const stratItems    = visible.filter(({ item }) => item.type === 'stratagem');
+  // Steps tab: all non-stratagem items
+  const stepItems = visible.filter(({ item }) => item.type !== 'stratagem');
 
   // Build action→notes groups for the Steps tab.
   // Each action is the parent; consecutive notes that follow it are its children.
@@ -2637,7 +2639,7 @@ function renderPhases() {
   let fsCount = 0;
   if (wahapedia.loaded) {
     const fsFilter = s => { const p = _wahapediaPhaseId(s.phase); return p === phase.id || (phase.id === 'command' && p === 'any'); };
-    fsCount = factionStrats.player.filter(fsFilter).length + factionStrats.enemy.filter(fsFilter).length;
+    fsCount = [...factionStrats.universal, ...factionStrats.player, ...factionStrats.enemy].filter(fsFilter).length;
   }
 
   const total = phase.items.length;
@@ -2681,18 +2683,7 @@ function renderPhases() {
   }
 
   function renderStratagemsTab() {
-    let coreHtml = '';
-    if (stratItems.length) {
-      coreHtml = `<div class="fs-subsection-label fs-universal">Universal</div>` +
-        stratItems.map(({ item }) => `
-          <div class="stratagem-item">
-            <div class="item-content">
-              <div><span class="strat-name">${item.name || item.text || ''}</span>${item.cp ? `<span class="strat-cp">${item.cp}CP</span>` : ''}</div>
-              ${item.legend ? `<div class="strat-legend">${item.legend}</div>` : ''}
-            </div>
-          </div>`).join('');
-    }
-    return coreHtml + renderFactionStratagemSection(phase.id);
+    return renderFactionStratagemSection(phase.id);
   }
 
   container.innerHTML = `
@@ -2711,7 +2702,7 @@ function renderPhases() {
           Steps<span class="tab-count">${stepItems.length}</span>
         </div>
         <div class="phase-tab ${tab === 'stratagems' ? 'active' : ''}" onclick="setPhaseTab('${phase.id}','stratagems')">
-          Stratagems<span class="tab-count">${stratItems.length + fsCount}</span>
+          Stratagems<span class="tab-count">${fsCount}</span>
         </div>
       </div>
       <div class="tab-content">
