@@ -501,6 +501,57 @@
     box-shadow: 0 0 8px rgba(46,204,113,0.15);
   }
 
+  /* FACTION STRATAGEMS (Wahapedia) */
+  .fs-section {
+    border-top: 1px solid var(--border);
+    padding-top: 2px;
+  }
+
+  .fs-subsection-label {
+    padding: 8px 16px 2px;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .fs-subsection-label.fs-player { color: #9b59b6; }
+  .fs-subsection-label.fs-enemy  { color: var(--red-bright); opacity: 0.75; }
+
+  .fs-empty {
+    padding: 4px 16px 8px;
+    font-size: 11px;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  .fs-status {
+    padding: 10px 16px;
+    font-size: 11px;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+
+  .fs-attribution {
+    padding: 6px 16px 10px;
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 0.3px;
+    text-align: right;
+    opacity: 0.5;
+  }
+
+  .fs-attribution a { color: inherit; text-decoration: none; }
+  .fs-attribution a:hover { text-decoration: underline; }
+
+  .fs-detachment {
+    font-size: 9px;
+    color: var(--gold-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+
   /* ROUND LABEL */
   .round-label {
     font-size: 9px;
@@ -836,76 +887,33 @@
   }
 
   /* Tabs */
-  .roster-tabs {
+  /* Roster action buttons (Paste List / Upload List) */
+  .roster-btn-row {
     display: flex;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 20px;
-    gap: 0;
+    gap: 8px;
+    margin-bottom: 14px;
   }
 
-  .roster-tab {
-    padding: 8px 20px;
+  .roster-action-btn {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    padding: 10px;
+    font-family: Arial, sans-serif;
     font-size: 10px;
     letter-spacing: 2px;
     text-transform: uppercase;
-    color: var(--text-dim);
     cursor: pointer;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1px;
     transition: all 0.15s;
-    user-select: none;
   }
 
-  .roster-tab:hover { color: var(--text); }
-
-  .roster-tab.active {
-    color: var(--gold);
-    border-bottom-color: var(--gold);
-  }
-
-  /* Drop zone */
-  .drop-zone {
-    border: 1px dashed var(--border-bright);
-    padding: 36px 20px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-  }
-
-  .drop-zone:hover, .drop-zone.drag-over {
+  .roster-action-btn:hover {
     border-color: var(--gold);
-    background: rgba(201,168,76,0.04);
+    color: var(--gold);
   }
 
-  .drop-zone input[type="file"] {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
-    width: 100%;
-    height: 100%;
-  }
-
-  .drop-zone-icon {
-    font-size: 28px;
-    margin-bottom: 10px;
-    opacity: 0.5;
-  }
-
-  .drop-zone-label {
-    font-size: 12px;
-    color: var(--text);
-    margin-bottom: 4px;
-  }
-
-  .drop-zone-hint {
-    font-size: 10px;
-    color: var(--text-dim);
-    letter-spacing: 1px;
-  }
-
-  /* Text paste area */
+  /* (legacy textarea kept for any residual references) */
   .roster-textarea {
     width: 100%;
     min-height: 160px;
@@ -926,26 +934,6 @@
   }
 
   .roster-textarea::placeholder { color: var(--text-dim); }
-
-  .roster-parse-btn {
-    width: 100%;
-    background: transparent;
-    border: 1px solid var(--border-bright);
-    color: var(--text);
-    padding: 10px;
-    font-family: Arial, sans-serif;
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    cursor: pointer;
-    margin-top: 8px;
-    transition: all 0.15s;
-  }
-
-  .roster-parse-btn:hover {
-    border-color: var(--gold);
-    color: var(--gold);
-  }
 
   /* Preview block */
   .roster-preview {
@@ -1106,7 +1094,7 @@
 let checked = {};
 let activePhaseIndex = 0;
 let turnNumber = 1;
-let gameConfig = { playerFaction: '', enemyFaction: '' };
+let gameConfig = { playerFaction: '', enemyFaction: '', playerDetachment: '', enemyDetachment: '' };
 let step = 'splash'; // 'splash' | 'setup' | 'game'
 
 // Keyed roster state — access via rs('player') / rs('enemy')
@@ -1119,6 +1107,10 @@ function rs(side) { return rsState[side]; }
 // Confirmed rosters (populated on launch)
 let roster      = { loaded: false, units: [], activeKeywords: new Set() }; // player
 let enemyRoster = { loaded: false, units: [], activeKeywords: new Set() };
+
+// Wahapedia faction-specific stratagem data
+let wahapedia = { loading: false, loaded: false, error: null, factionRows: [], stratagemRows: [] };
+let factionStrats = { player: [], enemy: [] };
 
 // ─── FACTION LIST ────────────────────────────────────────
 const factions = [
@@ -1518,20 +1510,18 @@ const coreAlwaysVisible = new Set([
 ]);
 
 // ─── KEYWORD VISIBILITY ──────────────────────────────────
-// kwForPlayer / kwForEnemy: tag-pill visibility only.
-//   coreAlwaysVisible keywords always render as pills so players
-//   are reminded those stratagems exist.
-// kwMatchesPlayer / kwMatchesEnemy: item visibility.
-//   No coreAlwaysVisible bypass — items must be in the loaded
-//   roster (or no roster) AND allowed by the faction mapping.
-// isKeywordVisible: union for pills.
+// kwForPlayer / kwForEnemy: drives both tag-pill visibility and
+//   playerOnly / enemyOnly item visibility.
+//   • coreAlwaysVisible → always true (universal stratagems shown to all)
+//   • _factionAllows   → false if keyword is faction-restricted
+//   • roster.loaded    → must be in roster when one is provided
+// isKeywordVisible: union — pill shown if relevant to either side.
 
 function _factionAllows(kw, faction) {
   const fl = keywordFactions[kw];
   return !fl || fl.includes(faction);
 }
 
-// ── tag-pill visibility ───────────────────────────────────
 function kwForPlayer(kw) {
   if (coreAlwaysVisible.has(kw)) return true;
   if (!_factionAllows(kw, gameConfig.playerFaction)) return false;
@@ -1550,33 +1540,193 @@ function isKeywordVisible(kw) {
   return kwForPlayer(kw) || kwForEnemy(kw);
 }
 
-// ── item visibility (no coreAlwaysVisible bypass) ─────────
-function kwMatchesPlayer(kw) {
-  if (!_factionAllows(kw, gameConfig.playerFaction)) return false;
-  if (roster.loaded) return roster.activeKeywords.has(kw);
-  return true;
-}
-
-function kwMatchesEnemy(kw) {
-  if (!_factionAllows(kw, gameConfig.enemyFaction)) return false;
-  if (enemyRoster.loaded) return enemyRoster.activeKeywords.has(kw);
-  return true;
-}
-
 // ─── ITEM VISIBILITY ─────────────────────────────────────
-// playerOnly: hidden when player roster loaded and no keyword matches.
-// enemyOnly:  hidden when enemy roster loaded and no keyword matches.
-// No flag + keywords: hidden when both rosters loaded and no keyword
-//   is relevant to either side.
-// No keywords: always shown (universal game steps).
+// playerOnly: show if any keyword passes kwForPlayer
+//   (coreAlwaysVisible items always pass — universal stratagems always show).
+// enemyOnly:  same via kwForEnemy.
+// No flag:    always shown (universal game steps).
+// No keywords: always shown.
 function shouldShowItem(item) {
   const kws = item.keywords || [];
   if (!kws.length) return true;
-  if (item.playerOnly) return kws.some(kwMatchesPlayer);
-  if (item.enemyOnly) return kws.some(kwMatchesEnemy);
-  // Universal items: show if visible to either side
-  // (isKeywordVisible is true for all kws when no roster loaded)
-  return kws.some(isKeywordVisible);
+  if (item.playerOnly) return kws.some(kwForPlayer);
+  if (item.enemyOnly)  return kws.some(kwForEnemy);
+  return true;
+}
+
+// ─── WAHAPEDIA STRATAGEM INTEGRATION ─────────────────────
+
+function _parseWahapediaCsv(text) {
+  const lines = text.replace(/\r/g, '').trim().split('\n');
+  if (lines.length < 2) return [];
+  const headers = lines[0].split('|').map(h => h.trim());
+  return lines.slice(1).map(line => {
+    const vals = line.split('|');
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = (vals[i] || '').trim(); });
+    return obj;
+  });
+}
+
+function _wahapediaPhaseId(wPhase) {
+  const p = (wPhase || '').toLowerCase();
+  if (p.includes('command'))                    return 'command';
+  if (p.includes('movement') || p === 'move')  return 'movement';
+  if (p.includes('shoot'))                      return 'shooting';
+  if (p.includes('charge') || p.includes('heroic')) return 'charge';
+  if (p.includes('fight'))                      return 'fight';
+  if (p.includes('end') || p.includes('battle round') || p.includes('morale')) return 'end';
+  return 'any';
+}
+
+function _matchFactionIds(appName, factionRows) {
+  const norm = s => s.toLowerCase().replace(/['\u2019\u2018]/g, '').replace(/[^a-z0-9]/g, '');
+  const n = norm(appName);
+  const ids = new Set();
+  for (const f of factionRows) {
+    const fname = norm(f.name || '');
+    if (fname && (fname === n || fname.includes(n) || n.includes(fname))) {
+      if (f.id) ids.add(f.id);
+    }
+  }
+  return ids;
+}
+
+function _buildFactionStrats() {
+  const { factionRows, stratagemRows } = wahapedia;
+  const pIds = _matchFactionIds(gameConfig.playerFaction, factionRows);
+  const eIds = _matchFactionIds(gameConfig.enemyFaction, factionRows);
+  const pDet = gameConfig.playerDetachment;
+  const eDet = gameConfig.enemyDetachment;
+
+  function detMatches(s, chosenDet) {
+    const d = s.detachment || '';
+    const isUniversal = d === '' || d === '-';
+    if (!chosenDet) return isUniversal;       // no selection → faction-wide/universal only
+    return isUniversal || d === chosenDet;    // selection → universal + chosen detachment
+  }
+
+  factionStrats.player = stratagemRows.filter(s => pIds.has(s.faction_id) && detMatches(s, pDet));
+  factionStrats.enemy  = stratagemRows.filter(s => eIds.has(s.faction_id) && detMatches(s, eDet));
+}
+
+// Return sorted list of detachment names available for a faction (from loaded Wahapedia data).
+function getAvailableDetachments(appFactionName) {
+  if (!wahapedia.loaded || !appFactionName) return [];
+  const ids = _matchFactionIds(appFactionName, wahapedia.factionRows);
+  const dets = new Set();
+  for (const s of wahapedia.stratagemRows) {
+    if (ids.has(s.faction_id) && s.detachment && s.detachment !== '-') {
+      dets.add(s.detachment);
+    }
+  }
+  return [...dets].sort();
+}
+
+async function loadWahapediaStratagems() {
+  const CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
+  const cacheDate = localStorage.getItem('wh_cache_date');
+  const cacheAge  = cacheDate ? Date.now() - new Date(cacheDate).getTime() : Infinity;
+  const cf = localStorage.getItem('wh_factions');
+  const cs = localStorage.getItem('wh_stratagems');
+
+  if (cf && cs && cacheAge < CACHE_TTL) {
+    wahapedia.factionRows   = _parseWahapediaCsv(cf);
+    wahapedia.stratagemRows = _parseWahapediaCsv(cs);
+    wahapedia.loaded = true;
+    _buildFactionStrats();
+    render();
+    return;
+  }
+
+  wahapedia.loading = true;
+  wahapedia.error   = null;
+  render();
+
+  try {
+    const [fr, sr] = await Promise.all([
+      fetch('https://wahapedia.ru/wh40k10ed/Factions.csv'),
+      fetch('https://wahapedia.ru/wh40k10ed/Stratagems.csv'),
+    ]);
+    if (!fr.ok || !sr.ok) throw new Error('Wahapedia returned an error response');
+    const [ft, st] = await Promise.all([fr.text(), sr.text()]);
+    localStorage.setItem('wh_factions',    ft);
+    localStorage.setItem('wh_stratagems',  st);
+    localStorage.setItem('wh_cache_date',  new Date().toISOString());
+    wahapedia.factionRows   = _parseWahapediaCsv(ft);
+    wahapedia.stratagemRows = _parseWahapediaCsv(st);
+    wahapedia.loaded = true;
+    _buildFactionStrats();
+  } catch (e) {
+    if (cf && cs) {
+      // Use stale cache rather than showing nothing
+      wahapedia.factionRows   = _parseWahapediaCsv(cf);
+      wahapedia.stratagemRows = _parseWahapediaCsv(cs);
+      wahapedia.loaded = true;
+      _buildFactionStrats();
+    } else {
+      wahapedia.error = 'Faction stratagems unavailable — check connection.';
+    }
+  }
+
+  wahapedia.loading = false;
+  render();
+}
+
+// Render the faction-specific stratagem section for the given phase.
+function renderFactionStratagemSection(phaseId) {
+  if (wahapedia.loading) {
+    return `<div class="fs-section"><div class="fs-status">Loading faction stratagems…</div></div>`;
+  }
+  if (wahapedia.error) {
+    return `<div class="fs-section"><div class="fs-status">${wahapedia.error}</div></div>`;
+  }
+  if (!wahapedia.loaded) return '';
+
+  function filterStrats(list) {
+    return list.filter(s => {
+      const p = _wahapediaPhaseId(s.phase);
+      return p === phaseId || (phaseId === 'command' && p === 'any');
+    });
+  }
+
+  function stratagemItemHtml(s, keyPrefix) {
+    const cp   = s.cp_cost ? `(${s.cp_cost}CP) ` : '';
+    const name = s.name || 'Unknown';
+    const desc = s.description || s.legend || '';
+    const det  = s.detachment && s.detachment !== '-' ? s.detachment : '';
+    const key  = `${keyPrefix}-${s.id}`;
+    const isChecked = checked[key] || false;
+    return `
+      <div class="check-item ${isChecked ? 'checked' : ''}" onclick="checked['${key}']=!checked['${key}'];this.classList.toggle('checked')">
+        <div class="checkbox"></div>
+        <div class="item-content">
+          <div class="item-text"><span class="item-prefix stratagem">Stratagem:</span> <strong>${name}</strong> ${cp}${desc ? '— ' + desc : ''}</div>
+          ${det ? `<div class="fs-detachment">${det}</div>` : ''}
+        </div>
+      </div>`;
+  }
+
+  const playerItems = filterStrats(factionStrats.player);
+  const enemyItems  = filterStrats(factionStrats.enemy);
+
+  if (!playerItems.length && !enemyItems.length) return '';
+
+  let html = '<div class="fs-section">';
+
+  if (playerItems.length) {
+    html += `<div class="fs-subsection-label fs-player">${gameConfig.playerFaction} — Stratagems</div>`;
+    html += playerItems.map(s => stratagemItemHtml(s, 'fs-p')).join('');
+  }
+
+  if (enemyItems.length) {
+    html += `<div class="fs-subsection-label fs-enemy">${gameConfig.enemyFaction} — Stratagems</div>`;
+    html += enemyItems.map(s => stratagemItemHtml(s, 'fs-e')).join('');
+  }
+
+  html += `<div class="fs-attribution">Stratagem data: <a href="https://wahapedia.ru" target="_blank" rel="noopener">Wahapedia</a></div>`;
+  html += '</div>';
+  return html;
 }
 
 // ─── ROSTER PARSING ──────────────────────────────────────
@@ -1589,11 +1739,12 @@ function normalizeKeyword(raw) {
     [/^RAPID FIRE \d+$/,            'RAPID FIRE X'],
     [/^SUSTAINED HITS \d+$/,        'SUSTAINED HITS X'],
     [/^MELTA \d+$/,                 'MELTA X'],
-    [/^SCOUTS \d+"?$/,              'SCOUTS X"'],
+    [/^SCOUTS? \d+"?$/,             'SCOUTS X"'],
     [/^FEEL NO PAIN \d\+$/,         'FEEL NO PAIN X+'],
     [/^DEADLY DEMISE (?:D\d+|\d+)$/,'DEADLY DEMISE X'],
     [/^ANTI-.+ \d\+$/,              'ANTI-[KEYWORD] X+'],
     [/^FIRING DECK \d+$/,           'FIRING DECK X'],
+    [/^TWIN.+/,                     'TWIN-LINKED'],
   ];
   for (const [re, mapped] of patterns) if (re.test(t)) return mapped;
   return null;
@@ -1602,9 +1753,11 @@ function normalizeKeyword(raw) {
 // Scan a block of upper-cased text and add any recognised keywords to the set.
 function scanTextForKeywords(upperText, into) {
   for (const kw of Object.keys(keywords)) {
-    // Build a search string: strip variable suffix so "RAPID FIRE X" matches "RAPID FIRE 1"
+    // Strip variable suffix so "RAPID FIRE X" matches "RAPID FIRE 1" etc.
     const base = kw.replace(/ X\+?$/, '').replace(/ X"$/, '').replace(/\[KEYWORD\] /, '');
-    if (upperText.includes(base)) into.add(kw);
+    if (upperText.includes(base)) { into.add(kw); continue; }
+    // Also try singular stem — e.g. "SCOUTS" matches unit name "Scout Squad"
+    if (base.endsWith('S') && upperText.includes(base.slice(0, -1))) into.add(kw);
   }
 }
 
@@ -1793,8 +1946,64 @@ function renderSetupPage() {
 }
 
 function onFactionChange() {
+  const prev = { p: gameConfig.playerFaction, e: gameConfig.enemyFaction };
   gameConfig.playerFaction = document.getElementById('sel-player').value;
-  gameConfig.enemyFaction = document.getElementById('sel-enemy').value;
+  gameConfig.enemyFaction  = document.getElementById('sel-enemy').value;
+  // Reset detachment when faction changes
+  if (gameConfig.playerFaction !== prev.p) gameConfig.playerDetachment = '';
+  if (gameConfig.enemyFaction  !== prev.e) gameConfig.enemyDetachment  = '';
+  render();
+  // Start loading Wahapedia data early so detachment dropdowns populate quickly
+  if (gameConfig.playerFaction || gameConfig.enemyFaction) _prefetchWahapedia();
+}
+
+function onDetachmentChange() {
+  gameConfig.playerDetachment = (document.getElementById('sel-det-player') || {}).value || '';
+  gameConfig.enemyDetachment  = (document.getElementById('sel-det-enemy')  || {}).value || '';
+  _buildFactionStrats();
+  render();
+}
+
+// Fetch Wahapedia data without triggering a full game render — used before game launch.
+async function _prefetchWahapedia() {
+  if (wahapedia.loaded || wahapedia.loading) return;
+  const CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
+  const cacheDate = localStorage.getItem('wh_cache_date');
+  const cacheAge  = cacheDate ? Date.now() - new Date(cacheDate).getTime() : Infinity;
+  const cf = localStorage.getItem('wh_factions');
+  const cs = localStorage.getItem('wh_stratagems');
+
+  if (cf && cs && cacheAge < CACHE_TTL) {
+    wahapedia.factionRows   = _parseWahapediaCsv(cf);
+    wahapedia.stratagemRows = _parseWahapediaCsv(cs);
+    wahapedia.loaded = true;
+    render(); // re-render setup page to populate detachment dropdowns
+    return;
+  }
+
+  wahapedia.loading = true;
+  render();
+  try {
+    const [fr, sr] = await Promise.all([
+      fetch('https://wahapedia.ru/wh40k10ed/Factions.csv'),
+      fetch('https://wahapedia.ru/wh40k10ed/Stratagems.csv'),
+    ]);
+    if (!fr.ok || !sr.ok) throw new Error();
+    const [ft, st] = await Promise.all([fr.text(), sr.text()]);
+    localStorage.setItem('wh_factions',   ft);
+    localStorage.setItem('wh_stratagems', st);
+    localStorage.setItem('wh_cache_date', new Date().toISOString());
+    wahapedia.factionRows   = _parseWahapediaCsv(ft);
+    wahapedia.stratagemRows = _parseWahapediaCsv(st);
+    wahapedia.loaded = true;
+  } catch (_) {
+    if (cf && cs) {
+      wahapedia.factionRows   = _parseWahapediaCsv(cf);
+      wahapedia.stratagemRows = _parseWahapediaCsv(cs);
+      wahapedia.loaded = true;
+    }
+  }
+  wahapedia.loading = false;
   render();
 }
 
@@ -1818,16 +2027,40 @@ function handleFileInput(input, side) {
   if (file) processRosterFile(file, side);
 }
 
-function parseAndPreviewText(side) {
-  const id = `roster-text-${side}`;
-  const text = (document.getElementById(id) || {}).value || '';
-  if (!text.trim()) {
-    rs(side).error = 'Please paste your army list above.';
-    render();
-    return;
+function looksLikeWarhammer(text) {
+  const upper = text.toUpperCase();
+  // Common army-list structural terms
+  const terms = ['PTS', 'POINTS', ' CP', 'DETACHMENT', 'ENHANCEMENT', 'WARLORD',
+                 'DATASHEET', 'BATTLESCRIBE', 'NEW RECRUIT', 'OPR'];
+  if (terms.some(t => upper.includes(t))) return true;
+  // Any recognised faction name
+  if (factions.some(f => upper.includes(f.toUpperCase()))) return true;
+  // Any recognised keyword (use base form, stripping variable suffixes)
+  for (const kw of Object.keys(keywords)) {
+    const base = kw.replace(/ X\+?$/, '').replace(/ X"$/, '').replace(/\[KEYWORD\] /, '');
+    if (upper.includes(base)) return true;
   }
-  rs(side).error = '';
-  rs(side).parsed = parseTextRoster(text);
+  return false;
+}
+
+async function pasteAndParseRoster(side) {
+  try {
+    const text = await navigator.clipboard.readText();
+    if (!text.trim()) {
+      rs(side).error = 'Clipboard is empty — copy your army list first.';
+      render();
+      return;
+    }
+    if (!looksLikeWarhammer(text)) {
+      rs(side).error = 'Mutiny! No army here.';
+      render();
+      return;
+    }
+    rs(side).error = '';
+    rs(side).parsed = parseTextRoster(text);
+  } catch (_) {
+    rs(side).error = 'Clipboard access denied — check browser permissions.';
+  }
   render();
 }
 
@@ -1843,11 +2076,26 @@ function renderSideComponent(side) {
   const isPlayer = side === 'player';
   const faction  = isPlayer ? gameConfig.playerFaction : gameConfig.enemyFaction;
   const selId    = isPlayer ? 'sel-player' : 'sel-enemy';
-  const tabFile  = s.inputMode === 'file';
 
   const opts = factions.map(f =>
     `<option value="${f}" ${faction === f ? 'selected' : ''}>${f}</option>`
   ).join('');
+
+  // Detachment dropdown — always shown when a faction is selected
+  const detId       = `sel-det-${side}`;
+  const selectedDet = isPlayer ? gameConfig.playerDetachment : gameConfig.enemyDetachment;
+  const detachments = getAvailableDetachments(faction);
+  const detLoading  = faction && wahapedia.loading;
+  const detHtml = faction ? `
+    <div class="faction-field" style="margin-bottom:14px">
+      <select id="${detId}" onchange="onDetachmentChange()" ${detLoading ? 'disabled' : ''}>
+        <option value="">— Choose detachment —</option>
+        ${detLoading ? '<option disabled>Loading…</option>' : ''}
+        ${detachments.map(d =>
+          `<option value="${d}" ${selectedDet === d ? 'selected' : ''}>${d}</option>`
+        ).join('')}
+      </select>
+    </div>` : '';
 
   const headerRight = s.parsed
     ? `<span class="side-loaded">
@@ -1874,26 +2122,11 @@ function renderSideComponent(side) {
 
   const errorHtml = s.error ? `<div class="roster-error">${s.error}</div>` : '';
 
-  const inputHtml = s.parsed ? '' : (tabFile ? `
-    <div class="drop-zone"
-      ondragover="event.preventDefault();this.classList.add('drag-over')"
-      ondragleave="this.classList.remove('drag-over')"
-      ondrop="this.classList.remove('drag-over');handleFileDrop(event,'${side}')">
-      <input type="file" accept=".ros,.rosz" onchange="handleFileInput(this,'${side}')">
-      <div class="drop-zone-icon">📋</div>
-      <div class="drop-zone-label">Drop .ros or .rosz file here, or click to browse</div>
-      <div class="drop-zone-hint">Battlescribe · New Recruit · OPR Army Forge</div>
-    </div>
-  ` : `
-    <textarea class="roster-textarea" id="roster-text-${side}"
-      placeholder="Paste army list here…"></textarea>
-    <button class="roster-parse-btn" onclick="parseAndPreviewText('${side}')">Analyse List</button>
-  `);
-
-  const tabsHtml = s.parsed ? '' : `
-    <div class="roster-tabs">
-      <div class="roster-tab ${tabFile ? 'active' : ''}" onclick="setRosterMode('${side}','file')">Upload File</div>
-      <div class="roster-tab ${!tabFile ? 'active' : ''}" onclick="setRosterMode('${side}','text')">Paste List</div>
+  const inputHtml = s.parsed ? '' : `
+    <div class="roster-btn-row">
+      <button class="roster-action-btn" onclick="pasteAndParseRoster('${side}')">Paste List</button>
+      <button class="roster-action-btn" onclick="document.getElementById('file-${side}').click()">Upload List</button>
+      <input type="file" id="file-${side}" accept=".ros,.rosz" style="display:none" onchange="handleFileInput(this,'${side}')">
     </div>`;
 
   return `
@@ -1902,15 +2135,15 @@ function renderSideComponent(side) {
         <span class="side-label">${isPlayer ? '★ Your Army' : '⚔ Enemy Army'}</span>
         ${headerRight}
       </div>
+      ${inputHtml}
+      ${errorHtml}
       <div class="faction-field" style="margin-bottom:14px">
         <select id="${selId}" onchange="onFactionChange()">
           <option value="">— Choose faction —</option>
           ${opts}
         </select>
       </div>
-      ${tabsHtml}
-      ${inputHtml}
-      ${errorHtml}
+      ${detHtml}
       ${previewHtml}
     </div>`;
 }
@@ -1931,6 +2164,8 @@ function launchGame() {
   updateHeaderFactions();
   render();
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Load faction-specific stratagems from Wahapedia in the background
+  loadWahapediaStratagems();
 }
 
 function updateHeaderFactions() {
@@ -1949,6 +2184,13 @@ function changeFactions() {
   enemyRoster = { loaded: false, units: [], activeKeywords: new Set() };
   rsState.player = { inputMode: 'file', parsed: null, error: '' };
   rsState.enemy  = { inputMode: 'file', parsed: null, error: '' };
+  gameConfig.playerDetachment = '';
+  gameConfig.enemyDetachment  = '';
+  // Reset faction stratagem display (cached Wahapedia rows are kept for reuse)
+  wahapedia.loading = false;
+  wahapedia.loaded  = false;
+  wahapedia.error   = null;
+  factionStrats     = { player: [], enemy: [] };
   render();
 }
 
@@ -2059,6 +2301,7 @@ function renderPhases() {
             </div>
           </div>`;
       }).join('')}
+      ${renderFactionStratagemSection(phase.id)}
       <div class="phase-nav-row">
         ${pi > 0 ? `<button class="phase-nav-arrow" onclick="goToPhase(${pi - 1})">← ${phases[pi - 1].title.split('—')[0].trim()}</button>` : '<span></span>'}
         ${pi < phases.length - 1 ? `<button class="phase-nav-arrow phase-nav-arrow--next" onclick="goToPhase(${pi + 1})">${phases[pi + 1].title.split('—')[0].trim()} →</button>` : '<span></span>'}
@@ -2120,6 +2363,11 @@ renderSplash();
 // ─── SERVICE WORKER ───────────────────────────────────────
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./warhammer-sw.js');
+  // When a new SW activates and claims this client, reload so the
+  // network-first fetch picks up the latest HTML immediately.
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload();
+  });
 }
 </script>
 
