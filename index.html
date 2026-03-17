@@ -913,6 +913,31 @@
     color: var(--gold);
   }
 
+  /* Paste-area textarea */
+  .roster-paste-area {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 12px;
+  }
+  .roster-paste-area textarea {
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 0.82rem;
+    line-height: 1.45;
+    padding: 10px 12px;
+    resize: vertical;
+    outline: none;
+    font-family: inherit;
+  }
+  .roster-paste-area textarea:focus {
+    border-color: var(--accent);
+  }
+
   /* (legacy textarea kept for any residual references) */
   .roster-textarea {
     width: 100%;
@@ -1843,12 +1868,32 @@ function _detectDetachment(text, faction) {
     if (c.length > 2) return c;
   }
 
-  // 3. Cross-reference against Wahapedia detachment names for this faction
+  // 3. Line-by-line exact match against Wahapedia detachment names (handles
+  //    formats like the WH40K app where each piece of info is on its own line)
   if (wahapedia.loaded && faction) {
     const dets = getAvailableDetachments(faction);
-    const upper = text.toUpperCase();
-    const match = dets.find(d => upper.includes(d.toUpperCase()));
-    if (match) return match;
+    if (dets.length) {
+      for (const line of text.split('\n')) {
+        const trimmed = line.trim();
+        const match = dets.find(d => d.toLowerCase() === trimmed.toLowerCase());
+        if (match) return match;
+      }
+      // Fallback substring search
+      const upper = text.toUpperCase();
+      const sub = dets.find(d => upper.includes(d.toUpperCase()));
+      if (sub) return sub;
+    }
+  }
+
+  // 4. Heuristic: scan each short, number-free line for common detachment keywords
+  //    (catches cases where Wahapedia isn't loaded or the faction isn't matched)
+  const detKw = /\b(task force|warband|brotherhood|spearhead|vanguard|host|nexus|patrol|phalanx|tide|praetor|gladius|anvil|outrider|crusade|conclave|talons?|claws?|fangs?|blades?|wings?|shield|guard)\b/i;
+  for (const line of text.split('\n')) {
+    const trimmed = line.trim();
+    if (trimmed.length < 5 || trimmed.length > 55) continue;
+    if (/\d/.test(trimmed)) continue;                          // skip lines with numbers (pts, unit counts)
+    if (/^[+\-·*]/.test(trimmed)) continue;                   // skip bullet/marker lines
+    if (detKw.test(trimmed)) return trimmed;
   }
 
   return null;
@@ -2146,28 +2191,43 @@ function looksLikeWarhammer(text) {
   return false;
 }
 
-async function pasteAndParseRoster(side) {
-  try {
-    const text = await navigator.clipboard.readText();
-    if (!text.trim()) {
-      rs(side).error = 'Clipboard is empty — copy your army list first.';
-      render();
-      return;
-    }
-    if (!looksLikeWarhammer(text)) {
-      rs(side).error = 'Mutiny! No army here.';
-      render();
-      return;
-    }
-    rs(side).error  = '';
-    rs(side).parsed = parseTextRoster(text);
-    const faction    = _detectFaction(text);
-    const detachment = _detectDetachment(text, faction);
-    _applyAutoDetect(side, faction, detachment, text);
-  } catch (_) {
-    rs(side).error = 'Clipboard access denied — check browser permissions.';
-  }
+function openPasteArea(side) {
+  rs(side).inputMode = 'paste-area';
+  rs(side).error = '';
   render();
+}
+
+function cancelPaste(side) {
+  rs(side).inputMode = 'file';
+  rs(side).error = '';
+  render();
+}
+
+function handlePasteInput(side, value) {
+  // Auto-parse once a meaningful amount of text lands (typical paste is >> 50 chars)
+  if (value.trim().length > 50 && looksLikeWarhammer(value)) {
+    rs(side).inputMode = 'file';
+    _parseAndApplyText(side, value.trim());
+    render();
+  }
+}
+
+function confirmPaste(side) {
+  const ta = document.getElementById(`paste-ta-${side}`);
+  if (!ta) return;
+  rs(side).inputMode = 'file';
+  _parseAndApplyText(side, ta.value.trim());
+  render();
+}
+
+function _parseAndApplyText(side, text) {
+  if (!text) { rs(side).error = 'Paste an army list first.'; return; }
+  if (!looksLikeWarhammer(text)) { rs(side).error = 'Mutiny! No army here.'; return; }
+  rs(side).error  = '';
+  rs(side).parsed = parseTextRoster(text);
+  const faction    = _detectFaction(text);
+  const detachment = _detectDetachment(text, faction);
+  _applyAutoDetect(side, faction, detachment, text);
 }
 
 function clearRosterSlot(side) {
@@ -2228,12 +2288,22 @@ function renderSideComponent(side) {
 
   const errorHtml = s.error ? `<div class="roster-error">${s.error}</div>` : '';
 
-  const inputHtml = s.parsed ? '' : `
+  const inputHtml = s.parsed ? '' : (s.inputMode === 'paste-area' ? `
+    <div class="roster-paste-area">
+      <textarea id="paste-ta-${side}"
+        placeholder="Paste your army list here…"
+        rows="7"
+        oninput="handlePasteInput('${side}', this.value)"></textarea>
+      <div class="roster-btn-row" style="margin-top:8px">
+        <button class="roster-action-btn" onclick="confirmPaste('${side}')">Parse List</button>
+        <button class="roster-action-btn" style="opacity:0.6" onclick="cancelPaste('${side}')">Cancel</button>
+      </div>
+    </div>` : `
     <div class="roster-btn-row">
-      <button class="roster-action-btn" onclick="pasteAndParseRoster('${side}')">Paste List</button>
+      <button class="roster-action-btn" onclick="openPasteArea('${side}')">Paste List</button>
       <button class="roster-action-btn" onclick="document.getElementById('file-${side}').click()">Upload List</button>
       <input type="file" id="file-${side}" accept=".ros,.rosz" style="display:none" onchange="handleFileInput(this,'${side}')">
-    </div>`;
+    </div>`);
 
   return `
     <div class="side-component ${isPlayer ? 'player-side' : 'enemy-side'}">
