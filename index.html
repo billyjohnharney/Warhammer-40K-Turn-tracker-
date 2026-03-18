@@ -1805,6 +1805,11 @@ const commandPhaseAbilities = {
   },
 };
 
+// SM successor chapters share detachments with Space Marines.
+// When a detachment isn't found in the sub-faction's own data, fall through
+// to the parent faction so e.g. Dark Angels + Gladius Task Force shows Oath of Moment.
+const smSuccessors = new Set(['Dark Angels','Blood Angels','Space Wolves','Black Templars','Grey Knights']);
+
 // Return abilities for both sides that trigger in the Command phase.
 function getCommandPhaseAbilities() {
   const results = [];
@@ -1813,14 +1818,20 @@ function getCommandPhaseAbilities() {
     ['Enemy army',  gameConfig.enemyFaction,  gameConfig.enemyDetachment],
   ]) {
     if (!faction) continue;
-    const factionData = commandPhaseAbilities[faction];
-    if (!factionData) continue;
-    const allDetachmentAbilities = Object.entries(factionData)
-      .filter(([k]) => k !== '*').flatMap(([, v]) => v);
+    const factionData  = commandPhaseAbilities[faction];
+    const parentData   = smSuccessors.has(faction) ? commandPhaseAbilities['Space Marines'] : null;
+    if (!factionData && !parentData) continue;
+
+    // Detachment lookup: own data first, then parent (e.g. shared SM detachment)
+    const ownDetAbilities = factionData && det && factionData[det] ? factionData[det] : null;
+    const parentDetAbilities = parentData && det && parentData[det] ? parentData[det] : null;
+    const fallbackAbilities = factionData
+      ? Object.entries(factionData).filter(([k]) => k !== '*').flatMap(([, v]) => v)
+      : [];
+
     const abilities = [
-      ...(factionData['*'] || []),
-      // Use detachment-specific entries when they exist; fall back to all faction abilities
-      ...(det && factionData[det] ? factionData[det] : allDetachmentAbilities),
+      ...((factionData && factionData['*']) || []),
+      ...(ownDetAbilities || parentDetAbilities || fallbackAbilities),
     ];
     for (const ab of abilities) results.push({ side, ...ab });
   }
