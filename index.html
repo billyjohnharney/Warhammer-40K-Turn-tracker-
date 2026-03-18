@@ -173,7 +173,7 @@
   main {
     max-width: 800px;
     margin: 0 auto;
-    padding: 20px 24px 60px;
+    padding: 20px 24px 80px;
   }
 
   /* PHASE VIEW (flat — no card) */
@@ -361,6 +361,14 @@
   .check-item.action-item.checked .item-text {
     font-weight: 400;
     color: var(--text-dim);
+  }
+
+  .step-support {
+    display: block;
+    font-weight: 400;
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 2px;
   }
 
   .check-item.action-item.checked {
@@ -569,67 +577,18 @@
 
   .sub-item.checked .sub-checkbox::after { display: block; }
 
-  /* KEYWORD TOOLTIP PANEL */
-  .keyword-panel {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 280px;
-    background: var(--panel);
-    border: 1px solid var(--gold);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 20px rgba(201,168,76,0.1);
-    z-index: 200;
-    display: none;
-    animation: slideIn 0.2s ease;
-  }
-
   @keyframes slideIn {
     from { opacity: 0; transform: translateY(10px); }
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  .keyword-panel.visible { display: block; }
-
-  .keyword-panel-header {
-    background: rgba(201,168,76,0.1);
-    border-bottom: 1px solid var(--gold-dim);
-    padding: 10px 14px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .keyword-panel-name {
-    font-family: Arial, sans-serif;
-    font-size: 12px;
-    color: var(--gold);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
-
-  .keyword-panel-close {
-    cursor: pointer;
-    color: var(--gold);
-    font-size: 16px;
-    line-height: 1;
-    background: none;
-    border: none;
-    font-family: Arial, sans-serif;
-  }
-
-  .keyword-panel-body {
-    padding: 12px 14px;
-    font-size: 11px;
-    line-height: 1.7;
-    color: var(--text);
-  }
-
-  .keyword-panel-body .rule-line {
-    padding: 3px 0;
+  .strat-modal-body .rule-line {
+    padding: 8px 0;
     border-bottom: 1px solid var(--border);
+    line-height: 1.6;
   }
 
-  .keyword-panel-body .rule-line:last-child { border-bottom: none; }
+  .strat-modal-body .rule-line:last-child { border-bottom: none; }
 
   /* SECTION DIVIDERS */
   .section-label {
@@ -648,8 +607,10 @@
     justify-content: space-between;
     padding: 12px 16px;
     border-top: 1px solid var(--border);
-    position: sticky;
+    position: fixed;
     bottom: 0;
+    left: 0;
+    right: 0;
     background: var(--panel);
     z-index: 10;
   }
@@ -814,16 +775,6 @@
   @keyframes splashBlink {
     0%, 100% { opacity: 0.4; }
     50%       { opacity: 1; }
-  }
-
-  /* SCROLL INDICATOR */
-  .scroll-hint {
-    text-align: center;
-    font-size: 9px;
-    letter-spacing: 2px;
-    color: var(--text-dim);
-    padding: 16px;
-    text-transform: uppercase;
   }
 
   /* FACTION SELECTION SCREEN */
@@ -1259,7 +1210,6 @@
 
 <main>
   <div id="phases-container"></div>
-  <div class="scroll-hint">Click any keyword tag to see its rules</div>
 </main>
 
 <!-- Stratagem Detail Modal -->
@@ -1277,12 +1227,14 @@
 </div>
 
 <!-- Keyword Info Panel -->
-<div class="keyword-panel" id="keyword-panel">
-  <div class="keyword-panel-header">
-    <span class="keyword-panel-name" id="kp-name"></span>
-    <button class="keyword-panel-close" onclick="closeKeywordPanel()">✕</button>
+<div class="strat-modal" id="keyword-panel" onclick="if(event.target===this)closeKeywordPanel()">
+  <div class="strat-modal-card">
+    <div class="strat-modal-header">
+      <div class="strat-modal-name" id="kp-name"></div>
+      <button class="strat-modal-close" onclick="closeKeywordPanel()">✕</button>
+    </div>
+    <div class="strat-modal-body" id="kp-body"></div>
   </div>
-  <div class="keyword-panel-body" id="kp-body"></div>
 </div>
 
 <script>
@@ -1708,6 +1660,14 @@ const coreAlwaysVisible = new Set([
   'HEROIC INTERVENTION','NEW ORDERS','RAPID INGRESS','SMOKESCREEN','TANK SHOCK',
   'OBJECTIVE SECURED','LEADER','ATTACHED UNIT','FIGHTS FIRST','FIGHTS LAST',
 ]);
+
+// Keywords whose first rule line starts with a CP cost are stratagems —
+// suppress them from action/note keyword tags (they live in the Stratagems tab).
+const stratagemKeywords = new Set(
+  Object.entries(keywords)
+    .filter(([, rules]) => /^\d+ CP/i.test(rules[0] || ''))
+    .map(([kw]) => kw)
+);
 
 // ─── KEYWORD VISIBILITY ──────────────────────────────────
 // kwForPlayer / kwForEnemy: drives both tag-pill visibility and
@@ -2305,10 +2265,8 @@ async function processRosterFile(file, side) {
 
 // ─── SPLASH ───────────────────────────────────────────────
 function renderSplash() {
-  const hint = document.querySelector('.scroll-hint');
   const turnBar = document.getElementById('turn-bar');
   turnBar.style.display = 'none';
-  hint.style.display = 'none';
 
   const el = document.createElement('div');
   el.className = 'splash-screen';
@@ -2341,7 +2299,6 @@ function dismissSplash() {
 
 // ─── RENDER ──────────────────────────────────────────────
 function render() {
-  const hint    = document.querySelector('.scroll-hint');
   const turnBar = document.getElementById('turn-bar');
   const header  = document.querySelector('header');
   if (step === 'splash') {
@@ -2352,13 +2309,11 @@ function render() {
     renderSetupPage();
     header.style.display  = 'none';
     turnBar.style.display = 'none';
-    hint.style.display    = 'none';
   } else {
     renderPills();
     renderPhases();
     header.style.display  = '';
     turnBar.style.display = '';
-    hint.style.display    = '';
   }
 }
 
@@ -2743,10 +2698,19 @@ function renderPhases() {
   const done  = phase.items.filter((_, j) => checked[`${phase.id}-${j}`]).length;
 
   function kwTags(item) {
-    const kws = (item.keywords || []).filter(isKeywordVisible);
+    const kws = (item.keywords || []).filter(kw => isKeywordVisible(kw) && !stratagemKeywords.has(kw));
     return kws.length ? `<div class="keyword-tags">${kws.map(kw =>
       `<span class="keyword-tag" onclick="event.stopPropagation();showKeyword('${kw}')">${kw}</span>`
     ).join('')}</div>` : '';
+  }
+
+  // Split action text on first → or — into bold primary + regular support line.
+  function fmtAction(text) {
+    const i = text.search(/\s*[→—]\s*/);
+    if (i === -1) return text;
+    const primary = text.slice(0, i);
+    const support = text.slice(i).replace(/^\s*[→—]\s*/, '');
+    return `${primary}<span class="step-support">${support}</span>`;
   }
 
   function renderStepsTab() {
@@ -2761,7 +2725,7 @@ function renderPhases() {
           <div class="check-item action-item ${isChecked ? 'checked' : ''} ${hasKw ? 'has-keyword' : ''}" onclick="toggleCheck('${phase.id}',${j})">
             <div class="checkbox"></div>
             <div class="item-content">
-              <div class="item-text">${item.text}</div>
+              <div class="item-text">${fmtAction(item.text)}</div>
               ${kwTags(item)}
             </div>
           </div>`;
@@ -2851,14 +2815,11 @@ function resetTurn() {
 }
 
 function showKeyword(kw) {
-  const panel = document.getElementById('keyword-panel');
-  const name = document.getElementById('kp-name');
-  const body = document.getElementById('kp-body');
   const rules = keywords[kw];
   if (!rules) return;
-  name.textContent = kw;
-  body.innerHTML = rules.map(r => `<div class="rule-line">${r}</div>`).join('');
-  panel.classList.add('visible');
+  document.getElementById('kp-name').textContent = kw;
+  document.getElementById('kp-body').innerHTML = rules.map(r => `<div class="rule-line">${r}</div>`).join('');
+  document.getElementById('keyword-panel').classList.add('visible');
 }
 
 function closeKeywordPanel() {
