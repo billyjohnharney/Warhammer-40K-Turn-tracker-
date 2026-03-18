@@ -363,6 +363,14 @@
     color: var(--text-dim);
   }
 
+  .step-support {
+    display: block;
+    font-weight: 400;
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
   .check-item.action-item.checked {
     border-left-color: var(--green);
   }
@@ -2735,6 +2743,15 @@ function renderPhases() {
     ).join('')}</div>` : '';
   }
 
+  // Split action text on first → or — into bold primary + regular support line.
+  function fmtAction(text) {
+    const i = text.search(/\s*[→—]\s*/);
+    if (i === -1) return text;
+    const primary = text.slice(0, i);
+    const support = text.slice(i).replace(/^\s*[→—]\s*/, '');
+    return `${primary}<span class="step-support">${support}</span>`;
+  }
+
   function renderStepsTab() {
     return stepGroups.map(({ action, notes }) => {
       let html = '';
@@ -2747,7 +2764,7 @@ function renderPhases() {
           <div class="check-item action-item ${isChecked ? 'checked' : ''} ${hasKw ? 'has-keyword' : ''}" onclick="toggleCheck('${phase.id}',${j})">
             <div class="checkbox"></div>
             <div class="item-content">
-              <div class="item-text">${item.text}</div>
+              <div class="item-text">${fmtAction(item.text)}</div>
               ${kwTags(item)}
             </div>
           </div>`;
