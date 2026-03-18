@@ -173,7 +173,7 @@
   main {
     max-width: 800px;
     margin: 0 auto;
-    padding: 20px 24px 60px;
+    padding: 20px 24px 80px;
   }
 
   /* PHASE VIEW (flat — no card) */
@@ -648,8 +648,10 @@
     justify-content: space-between;
     padding: 12px 16px;
     border-top: 1px solid var(--border);
-    position: sticky;
+    position: fixed;
     bottom: 0;
+    left: 0;
+    right: 0;
     background: var(--panel);
     z-index: 10;
   }
@@ -814,16 +816,6 @@
   @keyframes splashBlink {
     0%, 100% { opacity: 0.4; }
     50%       { opacity: 1; }
-  }
-
-  /* SCROLL INDICATOR */
-  .scroll-hint {
-    text-align: center;
-    font-size: 9px;
-    letter-spacing: 2px;
-    color: var(--text-dim);
-    padding: 16px;
-    text-transform: uppercase;
   }
 
   /* FACTION SELECTION SCREEN */
@@ -1259,7 +1251,6 @@
 
 <main>
   <div id="phases-container"></div>
-  <div class="scroll-hint">Click any keyword tag to see its rules</div>
 </main>
 
 <!-- Stratagem Detail Modal -->
@@ -2305,10 +2296,8 @@ async function processRosterFile(file, side) {
 
 // ─── SPLASH ───────────────────────────────────────────────
 function renderSplash() {
-  const hint = document.querySelector('.scroll-hint');
   const turnBar = document.getElementById('turn-bar');
   turnBar.style.display = 'none';
-  hint.style.display = 'none';
 
   const el = document.createElement('div');
   el.className = 'splash-screen';
@@ -2341,7 +2330,6 @@ function dismissSplash() {
 
 // ─── RENDER ──────────────────────────────────────────────
 function render() {
-  const hint    = document.querySelector('.scroll-hint');
   const turnBar = document.getElementById('turn-bar');
   const header  = document.querySelector('header');
   if (step === 'splash') {
@@ -2352,13 +2340,11 @@ function render() {
     renderSetupPage();
     header.style.display  = 'none';
     turnBar.style.display = 'none';
-    hint.style.display    = 'none';
   } else {
     renderPills();
     renderPhases();
     header.style.display  = '';
     turnBar.style.display = '';
-    hint.style.display    = '';
   }
 }
 
