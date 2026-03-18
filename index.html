@@ -1576,8 +1576,8 @@ const phases = [
     id: 'command',
     title: 'Command Phase',
     items: [
-      { type: 'action', text: 'Both players gain 1CP' },
-      { type: 'action', text: 'Resolve army abilities' },
+      { type: 'action', text: 'Both players gain 1CP — Command Points are spent to activate Stratagems during any phase' },
+      { type: 'action', text: 'Resolve army abilities — activate any faction or detachment abilities that trigger at the start of your Command phase (see abilities listed below)' },
       { type: 'command-abilities' },
       { type: 'action', text: 'Check for Battle-Shock — for each unit below Half-strength, roll 2D6; equal or beat Leadership to pass', keywords: ['BATTLE-SHOCK', 'INSANE BRAVERY'] },
       { type: 'note',   text: 'Failed Battle-shock: unit OC becomes 0, cannot use Stratagems until next Command phase. Battle-shocked units take Desperate Escape tests when Falling Back', keywords: ['BATTLE-SHOCK'] },
@@ -1618,9 +1618,9 @@ const phases = [
       { type: 'note',      text: 'Blast: add 1 to Attacks per 5 models in target unit. Cannot use vs units in Engagement Range of your own', keywords: ['BLAST'], playerOnly: true },
       { type: 'note',      text: 'Heavy: add +1 to Hit rolls if unit Remained Stationary this turn', keywords: ['HEAVY'], playerOnly: true },
       { type: 'note',      text: 'Indirect Fire with no visible target: -1 to Hit rolls, target has Benefit of Cover', keywords: ['INDIRECT FIRE'], playerOnly: true },
-      { type: 'action',    text: 'Roll Hit rolls → check unmodified 6s (Critical Hits)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'] },
-      { type: 'action',    text: 'Roll Wound rolls → check unmodified 6s (Critical Wounds)', keywords: ['DEVASTATING WOUNDS', 'ANTI-[KEYWORD] X+'] },
-      { type: 'action',    text: 'Apply AP to saving throws — Invulnerable saves are never modified by AP' },
+      { type: 'action',    text: 'Roll Hit rolls — roll 1D6 per attack vs. your BS; equal or beat it to hit. Unmodified 6 = Critical Hit', keywords: ['LETHAL HITS', 'SUSTAINED HITS X'] },
+      { type: 'action',    text: 'Roll Wound rolls — compare Strength vs Toughness (S≥2×T: 2+, S>T: 3+, S=T: 4+, S<T: 5+, S≤½T: 6+). Unmodified 6 = Critical Wound', keywords: ['DEVASTATING WOUNDS', 'ANTI-[KEYWORD] X+'] },
+      { type: 'action',    text: 'Apply AP to saving throws — subtract AP from armour Save; roll 1D6 per wound and meet/beat it to block. Invulnerable saves ignore AP entirely' },
       { type: 'note',      text: 'Your Feel No Pain: your models with FNP may roll to negate wounds after saves', keywords: ['FEEL NO PAIN X+'], playerOnly: true },
       { type: 'note',      text: 'Enemy Feel No Pain: after your attacks wound, enemy models with FNP may roll to negate those wounds', keywords: ['FEEL NO PAIN X+'], enemyOnly: true },
       { type: 'note',      text: 'Ignores Cover: target cannot use Benefit of Cover', keywords: ['IGNORES COVER'], playerOnly: true },
@@ -1637,7 +1637,7 @@ const phases = [
     items: [
       { type: 'action',    text: 'Select eligible units — Units within 12" of enemy, haven\'t Advanced or Fell Back, not in Engagement Range' },
       { type: 'note',      text: 'Targets do not need to be visible' },
-      { type: 'action',    text: 'Charge — Roll 2D6. This must reach targets or charge fails.', keywords: ['COMMAND RE-ROLL'] },
+      { type: 'action',    text: 'Charge — Roll 2D6; move up to that distance. Must end within Engagement Range (≤1" horizontally) of all declared targets without moving within 1" of undeclared enemies, or the charge fails', keywords: ['COMMAND RE-ROLL'] },
       { type: 'note',      text: 'Successful charge gives unit Fights First this turn', keywords: ['FIGHTS FIRST'] },
       { type: 'note',      text: 'Heroic Intervention (2CP): after this charge, the opponent may spend 2CP to move one eligible unit within 6" into Engagement Range of your charging unit', keywords: ['HEROIC INTERVENTION'] },
     ]
@@ -1649,7 +1649,7 @@ const phases = [
       { type: 'note',      text: 'Fights First step: Units with Fights First ability fight now — all units that charged this turn also fight in this step', keywords: ['FIGHTS FIRST'] },
       { type: 'note',      text: 'Fights Last: units with this ability fight after all other units — select them only once all normal units have fought', keywords: ['FIGHTS LAST'] },
       { type: 'action',    text: 'Players alternate selecting eligible units — defending player picks first. Counter-Offensive (2CP) can interrupt the sequence', keywords: ['COUNTER-OFFENSIVE'] },
-      { type: 'action',    text: 'Pile In: move each model up to 3" closer to nearest enemy' },
+      { type: 'action',    text: 'Pile In: move each model up to 3" — must end closer to the nearest enemy model than it started, remaining in unit coherency' },
       { type: 'note',      text: 'Lance: add +1 to Wound rolls if bearer charged this turn', keywords: ['LANCE'], playerOnly: true },
       { type: 'note',      text: 'Extra Attacks: bearer attacks with this weapon in addition to other melee weapons', keywords: ['EXTRA ATTACKS'], playerOnly: true },
       { type: 'note',      text: 'Precision: when targeting Attached unit, can allocate attack to visible Character', keywords: ['PRECISION'], playerOnly: true },
@@ -1668,10 +1668,10 @@ const phases = [
     id: 'end',
     title: 'End of Turn',
     items: [
-      { type: 'action',    text: 'Check unit coherency — remove models from any unit not in coherency' },
+      { type: 'action',    text: 'Check unit coherency — each model must be within 2" horizontally and 5" vertically of at least one other model in its unit; remove models that cannot maintain coherency' },
       { type: 'action',    text: 'Score objectives — units with Objective Secured control markers even against non-ObjSec enemies', keywords: ['OBJECTIVE SECURED'] },
-      { type: 'action',    text: 'Note victory points scored this turn' },
-      { type: 'action',    text: 'Pass to your opponent' },
+      { type: 'action',    text: 'Note victory points scored this turn — tally VPs from Primary Mission objectives, Secondary Mission cards, and any other scoring rules triggered this turn' },
+      { type: 'action',    text: 'Pass to your opponent — your turn ends; opponent takes their turn. After both players have gone, the Battle Round is complete (game lasts 5 Battle Rounds)' },
     ]
   }
 ];
