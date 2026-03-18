@@ -2267,6 +2267,7 @@ async function processRosterFile(file, side) {
 function renderSplash() {
   const turnBar = document.getElementById('turn-bar');
   turnBar.style.display = 'none';
+  document.querySelector('header').style.display = 'none';
 
   const el = document.createElement('div');
   el.className = 'splash-screen';
