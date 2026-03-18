@@ -416,9 +416,82 @@
 
   .strat-legend {
     font-size: 12px;
-    color: var(--text-bright);
+    color: var(--text-dim);
     line-height: 1.4;
     margin-top: 3px;
+  }
+
+  .stratagem-item { cursor: pointer; }
+
+  /* STRATAGEM DETAIL MODAL */
+  .strat-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .strat-modal.visible { display: flex; }
+
+  .strat-modal-card {
+    background: var(--panel);
+    border: 1px solid var(--border-bright);
+    border-radius: 12px 12px 0 0;
+    width: 100%;
+    max-width: 560px;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: slideIn 0.2s ease;
+  }
+
+  .strat-modal-header {
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: sticky;
+    top: 0;
+    background: var(--panel);
+  }
+
+  .strat-modal-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-bright);
+  }
+
+  .strat-modal-cp {
+    font-size: 12px;
+    color: var(--gold);
+    margin-top: 3px;
+  }
+
+  .strat-modal-close {
+    cursor: pointer;
+    color: var(--text-dim);
+    font-size: 20px;
+    background: none;
+    border: none;
+    line-height: 1;
+    padding: 0 0 0 12px;
+    flex-shrink: 0;
+  }
+
+  .strat-modal-body {
+    padding: 16px;
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--text);
+  }
+
+  .strat-modal-body b {
+    color: var(--green-bright);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
   }
 
   /* KEYWORD TAGS */
@@ -1189,6 +1262,20 @@
   <div class="scroll-hint">Click any keyword tag to see its rules</div>
 </main>
 
+<!-- Stratagem Detail Modal -->
+<div class="strat-modal" id="strat-modal" onclick="if(event.target===this)closeStratModal()">
+  <div class="strat-modal-card">
+    <div class="strat-modal-header">
+      <div>
+        <div class="strat-modal-name" id="sm-name"></div>
+        <div class="strat-modal-cp" id="sm-cp"></div>
+      </div>
+      <button class="strat-modal-close" onclick="closeStratModal()">✕</button>
+    </div>
+    <div class="strat-modal-body" id="sm-body"></div>
+  </div>
+</div>
+
 <!-- Keyword Info Panel -->
 <div class="keyword-panel" id="keyword-panel">
   <div class="keyword-panel-header">
@@ -1875,12 +1962,21 @@ function renderFactionStratagemSection(phaseId) {
   function stratagemItemHtml(s) {
     const name   = s.name || 'Unknown';
     const cp     = s.cp_cost ? `${s.cp_cost}CP` : '';
-    const legend = s.legend || '';
+    // Show effect text as brief summary; fall back to legend if no description
+    const desc   = s.description || '';
+    const effIdx = desc.indexOf('<b>EFFECT:</b>');
+    let brief = '';
+    if (effIdx !== -1) {
+      const raw = desc.slice(effIdx + '<b>EFFECT:</b>'.length).replace(/<[^>]+>/g, '').trim();
+      brief = raw.length > 110 ? raw.slice(0, 107) + '…' : raw;
+    } else {
+      brief = s.legend || '';
+    }
     return `
-      <div class="stratagem-item">
+      <div class="stratagem-item" data-sid="${s.id || ''}" onclick="showStratagem(this.dataset.sid)">
         <div class="item-content">
           <div><span class="strat-name">${name}</span>${cp ? `<span class="strat-cp">${cp}</span>` : ''}</div>
-          ${legend ? `<div class="strat-legend">${legend}</div>` : ''}
+          ${brief ? `<div class="strat-legend">${brief}</div>` : ''}
         </div>
       </div>`;
   }
@@ -2767,6 +2863,19 @@ function showKeyword(kw) {
 
 function closeKeywordPanel() {
   document.getElementById('keyword-panel').classList.remove('visible');
+}
+
+function showStratagem(id) {
+  const s = wahapedia.stratagemRows.find(x => x.id === id);
+  if (!s) return;
+  document.getElementById('sm-name').textContent = s.name || '';
+  document.getElementById('sm-cp').textContent   = s.cp_cost ? `${s.cp_cost} CP` : '';
+  document.getElementById('sm-body').innerHTML   = s.description || s.legend || '';
+  document.getElementById('strat-modal').classList.add('visible');
+}
+
+function closeStratModal() {
+  document.getElementById('strat-modal').classList.remove('visible');
 }
 
 // ─── INIT ─────────────────────────────────────────────────
