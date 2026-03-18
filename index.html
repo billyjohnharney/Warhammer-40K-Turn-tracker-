@@ -623,9 +623,9 @@
     color: var(--text-dim);
   }
 
-  .fs-subsection-label.fs-universal { color: var(--text-dim); }
-  .fs-subsection-label.fs-player    { color: #9b59b6; }
-  .fs-subsection-label.fs-enemy     { color: var(--red-bright); opacity: 0.75; }
+  .fs-subsection-label.fs-attack  { color: #2980b9; }
+  .fs-subsection-label.fs-defence { color: var(--red-bright); }
+  .fs-subsection-label.fs-either  { color: var(--green-bright); }
 
   .fs-empty {
     padding: 4px 16px 8px;
@@ -1885,41 +1885,45 @@ function renderFactionStratagemSection(phaseId) {
       </div>`;
   }
 
-  function renderFactionGroup(items, factionLabel, labelClass) {
-    if (!items.length) return '';
-    // Split into universal (no detachment) and per-detachment groups
-    const universal = items.filter(s => !s.detachment || s.detachment === '-');
-    const byDet = {};
-    for (const s of items) {
-      if (s.detachment && s.detachment !== '-') {
-        (byDet[s.detachment] = byDet[s.detachment] || []).push(s);
-      }
-    }
-    let html = '';
-    if (universal.length) {
-      html += `<div class="fs-subsection-label ${labelClass}">${factionLabel}</div>`;
-      html += universal.map(stratagemItemHtml).join('');
-    }
-    for (const [det, strats] of Object.entries(byDet)) {
-      html += `<div class="fs-subsection-label ${labelClass}">${det}</div>`;
-      html += strats.map(stratagemItemHtml).join('');
-    }
-    return html;
+  // Classify a stratagem as 'attack' (your turn), 'defence' (opponent's turn), or 'either'.
+  function _stratageminTurn(s) {
+    const text = (s.when || s.legend || s.description || '').toLowerCase();
+    const hasOpponent = text.includes('opponent');
+    const hasYourTurn = /your (shooting|movement|command|charge|fight|end|battle round|turn)/.test(text);
+    if (hasOpponent && hasYourTurn) return 'either';
+    if (hasOpponent) return 'defence';
+    if (hasYourTurn) return 'attack';
+    return 'either';
   }
 
   const universalItems = filterStrats(factionStrats.universal);
   const playerItems    = filterStrats(factionStrats.player);
-  const enemyItems     = filterStrats(factionStrats.enemy);
+  const allItems = [...universalItems, ...playerItems];
 
-  if (!universalItems.length && !playerItems.length && !enemyItems.length) return '';
+  if (!allItems.length) return '';
+
+  const attackItems  = allItems.filter(s => _stratageminTurn(s) === 'attack');
+  const defenceItems = allItems.filter(s => _stratageminTurn(s) === 'defence');
+  const eitherItems  = allItems.filter(s => _stratageminTurn(s) === 'either');
 
   let html = '<div class="fs-section">';
-  if (universalItems.length) {
-    html += `<div class="fs-subsection-label fs-universal">Universal</div>`;
-    html += universalItems.map(stratagemItemHtml).join('');
+
+  if (attackItems.length) {
+    html += `<div class="fs-subsection-label fs-attack">Attack</div>`;
+    html += attackItems.map(stratagemItemHtml).join('');
   }
-  html += renderFactionGroup(playerItems, gameConfig.playerFaction, 'fs-player');
-  html += renderFactionGroup(enemyItems,  gameConfig.enemyFaction,  'fs-enemy');
+
+  if (defenceItems.length) {
+    html += `<div class="fs-subsection-label fs-defence">Defence</div>`;
+    html += defenceItems.map(stratagemItemHtml).join('');
+  }
+
+  if (eitherItems.length) {
+    html += `<div class="fs-subsection-label fs-either">Either</div>`;
+    html += eitherItems.map(stratagemItemHtml).join('');
+  }
+
+
   html += `<div class="fs-attribution">Stratagem data: <a href="https://wahapedia.ru" target="_blank" rel="noopener">Wahapedia</a></div>`;
   html += '</div>';
   return html;
