@@ -1708,6 +1708,14 @@ const coreAlwaysVisible = new Set([
   'OBJECTIVE SECURED','LEADER','ATTACHED UNIT','FIGHTS FIRST','FIGHTS LAST',
 ]);
 
+// Keywords whose first rule line starts with a CP cost are stratagems —
+// suppress them from action/note keyword tags (they live in the Stratagems tab).
+const stratagemKeywords = new Set(
+  Object.entries(keywords)
+    .filter(([, rules]) => /^\d+ CP/i.test(rules[0] || ''))
+    .map(([kw]) => kw)
+);
+
 // ─── KEYWORD VISIBILITY ──────────────────────────────────
 // kwForPlayer / kwForEnemy: drives both tag-pill visibility and
 //   playerOnly / enemyOnly item visibility.
@@ -2737,7 +2745,7 @@ function renderPhases() {
   const done  = phase.items.filter((_, j) => checked[`${phase.id}-${j}`]).length;
 
   function kwTags(item) {
-    const kws = (item.keywords || []).filter(isKeywordVisible);
+    const kws = (item.keywords || []).filter(kw => isKeywordVisible(kw) && !stratagemKeywords.has(kw));
     return kws.length ? `<div class="keyword-tags">${kws.map(kw =>
       `<span class="keyword-tag" onclick="event.stopPropagation();showKeyword('${kw}')">${kw}</span>`
     ).join('')}</div>` : '';
