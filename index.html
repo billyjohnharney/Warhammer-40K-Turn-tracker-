@@ -1524,6 +1524,16 @@ const keywords = {
 
   // ══ VEHICLE / MONSTER SPECIAL RULES ══════════════════════════════════════
 
+  'MONSTER': [
+    'Unit type keyword — MONSTER models can shoot and fight while in Engagement Range, even with non-Pistol weapons.',
+    'Hazardous rolls of 1 inflict 3 mortal wounds on the MONSTER model rather than destroying it outright.',
+    'Many MONSTER datasheets have a DAMAGED threshold — characteristics are reduced when wounds drop below a set level.'
+  ],
+  'VEHICLE': [
+    'Unit type keyword — VEHICLE models can shoot and fight while in Engagement Range, even with non-Pistol weapons.',
+    'Hazardous rolls of 1 inflict 3 mortal wounds on the VEHICLE model rather than destroying it outright.',
+    'Many VEHICLE datasheets have a DAMAGED threshold — characteristics are reduced when wounds drop below a set level.'
+  ],
   'ATTACHED UNIT': [
     'A unit containing a LEADER — the Character and Bodyguard are treated as a single unit.',
     'Wounds are always allocated to Bodyguard models until all are destroyed.',
@@ -1604,7 +1614,7 @@ const phases = [
       { type: 'action', text: 'Both players gain 1CP' },
       { type: 'action', text: 'Resolve army abilities' },
       { type: 'command-abilities' },
-      { type: 'action', text: 'Check for Battle-Shock — For each unit Below Half-strength, roll 2D6<br>equal or beat Leadership to pass', keywords: ['BATTLE-SHOCK', 'INSANE BRAVERY'] },
+      { type: 'action', text: 'Check for Battle-Shock — for each unit below Half-strength, roll 2D6; equal or beat Leadership to pass', keywords: ['BATTLE-SHOCK', 'INSANE BRAVERY'] },
       { type: 'note',   text: 'Failed Battle-shock: unit OC becomes 0, cannot use Stratagems until next Command phase. Battle-shocked units take Desperate Escape tests when Falling Back', keywords: ['BATTLE-SHOCK'] },
     ]
   },
@@ -1617,9 +1627,9 @@ const phases = [
       { type: 'note',   text: 'Units that Advance cannot shoot or charge this turn — exception: Assault weapons can still fire', keywords: ['ASSAULT'], playerOnly: true },
       { type: 'note',   text: 'Units that Remain Stationary get +1 to Hit rolls for Heavy weapons this turn', keywords: ['HEAVY'], playerOnly: true },
       { type: 'note',   text: 'Units that Fall Back cannot shoot or charge this turn. Battle-shocked units must take Desperate Escape tests', keywords: ['BATTLE-SHOCK'] },
-      { type: 'note',   text: 'LEADER: Attached units (Character + bodyguard) move together as a single unit — they cannot separate', keywords: ['LEADER', 'ATTACHED UNIT'] },
-      { type: 'note',   text: 'SCOUTS: eligible units may make their pre-battle Scout move before the first battle round begins', keywords: ['SCOUTS X"'], playerOnly: true },
-      { type: 'note',   text: 'HOVER: declare Hover mode now if needed — model loses AIRCRAFT rules, Move becomes 20"', keywords: ['HOVER'], playerOnly: true },
+      { type: 'note',   text: 'Leader: Attached units (Character + bodyguard) move together as a single unit — they cannot separate', keywords: ['LEADER', 'ATTACHED UNIT'] },
+      { type: 'note',   text: 'Scouts: eligible units make a pre-battle move of up to X" before Round 1 — resolve before other movement if not yet done', keywords: ['SCOUTS X"'], playerOnly: true },
+      { type: 'note',   text: 'Hover: declare Hover mode now if needed — model loses AIRCRAFT rules, Move becomes 20"', keywords: ['HOVER'], playerOnly: true },
       { type: 'action', text: 'Deploy reinforcements — Excluding the first round, deploy any units arriving from Deep Strike or Reserves', keywords: ['DEEP STRIKE'], playerOnly: true },
     ]
   },
@@ -1629,7 +1639,7 @@ const phases = [
     items: [
       { type: 'note',      text: 'Skip units that Advanced or Fell Back — unless using Assault weapons', keywords: ['ASSAULT'] },
       { type: 'action',    text: 'Declare all targets — Complete before rolling. Indirect Fire weapons may target units not visible', keywords: ['INDIRECT FIRE'] },
-      { type: 'note',      text: 'Units in Engagement Range cannot shoot — exceptions: Monsters, Vehicles, Pistol weapons', keywords: ['PISTOL'] },
+      { type: 'note',      text: 'Units in Engagement Range cannot shoot — exceptions: Monsters, Vehicles, Pistol weapons', keywords: ['PISTOL', 'MONSTER', 'VEHICLE'] },
       { type: 'note',      text: 'Pistol: must target a unit in Engagement Range, cannot mix with non-Pistol weapons', keywords: ['PISTOL'], playerOnly: true },
       { type: 'note',      text: 'Your Lone Operative units cannot be targeted by ranged attacks from more than 12" away', keywords: ['LONE OPERATIVE'], playerOnly: true },
       { type: 'note',      text: 'Enemy Lone Operative: you cannot target enemy units with this ability from more than 12" away', keywords: ['LONE OPERATIVE'], enemyOnly: true },
@@ -1637,7 +1647,7 @@ const phases = [
       { type: 'note',      text: 'Enemy Stealth: apply -1 to your Hit rolls when targeting an enemy unit with Stealth from more than 12"', keywords: ['STEALTH'], enemyOnly: true },
       { type: 'note',      text: 'Psychic: weapons/abilities tagged [PSYCHIC] are resolved in this phase — no separate Psychic phase', keywords: ['PSYCHIC'], playerOnly: true },
       { type: 'note',      text: 'One Shot: track any One Shot weapons used this turn — they cannot be fired again this battle', keywords: ['ONE SHOT'], playerOnly: true },
-      { type: 'note',      text: 'FIRING DECK: TRANSPORT models with Firing Deck may shoot using embarked models\' weapons', keywords: ['FIRING DECK X'], playerOnly: true },
+      { type: 'note',      text: 'Firing Deck: Transport models with Firing Deck may shoot using embarked models\' weapons', keywords: ['FIRING DECK X'], playerOnly: true },
       { type: 'note',      text: 'Torrent: attacks automatically hit, skip Hit roll', keywords: ['TORRENT'], playerOnly: true },
       { type: 'note',      text: 'Rapid Fire X: check if target is within half range, if so add X to Attacks', keywords: ['RAPID FIRE X'], playerOnly: true },
       { type: 'note',      text: 'Blast: add 1 to Attacks per 5 models in target unit. Cannot use vs units in Engagement Range of your own', keywords: ['BLAST'], playerOnly: true },
@@ -1664,6 +1674,7 @@ const phases = [
       { type: 'note',      text: 'Targets do not need to be visible' },
       { type: 'action',    text: 'Charge — Roll 2D6. This must reach targets or charge fails.', keywords: ['COMMAND RE-ROLL'] },
       { type: 'note',      text: 'Successful charge gives unit Fights First this turn', keywords: ['FIGHTS FIRST'] },
+      { type: 'note',      text: 'Heroic Intervention (2CP): after this charge, the opponent may spend 2CP to move one eligible unit within 6" into Engagement Range of your charging unit', keywords: ['HEROIC INTERVENTION'] },
     ]
   },
   {
@@ -1684,7 +1695,7 @@ const phases = [
       { type: 'note',      text: 'After fighting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'], playerOnly: true },
       { type: 'note',      text: 'Your Deadly Demise: if your models with this ability are destroyed in this fight, roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], playerOnly: true },
       { type: 'note',      text: 'Enemy Deadly Demise: when you destroy an enemy model with this ability, roll D6 — on a 6 your nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], enemyOnly: true },
-      { type: 'action',    text: 'Consolidate: move each model up to 3" closer to nearest enemy' },
+      { type: 'action',    text: 'Consolidate: move each model up to 3" closer to nearest enemy model or toward an objective marker' },
       { type: 'note',      text: 'Remaining Combats: all remaining eligible units now fight — repeat the same sequence above. No unit can fight more than once per phase' },
     ]
   },
@@ -1861,6 +1872,7 @@ const coreAlwaysVisible = new Set([
   'EPIC CHALLENGE','FIRE OVERWATCH','GO TO GROUND','GRENADE',
   'HEROIC INTERVENTION','NEW ORDERS','RAPID INGRESS','SMOKESCREEN','TANK SHOCK',
   'OBJECTIVE SECURED','LEADER','ATTACHED UNIT','FIGHTS FIRST','FIGHTS LAST',
+  'MONSTER','VEHICLE',
 ]);
 
 // Keywords whose first rule line starts with a CP cost are stratagems —
