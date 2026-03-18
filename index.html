@@ -1887,12 +1887,9 @@ function renderFactionStratagemSection(phaseId) {
 
   // Classify a stratagem as 'attack' (your turn), 'defence' (opponent's turn), or 'either'.
   function _stratageminTurn(s) {
-    const text = (s.when || s.legend || s.description || '').toLowerCase();
-    const hasOpponent = text.includes('opponent');
-    const hasYourTurn = /your (shooting|movement|command|charge|fight|end|battle round|turn)/.test(text);
-    if (hasOpponent && hasYourTurn) return 'either';
-    if (hasOpponent) return 'defence';
-    if (hasYourTurn) return 'attack';
+    const t = (s.turn || '').toLowerCase();
+    if (t.includes('opponent')) return 'defence';
+    if (t === 'your turn') return 'attack';
     return 'either';
   }
 
