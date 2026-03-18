@@ -347,20 +347,22 @@
   .tab-content { padding-top: 4px; }
 
   /* ── ACTION ITEMS — primary steps ───────────────── */
-  .check-item.action-item {
+  .step-item {
+    padding: 10px 8px 10px 7px;
     border-left: 3px solid transparent;
-    padding-left: 3px;
+    cursor: pointer;
+    transition: background 0.1s;
   }
 
-  .check-item.action-item .item-text {
+  .step-item:hover {
+    background: rgba(255,255,255,0.03);
+    border-left-color: rgba(201,168,76,0.4);
+  }
+
+  .step-item .item-text {
     font-size: 15px;
     font-weight: 600;
     color: var(--text-bright);
-  }
-
-  .check-item.action-item.checked .item-text {
-    font-weight: 400;
-    color: var(--text-dim);
   }
 
   .step-support {
@@ -371,8 +373,11 @@
     margin-top: 2px;
   }
 
-  .check-item.action-item.checked {
-    border-left-color: var(--green);
+  .step-modal-note {
+    margin: 10px 0 0;
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.5;
   }
 
   /* ── NOTE ITEMS — subordinate context ───────────── */
@@ -1257,6 +1262,17 @@
   </div>
 </div>
 
+<!-- Step Detail Modal -->
+<div class="strat-modal" id="step-modal" onclick="if(event.target===this)closeStepModal()">
+  <div class="strat-modal-card">
+    <div class="strat-modal-header">
+      <div class="strat-modal-name" id="step-modal-name"></div>
+      <button class="strat-modal-close" onclick="closeStepModal()">✕</button>
+    </div>
+    <div class="strat-modal-body" id="step-modal-body"></div>
+  </div>
+</div>
+
 <!-- Keyword Info Panel -->
 <div class="strat-modal" id="keyword-panel" onclick="if(event.target===this)closeKeywordPanel()">
   <div class="strat-modal-card">
@@ -1596,7 +1612,7 @@ const phases = [
     id: 'movement',
     title: 'Movement Phase',
     items: [
-      { type: 'action', text: 'Select each unit and choose: Normal Move, Advance, Remain Stationary, or Fall Back' },
+      { type: 'action', text: 'Select each unit to move — Normal Move, Advance, Remain Stationary, or Fall Back' },
       { type: 'note',   text: 'Units in Engagement Range can only Remain Stationary or Fall Back' },
       { type: 'note',   text: 'Units that Advance cannot shoot or charge this turn — exception: Assault weapons can still fire', keywords: ['ASSAULT'], playerOnly: true },
       { type: 'note',   text: 'Units that Remain Stationary get +1 to Hit rolls for Heavy weapons this turn', keywords: ['HEAVY'], playerOnly: true },
@@ -1604,7 +1620,7 @@ const phases = [
       { type: 'note',   text: 'LEADER: Attached units (Character + bodyguard) move together as a single unit — they cannot separate', keywords: ['LEADER', 'ATTACHED UNIT'] },
       { type: 'note',   text: 'SCOUTS: eligible units may make their pre-battle Scout move before the first battle round begins', keywords: ['SCOUTS X"'], playerOnly: true },
       { type: 'note',   text: 'HOVER: declare Hover mode now if needed — model loses AIRCRAFT rules, Move becomes 20"', keywords: ['HOVER'], playerOnly: true },
-      { type: 'action', text: 'Reinforcements step: set up any units arriving from Deep Strike or Reserves', keywords: ['DEEP STRIKE'], playerOnly: true },
+      { type: 'action', text: 'Reinforcements — Excluding the first round, deploy any units arriving from Deep Strike or Reserves', keywords: ['DEEP STRIKE'], playerOnly: true },
     ]
   },
   {
@@ -1612,7 +1628,7 @@ const phases = [
     title: 'Shooting Phase',
     items: [
       { type: 'note',      text: 'Skip units that Advanced or Fell Back — unless using Assault weapons', keywords: ['ASSAULT'] },
-      { type: 'action',    text: 'Declare all targets before rolling — Indirect Fire weapons may target units not visible', keywords: ['INDIRECT FIRE'] },
+      { type: 'action',    text: 'Declare all targets — Complete before rolling. Indirect Fire weapons may target units not visible', keywords: ['INDIRECT FIRE'] },
       { type: 'note',      text: 'Units in Engagement Range cannot shoot — exceptions: Monsters, Vehicles, Pistol weapons', keywords: ['PISTOL'] },
       { type: 'note',      text: 'Pistol: must target a unit in Engagement Range, cannot mix with non-Pistol weapons', keywords: ['PISTOL'], playerOnly: true },
       { type: 'note',      text: 'Your Lone Operative units cannot be targeted by ranged attacks from more than 12" away', keywords: ['LONE OPERATIVE'], playerOnly: true },
@@ -1644,9 +1660,9 @@ const phases = [
     id: 'charge',
     title: 'Charge Phase',
     items: [
-      { type: 'action',    text: 'Eligible units: within 12" of enemy, haven\'t Advanced or Fell Back, not in Engagement Range' },
+      { type: 'action',    text: 'Select eligible units — Units within 12" of enemy, haven\'t Advanced or Fell Back, not in Engagement Range' },
       { type: 'note',      text: 'Targets do not need to be visible' },
-      { type: 'action',    text: 'Roll 2D6 for Charge roll — must reach all targets or charge fails. Use Command Re-roll if needed', keywords: ['COMMAND RE-ROLL'] },
+      { type: 'action',    text: 'Charge — Roll 2D6. This must reach targets or charge fails.', keywords: ['COMMAND RE-ROLL'] },
       { type: 'note',      text: 'Successful charge gives unit Fights First this turn', keywords: ['FIGHTS FIRST'] },
     ]
   },
@@ -2905,19 +2921,15 @@ function renderPhases() {
       let html = '';
       if (action) {
         const { item, j } = action;
-        const key = `${phase.id}-${j}`;
-        const isChecked = checked[key];
-        const hasKw = (item.keywords || []).some(isKeywordVisible);
         html += `
-          <div class="check-item action-item ${isChecked ? 'checked' : ''} ${hasKw ? 'has-keyword' : ''}" onclick="toggleCheck('${phase.id}',${j})">
-            <div class="checkbox"></div>
+          <div class="step-item" onclick="showStep('${phase.id}',${j})">
             <div class="item-content">
               <div class="item-text">${fmtAction(item.text)}</div>
               ${kwTags(item)}
             </div>
           </div>`;
       }
-      for (const { item, j } of notes) {
+      for (const { item } of notes) {
         if (item.type === 'command-abilities') {
           html += getCommandPhaseAbilities().map(({ side, name, text }) => `
             <div class="note-child cmd-ability-note">
@@ -2927,15 +2939,7 @@ function renderPhases() {
                 <div class="cmd-ability-text">${text}</div>
               </div>
             </div>`).join('');
-          continue;
         }
-        html += `
-          <div class="note-child">
-            <div class="item-content">
-              <div class="note-text">${item.text}</div>
-              ${kwTags(item)}
-            </div>
-          </div>`;
       }
       return html;
     }).join('');
@@ -3035,6 +3039,40 @@ function showStratagem(id) {
 
 function closeStratModal() {
   document.getElementById('strat-modal').classList.remove('visible');
+}
+
+function showStep(phaseId, itemIndex) {
+  const phase = phases.find(p => p.id === phaseId);
+  if (!phase) return;
+  const item = phase.items[itemIndex];
+  if (!item) return;
+
+  // Split title (before —) from support text (after —)
+  const text = item.text;
+  const sep = text.search(/\s*[→—]\s*/);
+  const title   = sep === -1 ? text : text.slice(0, sep);
+  const support = sep === -1 ? '' : text.slice(sep).replace(/^\s*[→—]\s*/, '');
+
+  // Collect filtered notes that follow this action
+  const notes = [];
+  for (let k = itemIndex + 1; k < phase.items.length; k++) {
+    const next = phase.items[k];
+    if (next.type === 'action') break;
+    if (next.type === 'note' && shouldShowItem(next)) notes.push(next);
+  }
+
+  document.getElementById('step-modal-name').textContent = title;
+  let body = '';
+  if (support) body += `<p style="margin:0 0 8px">${support}</p>`;
+  for (const note of notes) {
+    body += `<p class="step-modal-note">${note.text}</p>`;
+  }
+  document.getElementById('step-modal-body').innerHTML = body;
+  document.getElementById('step-modal').classList.add('visible');
+}
+
+function closeStepModal() {
+  document.getElementById('step-modal').classList.remove('visible');
 }
 
 // ─── INIT ─────────────────────────────────────────────────
