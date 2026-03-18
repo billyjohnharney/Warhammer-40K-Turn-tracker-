@@ -146,29 +146,6 @@
     background: rgba(26,107,46,0.08);
   }
 
-  /* RESET BUTTON */
-  .reset-btn {
-    flex: 1;
-    aspect-ratio: 1;
-    background: transparent;
-    border: 1px solid var(--gold-dim);
-    color: var(--gold);
-    padding: 6px 4px;
-    min-width: 0;
-    font-family: Arial, sans-serif;
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .reset-btn:hover {
-    background: rgba(201,168,76,0.1);
-    border-color: var(--gold);
-    box-shadow: 0 0 12px rgba(201,168,76,0.2);
-  }
-
   /* MAIN CONTENT */
   main {
     max-width: 800px;
@@ -730,16 +707,6 @@
     margin-top: 3px;
   }
 
-  /* ROUND LABEL */
-  .round-label {
-    font-size: 9px;
-    color: var(--gold);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    text-align: right;
-    margin-bottom: 2px;
-  }
-
   /* SPLASH SCREEN */
   .splash-screen {
     position: fixed;
@@ -1240,7 +1207,6 @@
 <div class="turn-bar" id="turn-bar">
   <div class="turn-bar-inner">
     <div class="phase-pills" id="phase-pills"></div>
-    <button class="reset-btn" onclick="resetTurn()">↺ New Turn</button>
   </div>
 </div>
 
@@ -1289,7 +1255,6 @@
 let checked = {};
 let activePhaseIndex = 0;
 let phaseTab = {}; // active tab per phase id: 'steps' | 'stratagems'
-let turnNumber = 1;
 let gameConfig = { playerFaction: '', enemyFaction: '', playerDetachment: '', enemyDetachment: '' };
 let step = 'splash'; // 'splash' | 'setup' | 'game'
 
@@ -2775,7 +2740,6 @@ function launchGame() {
   step = 'game';
   checked = {};
   activePhaseIndex = 0;
-  turnNumber = 1;
   updateHeaderFactions();
   render();
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2795,7 +2759,6 @@ function updateHeaderFactions() {
 
 function changeFactions() {
   step = 'setup';
-  turnNumber = 1;
   roster      = { loaded: false, units: [], activeKeywords: new Set() };
   enemyRoster = { loaded: false, units: [], activeKeywords: new Set() };
   rsState.player = { inputMode: 'file', parsed: null, error: '' };
@@ -2968,7 +2931,6 @@ function renderPhases() {
           <span class="phase-title">${phase.title}</span>
         </div>
         <div>
-          <div class="round-label">Round ${turnNumber}</div>
           <div class="phase-progress">${done} / ${total}</div>
         </div>
       </div>
@@ -3018,15 +2980,6 @@ function setPhaseTab(phaseId, tab) {
   renderPhases();
 }
 
-
-function resetTurn() {
-  checked = {};
-  activePhaseIndex = 0;
-  turnNumber++;
-  if (step === 'game') updateHeaderFactions();
-  render();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
 
 function showKeyword(kw) {
   const rules = keywords[kw];
