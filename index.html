@@ -376,7 +376,7 @@
   .step-modal-note {
     margin: 10px 0 0;
     font-size: 13px;
-    color: var(--text-dim);
+    color: var(--text-bright);
     line-height: 1.5;
   }
 
@@ -497,7 +497,7 @@
     padding: 16px;
     font-size: 13px;
     line-height: 1.8;
-    color: var(--text);
+    color: var(--text-bright);
   }
 
   .strat-modal-body b {
@@ -3061,11 +3061,20 @@ function showStep(phaseId, itemIndex) {
     if (next.type === 'note' && shouldShowItem(next)) notes.push(next);
   }
 
+  function makeKwTags(i) {
+    const kws = (i.keywords || []).filter(kw => isKeywordVisible(kw) && !stratagemKeywords.has(kw));
+    return kws.length ? `<div class="keyword-tags" style="margin-top:8px">${kws.map(kw =>
+      `<span class="keyword-tag" onclick="event.stopPropagation();showKeyword('${kw}')">${kw}</span>`
+    ).join('')}</div>` : '';
+  }
+
   document.getElementById('step-modal-name').textContent = title;
   let body = '';
-  if (support) body += `<p style="margin:0 0 8px">${support}</p>`;
+  if (support) body += `<p style="margin:0 0 4px">${support}</p>`;
+  body += makeKwTags(item);
   for (const note of notes) {
     body += `<p class="step-modal-note">${note.text}</p>`;
+    body += makeKwTags(note);
   }
   document.getElementById('step-modal-body').innerHTML = body;
   document.getElementById('step-modal').classList.add('visible');
