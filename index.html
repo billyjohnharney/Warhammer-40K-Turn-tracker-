@@ -2500,7 +2500,8 @@ function renderSetupPage() {
   document.getElementById('header-title').textContent = 'Tacticum';
   document.getElementById('header-subtitle').textContent = '10th Edition';
 
-  const canStart = !!(gameConfig.playerFaction && gameConfig.enemyFaction);
+  const canStart = !!(gameConfig.playerFaction && gameConfig.playerDetachment &&
+                      gameConfig.enemyFaction  && gameConfig.enemyDetachment);
 
   document.getElementById('phases-container').innerHTML = `
     <div class="faction-screen">
