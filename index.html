@@ -386,26 +386,6 @@
     background: rgba(201,168,76,0.03);
   }
 
-  .note-child.detachment-note {
-    border-left-color: var(--gold);
-    background: rgba(201,168,76,0.06);
-  }
-
-  .note-child.detachment-note .note-label {
-    font-size: 9px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--gold);
-    font-family: Arial, sans-serif;
-  }
-
-  .note-child.detachment-note .note-value {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-bright);
-    line-height: 1.4;
-  }
-
   .note-text {
     font-size: 13px;
     line-height: 1.5;
@@ -1576,8 +1556,6 @@ const phases = [
     items: [
       { type: 'action', text: 'Both players gain 1CP' },
       { type: 'action', text: 'Resolve any other Command phase rules, including detachment and army abilities that trigger here' },
-      { type: 'detachment-note', side: 'player' },
-      { type: 'detachment-note', side: 'enemy' },
       { type: 'action', text: 'For each unit Below Half-strength, roll 2D6 — equal or beat Leadership to pass', keywords: ['BATTLE-SHOCK', 'INSANE BRAVERY'] },
       { type: 'note',   text: 'Failed Battle-shock: unit OC becomes 0, cannot use Stratagems until next Command phase. Battle-shocked units take Desperate Escape tests when Falling Back', keywords: ['BATTLE-SHOCK'] },
     ]
@@ -2754,22 +2732,6 @@ function renderPhases() {
           </div>`;
       }
       for (const { item, j } of notes) {
-        if (item.type === 'detachment-note') {
-          const isPlayer = item.side === 'player';
-          const faction  = isPlayer ? gameConfig.playerFaction : gameConfig.enemyFaction;
-          const det      = isPlayer ? gameConfig.playerDetachment : gameConfig.enemyDetachment;
-          if (!faction) continue;
-          const label = isPlayer ? 'Your army' : 'Enemy army';
-          const value = det ? `${faction} · ${det}` : faction;
-          html += `
-            <div class="note-child detachment-note">
-              <div class="item-content">
-                <div class="note-label">${label}</div>
-                <div class="note-value">${value}</div>
-              </div>
-            </div>`;
-          continue;
-        }
         html += `
           <div class="note-child">
             <div class="item-content">
