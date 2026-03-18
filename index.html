@@ -577,67 +577,18 @@
 
   .sub-item.checked .sub-checkbox::after { display: block; }
 
-  /* KEYWORD TOOLTIP PANEL */
-  .keyword-panel {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 280px;
-    background: var(--panel);
-    border: 1px solid var(--gold);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 20px rgba(201,168,76,0.1);
-    z-index: 200;
-    display: none;
-    animation: slideIn 0.2s ease;
-  }
-
   @keyframes slideIn {
     from { opacity: 0; transform: translateY(10px); }
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  .keyword-panel.visible { display: block; }
-
-  .keyword-panel-header {
-    background: rgba(201,168,76,0.1);
-    border-bottom: 1px solid var(--gold-dim);
-    padding: 10px 14px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .keyword-panel-name {
-    font-family: Arial, sans-serif;
-    font-size: 12px;
-    color: var(--gold);
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
-
-  .keyword-panel-close {
-    cursor: pointer;
-    color: var(--gold);
-    font-size: 16px;
-    line-height: 1;
-    background: none;
-    border: none;
-    font-family: Arial, sans-serif;
-  }
-
-  .keyword-panel-body {
-    padding: 12px 14px;
-    font-size: 11px;
-    line-height: 1.7;
-    color: var(--text);
-  }
-
-  .keyword-panel-body .rule-line {
-    padding: 3px 0;
+  .strat-modal-body .rule-line {
+    padding: 8px 0;
     border-bottom: 1px solid var(--border);
+    line-height: 1.6;
   }
 
-  .keyword-panel-body .rule-line:last-child { border-bottom: none; }
+  .strat-modal-body .rule-line:last-child { border-bottom: none; }
 
   /* SECTION DIVIDERS */
   .section-label {
@@ -1276,12 +1227,14 @@
 </div>
 
 <!-- Keyword Info Panel -->
-<div class="keyword-panel" id="keyword-panel">
-  <div class="keyword-panel-header">
-    <span class="keyword-panel-name" id="kp-name"></span>
-    <button class="keyword-panel-close" onclick="closeKeywordPanel()">✕</button>
+<div class="strat-modal" id="keyword-panel" onclick="if(event.target===this)closeKeywordPanel()">
+  <div class="strat-modal-card">
+    <div class="strat-modal-header">
+      <div class="strat-modal-name" id="kp-name"></div>
+      <button class="strat-modal-close" onclick="closeKeywordPanel()">✕</button>
+    </div>
+    <div class="strat-modal-body" id="kp-body"></div>
   </div>
-  <div class="keyword-panel-body" id="kp-body"></div>
 </div>
 
 <script>
@@ -2862,14 +2815,11 @@ function resetTurn() {
 }
 
 function showKeyword(kw) {
-  const panel = document.getElementById('keyword-panel');
-  const name = document.getElementById('kp-name');
-  const body = document.getElementById('kp-body');
   const rules = keywords[kw];
   if (!rules) return;
-  name.textContent = kw;
-  body.innerHTML = rules.map(r => `<div class="rule-line">${r}</div>`).join('');
-  panel.classList.add('visible');
+  document.getElementById('kp-name').textContent = kw;
+  document.getElementById('kp-body').innerHTML = rules.map(r => `<div class="rule-line">${r}</div>`).join('');
+  document.getElementById('keyword-panel').classList.add('visible');
 }
 
 function closeKeywordPanel() {
