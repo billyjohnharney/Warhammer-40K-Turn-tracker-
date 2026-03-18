@@ -1816,8 +1816,12 @@ function getCommandPhaseAbilities() {
     const factionData = commandPhaseAbilities[faction];
     if (!factionData) continue;
     const abilities = [
-      ...(factionData['*']  || []),
-      ...(det ? (factionData[det] || []) : []),
+      ...(factionData['*'] || []),
+      // If a detachment is selected use only its entries; otherwise show all detachments
+      ...(det
+        ? (factionData[det] || [])
+        : Object.entries(factionData).filter(([k]) => k !== '*').flatMap(([, v]) => v)
+      ),
     ];
     for (const ab of abilities) results.push({ side, ...ab });
   }
