@@ -233,6 +233,9 @@ export default function SetupScreen({ wahapediaHook, onLaunch }) {
         <SideComponent side="player" wahapediaHook={wahapediaHook} />
         <div className="setup-vs-sep">VS</div>
         <SideComponent side="enemy" wahapediaHook={wahapediaHook} />
+        <div className="faction-start-btn-spacer" />
+      </div>
+      <div className="faction-start-btn-bar">
         <button
           className="faction-start-btn"
           onClick={onLaunch}
