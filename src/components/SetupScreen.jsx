@@ -245,7 +245,7 @@ export default function SetupScreen({ wahapediaHook, onLaunch }) {
         <img src={`${import.meta.env.BASE_URL}IMG_8702.png`} alt="" className="setup-logo" />
         <div className="setup-content">
           <div className="faction-screen-intro">
-            Streamline your battles with all rules, abilities and strategies for your army in one place
+            All your army rules, abilities and strategy combined.
           </div>
           <SideComponent side="player" wahapediaHook={wahapediaHook} />
           <div className="setup-vs-sep">VS</div>
