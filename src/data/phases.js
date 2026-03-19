@@ -22,7 +22,7 @@ export const phases = [
       { type: 'note', text: 'Leader: Attached units (Character + bodyguard) move together as a single unit — they cannot separate', keywords: ['LEADER', 'ATTACHED UNIT'] },
       { type: 'note', text: 'Scouts: eligible units make a pre-battle move of up to X" before Round 1 — resolve before other movement if not yet done', keywords: ['SCOUTS X"'], playerOnly: true },
       { type: 'note', text: 'Hover: declare Hover mode now if needed — model loses AIRCRAFT rules, Move becomes 20"', keywords: ['HOVER'], playerOnly: true },
-      { type: 'action', text: 'Deploy reinforcements — Excluding the first round, deploy any units arriving from Deep Strike or Reserves', keywords: ['DEEP STRIKE'], playerOnly: true },
+      { type: 'action', text: 'Deploy reinforcements — Excluding the first round, deploy any units arriving from Deep Strike or Reserves', keywords: ['DEEP STRIKE'] },
     ]
   },
   {
