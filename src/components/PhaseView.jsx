@@ -7,7 +7,7 @@ import { wahapediaPhaseId } from '../hooks/useWahapedia.js';
 import StepsTab from './StepsTab.jsx';
 import StratagemTab from './StratagemTab.jsx';
 
-function kwForPlayer(kw, gameConfig, roster) {
+export function kwForPlayer(kw, gameConfig, roster) {
   if (coreAlwaysVisible.has(kw)) return true;
   const fl = keywordFactions[kw];
   if (fl && !fl.includes(gameConfig.playerFaction)) return false;
@@ -15,7 +15,7 @@ function kwForPlayer(kw, gameConfig, roster) {
   return true;
 }
 
-function kwForEnemy(kw, gameConfig, enemyRoster) {
+export function kwForEnemy(kw, gameConfig, enemyRoster) {
   if (coreAlwaysVisible.has(kw)) return true;
   const fl = keywordFactions[kw];
   if (fl && !fl.includes(gameConfig.enemyFaction)) return false;
