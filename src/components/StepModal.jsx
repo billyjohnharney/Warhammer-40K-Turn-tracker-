@@ -1,6 +1,7 @@
 import { Dialog } from '@base-ui/react/dialog';
 import { useGame } from '../context/GameContext.jsx';
 import { phases } from '../data/phases.js';
+import { CloseIcon } from './Icons.jsx';
 import { keywords, stratagemKeywords } from '../data/keywords.js';
 import { keywordFactions } from '../data/factions.js';
 
@@ -95,7 +96,7 @@ export default function StepModal({ coreAlwaysVisible }) {
           <div className="strat-modal-card">
             <div className="strat-modal-header">
               <Dialog.Title className="strat-modal-name">{title}</Dialog.Title>
-              <Dialog.Close className="strat-modal-close">✕</Dialog.Close>
+              <Dialog.Close className="strat-modal-close" aria-label="Close"><CloseIcon /></Dialog.Close>
             </div>
             <div className="strat-modal-body">
               {support && <p style={{ margin: '0 0 4px' }}>{support}</p>}

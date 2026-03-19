@@ -4,6 +4,7 @@ import { Field } from '@base-ui/react/field';
 import { useGame } from '../context/GameContext.jsx';
 import { factions } from '../data/factions.js';
 import { parseRosXml, parseTextRoster, looksLikeWarhammer } from '../hooks/useRoster.js';
+import { ChevronDownIcon, CheckIcon, CloseIcon } from './Icons.jsx';
 
 function FactionSelect({ id, label, value, onChange, placeholder }) {
   return (
@@ -11,14 +12,14 @@ function FactionSelect({ id, label, value, onChange, placeholder }) {
       <Select.Label className="field-label">{label}</Select.Label>
       <Select.Trigger className="select-trigger" id={id}>
         <Select.Value placeholder={placeholder} />
-        <Select.Icon className="select-icon">▼</Select.Icon>
+        <Select.Icon className="select-icon"><ChevronDownIcon /></Select.Icon>
       </Select.Trigger>
       <Select.Portal>
         <Select.Positioner className="select-positioner" sideOffset={4}>
           <Select.Popup className="select-popup">
             {factions.map(f => (
               <Select.Item key={f} value={f} className="select-item">
-                <Select.ItemIndicator className="select-item-indicator">✓</Select.ItemIndicator>
+                <Select.ItemIndicator className="select-item-indicator"><CheckIcon /></Select.ItemIndicator>
                 <Select.ItemText>{f}</Select.ItemText>
               </Select.Item>
             ))}
@@ -36,14 +37,14 @@ function DetachmentSelect({ id, label, value, onChange, detachments, loading }) 
       <Select.Label className="field-label">{label}</Select.Label>
       <Select.Trigger className="select-trigger" id={id}>
         <Select.Value placeholder={loading ? 'Loading…' : '— Choose detachment —'} />
-        <Select.Icon className="select-icon">▼</Select.Icon>
+        <Select.Icon className="select-icon"><ChevronDownIcon /></Select.Icon>
       </Select.Trigger>
       <Select.Portal>
         <Select.Positioner className="select-positioner" sideOffset={4}>
           <Select.Popup className="select-popup">
             {detachments.map(d => (
               <Select.Item key={d} value={d} className="select-item">
-                <Select.ItemIndicator className="select-item-indicator">✓</Select.ItemIndicator>
+                <Select.ItemIndicator className="select-item-indicator"><CheckIcon /></Select.ItemIndicator>
                 <Select.ItemText>{d}</Select.ItemText>
               </Select.Item>
             ))}
@@ -146,12 +147,12 @@ function SideComponent({ side, wahapediaHook }) {
   return (
     <div className={`side-component ${isPlayer ? 'player-side' : 'enemy-side'}`}>
       <div className="side-component-header">
-        <span className="side-label">{isPlayer ? '★ Your Army' : '⚔ Enemy Army'}</span>
+        <span className="side-label">{isPlayer ? 'Your Army' : 'Enemy Army'}</span>
         {parsed && (
           <span className="side-loaded">
             ✓ {parsed.units.length} units · {parsed.activeKeywords.size} keywords
             &nbsp;
-            <button className="side-clear" onClick={() => dispatch({ type: 'CLEAR_RS_STATE', side })}>✕</button>
+            <button className="side-clear" onClick={() => dispatch({ type: 'CLEAR_RS_STATE', side })} aria-label="Clear"><CloseIcon /></button>
           </span>
         )}
       </div>

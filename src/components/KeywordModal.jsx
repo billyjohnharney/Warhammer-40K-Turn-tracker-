@@ -1,6 +1,7 @@
 import { Dialog } from '@base-ui/react/dialog';
 import { useGame } from '../context/GameContext.jsx';
 import { keywords } from '../data/keywords.js';
+import { CloseIcon } from './Icons.jsx';
 
 export default function KeywordModal() {
   const { state, dispatch } = useGame();
@@ -15,7 +16,7 @@ export default function KeywordModal() {
           <div className="strat-modal-card">
             <div className="strat-modal-header">
               <Dialog.Title className="strat-modal-name">{kw}</Dialog.Title>
-              <Dialog.Close className="strat-modal-close">✕</Dialog.Close>
+              <Dialog.Close className="strat-modal-close" aria-label="Close"><CloseIcon /></Dialog.Close>
             </div>
             <div className="strat-modal-body">
               {rules?.map((r, i) => (
