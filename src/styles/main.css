@@ -384,6 +384,16 @@ main {
   color: var(--color-foreground);
 }
 
+.keyword-tag--player {
+  color: #2a3326;
+  border-color: #2a3326;
+}
+
+.keyword-tag--enemy {
+  color: #a84a32;
+  border-color: #a84a32;
+}
+
 /* ─── Stratagem items ────────────────────────────────────────────────────── */
 .stratagem-item {
   padding: 0.625rem 0.5rem;

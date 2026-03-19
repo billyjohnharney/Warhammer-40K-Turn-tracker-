@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useGame } from '../context/GameContext.jsx';
 import { stratagemKeywords } from '../data/keywords.js';
-import { isKeywordVisible } from './PhaseView.jsx';
+import { isKeywordVisible, kwForPlayer, kwForEnemy } from './PhaseView.jsx';
 import { ChevronDownIcon } from './Icons.jsx';
 
 function fmtAction(text) {
@@ -16,6 +16,14 @@ function fmtAction(text) {
   return { primary, support };
 }
 
+function kwSideClass(kw, gameConfig, roster, enemyRoster) {
+  const isPlayer = kwForPlayer(kw, gameConfig, roster);
+  const isEnemy = kwForEnemy(kw, gameConfig, enemyRoster);
+  if (isPlayer && !isEnemy) return ' keyword-tag--player';
+  if (isEnemy && !isPlayer) return ' keyword-tag--enemy';
+  return '';
+}
+
 function KeywordTags({ item }) {
   const { state, dispatch } = useGame();
   const kws = (item.keywords || []).filter(kw =>
@@ -28,7 +36,7 @@ function KeywordTags({ item }) {
       {kws.map(kw => (
         <span
           key={kw}
-          className="keyword-tag"
+          className={`keyword-tag${kwSideClass(kw, state.gameConfig, state.roster, state.enemyRoster)}`}
           onClick={e => {
             e.stopPropagation();
             dispatch({ type: 'OPEN_MODAL', modal: 'keyword', data: kw });
@@ -91,7 +99,7 @@ function StepItem({ item, notes, phase, stepNum, getCommandPhaseAbilities }) {
         {allNoteKeywords.length > 0 && (
           <div className="step-keywords-inline">
             {allNoteKeywords.map(kw => (
-              <span key={kw} className="keyword-tag" onClick={e => {
+              <span key={kw} className={`keyword-tag${kwSideClass(kw, state.gameConfig, state.roster, state.enemyRoster)}`} onClick={e => {
                 e.stopPropagation();
                 dispatch({ type: 'OPEN_MODAL', modal: 'keyword', data: kw });
               }}>{kw}</span>
