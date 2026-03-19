@@ -301,6 +301,13 @@ main {
   margin-top: 0.125rem;
 }
 
+.step-keywords-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 0.25rem;
+}
+
 /* ─── Note items ─────────────────────────────────────────────────────────── */
 .note-child {
   display: flex;
