@@ -91,7 +91,6 @@ export function GameProvider({ children }) {
     const results = [];
     for (const [side, faction, det] of [
       ['Your army', playerFaction, playerDetachment],
-      ['Enemy army', enemyFaction, enemyDetachment],
     ]) {
       if (!faction) continue;
       const factionData = commandPhaseAbilities[faction];
