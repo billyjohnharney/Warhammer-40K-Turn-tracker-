@@ -46,6 +46,23 @@ function detectDetachment(text, faction, availableDetachments = []) {
     if (sub) return sub;
   }
 
+  // Strategy: line immediately after faction name, before a game-size line (e.g. Warhammer app export)
+  if (faction) {
+    const gameSizeLine = /^(combat patrol|incursion|strike force|onslaught|patrol|boarding action)\s*\(/i;
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    for (let i = 0; i < lines.length - 1; i++) {
+      if (lines[i].toLowerCase() === faction.toLowerCase()) {
+        const candidate = lines[i + 1];
+        if (
+          candidate.length >= 3 &&
+          candidate.length <= 60 &&
+          !gameSizeLine.test(candidate) &&
+          !/^[+\-·*•]/.test(candidate)
+        ) return candidate;
+      }
+    }
+  }
+
   const detKw = /\b(task force|warband|brotherhood|spearhead|vanguard|host|nexus|patrol|phalanx|tide|praetor|gladius|anvil|outrider|crusade|conclave|talons?|claws?|fangs?|blades?|wings?|shield|guard)\b/i;
   for (const line of text.split('\n')) {
     const trimmed = line.trim();
