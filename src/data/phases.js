@@ -29,8 +29,9 @@ export const phases = [
     id: 'shooting',
     title: 'Shooting Phase',
     items: [
+      { type: 'action', text: 'Declare all targets — Complete before rolling', keywords: ['INDIRECT FIRE'] },
       { type: 'note', text: 'Skip units that Advanced or Fell Back — unless using Assault weapons', keywords: ['ASSAULT'] },
-      { type: 'action', text: 'Declare all targets — Complete before rolling. Indirect Fire weapons may target units not visible', keywords: ['INDIRECT FIRE'] },
+      { type: 'note', text: 'Indirect Fire: may target units not visible', keywords: ['INDIRECT FIRE'], playerOnly: true },
       { type: 'note', text: 'Units in Engagement Range cannot shoot — exceptions: Monsters, Vehicles, Pistol weapons', keywords: ['PISTOL', 'MONSTER', 'VEHICLE'] },
       { type: 'note', text: 'Pistol: must target a unit in Engagement Range, cannot mix with non-Pistol weapons', keywords: ['PISTOL'], playerOnly: true },
       { type: 'note', text: 'Your Lone Operative units cannot be targeted by ranged attacks from more than 12" away', keywords: ['LONE OPERATIVE'], playerOnly: true },
@@ -73,7 +74,8 @@ export const phases = [
     id: 'fight',
     title: 'Fight Phase',
     items: [
-      { type: 'note', text: 'Fights First step: Units with Fights First ability fight now — all units that charged this turn also fight in this step', keywords: ['FIGHTS FIRST'] },
+      { type: 'action', text: 'Resolve fight order', keywords: ['FIGHTS FIRST', 'FIGHTS LAST'] },
+      { type: 'note', text: 'Fights First: Units with Fights First ability fight now — all units that charged this turn also fight in this step', keywords: ['FIGHTS FIRST'] },
       { type: 'note', text: 'Fights Last: units with this ability fight after all other units — select them only once all normal units have fought', keywords: ['FIGHTS LAST'] },
       { type: 'action', text: 'Players alternate selecting eligible units — defending player picks first. Counter-Offensive (2CP) can interrupt the sequence', keywords: ['COUNTER-OFFENSIVE'] },
       { type: 'action', text: 'Pile In: move each model up to 3" — must end closer to the nearest enemy model than it started, remaining in unit coherency' },
@@ -87,7 +89,7 @@ export const phases = [
       { type: 'note', text: 'After fighting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'], playerOnly: true },
       { type: 'note', text: 'Your Deadly Demise: if your models with this ability are destroyed in this fight, roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], playerOnly: true },
       { type: 'note', text: 'Enemy Deadly Demise: when you destroy an enemy model with this ability, roll D6 — on a 6 your nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], enemyOnly: true },
-      { type: 'action', text: '<b>Consolidate</b> Move each model up to 3" closer to nearest enemy model or toward an objective marker.' },
+      { type: 'action', text: 'Consolidate: Move each model up to 3" closer to nearest enemy model or toward an objective marker.' },
       { type: 'note', text: 'Remaining Combats: all remaining eligible units now fight — repeat the same sequence above. No unit can fight more than once per phase' },
     ]
   },
