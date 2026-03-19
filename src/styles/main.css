@@ -924,6 +924,12 @@ main {
   to   { opacity: 0; }
 }
 
+.splash-icon {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 1.25rem;
+}
+
 .splash-logo {
   font-size: 2.5rem;
   font-weight: 700;
