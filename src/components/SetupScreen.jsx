@@ -1,12 +1,14 @@
 import { useRef } from 'react';
 import { Select } from '@base-ui/react/select';
+import { Field } from '@base-ui/react/field';
 import { useGame } from '../context/GameContext.jsx';
 import { factions } from '../data/factions.js';
 import { parseRosXml, parseTextRoster, looksLikeWarhammer } from '../hooks/useRoster.js';
 
-function FactionSelect({ id, value, onChange, placeholder }) {
+function FactionSelect({ id, label, value, onChange, placeholder }) {
   return (
     <Select.Root value={value} onValueChange={onChange}>
+      <Select.Label className="field-label">{label}</Select.Label>
       <Select.Trigger className="select-trigger" id={id}>
         <Select.Value placeholder={placeholder} />
         <Select.Icon className="select-icon">▼</Select.Icon>
@@ -27,10 +29,11 @@ function FactionSelect({ id, value, onChange, placeholder }) {
   );
 }
 
-function DetachmentSelect({ id, value, onChange, detachments, loading }) {
+function DetachmentSelect({ id, label, value, onChange, detachments, loading }) {
   if (detachments.length === 0 && !loading) return null;
   return (
     <Select.Root value={value} onValueChange={onChange} disabled={loading}>
+      <Select.Label className="field-label">{label}</Select.Label>
       <Select.Trigger className="select-trigger" id={id}>
         <Select.Value placeholder={loading ? 'Loading…' : '— Choose detachment —'} />
         <Select.Icon className="select-icon">▼</Select.Icon>
@@ -169,25 +172,27 @@ function SideComponent({ side, wahapediaHook }) {
 
       {rsData.error && <div className="roster-error">{rsData.error}</div>}
 
-      <div className="faction-field">
+      <Field.Root className="field-root">
         <FactionSelect
           id={`sel-${side}`}
+          label="Faction"
           value={faction}
           onChange={handleFactionChange}
           placeholder="— Choose faction —"
         />
-      </div>
+      </Field.Root>
 
       {faction && (
-        <div className="faction-field">
+        <Field.Root className="field-root">
           <DetachmentSelect
             id={`sel-det-${side}`}
+            label="Detachment"
             value={selectedDet}
             onChange={handleDetachmentChange}
             detachments={detachments}
             loading={detLoading}
           />
-        </div>
+        </Field.Root>
       )}
 
       {parsed && (
