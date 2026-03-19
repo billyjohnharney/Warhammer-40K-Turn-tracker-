@@ -1,42 +1,24 @@
-/* ─── Base UI design tokens ──────────────────────────────────────────────── */
+/* ─── Design tokens ──────────────────────────────────────────────────────── */
+/* Background: #cfcdb6  |  Foreground: #141408                               */
 :root {
-  --color-gray-50:  oklch(97.5% 0.25%  264deg);
-  --color-gray-75:  oklch(97%   0.325% 264deg);
-  --color-gray-100: oklch(95%   0.5%   264deg);
-  --color-gray-200: oklch(91.6% 1%     264deg);
-  --color-gray-300: oklch(87%   1.5%   264deg);
-  --color-gray-400: oklch(75%   2%     264deg);
-  --color-gray-600: oklch(55%   3%     264deg);
-  --color-gray-900: oklch(20%   3%     264deg);
-  --color-gray-950: oklch(13%   2%     264deg);
-  --color-blue:     oklch(55%   25%    264deg);
-  --color-red:      oklch(50%   25%    25deg);
+  /* Warm scale interpolated between #cfcdb6 and #141408 */
+  --color-gray-50:  #cfcdb6; /* background */
+  --color-gray-100: #c2c0ab; /* hover surface */
+  --color-gray-200: #b5b3a1; /* borders, gridlines */
+  --color-gray-300: #9e9c8e;
+  --color-gray-400: #848370;
+  --color-gray-600: #5f5e4e; /* secondary text */
+  --color-gray-900: #141408; /* foreground / primary text */
 
-  --color-background: var(--color-gray-50);
-  --color-foreground: var(--color-gray-900);
-  --color-popup:      white;
-  --color-gridline:   var(--color-gray-200);
+  --color-blue: oklch(45% 20% 264deg); /* focus ring — muted to suit warm palette */
+  --color-red:  oklch(45% 22% 25deg);
+
+  --color-background: #cfcdb6;
+  --color-foreground: #141408;
+  --color-popup:      #d6d4be; /* slightly lighter for modal / dropdown surfaces */
+  --color-gridline:   #b5b3a1;
 
   --ease-out-fast: cubic-bezier(0.45, 1.005, 0, 1.005);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-gray-50:  oklch(13%  2%    264deg);
-    --color-gray-75:  oklch(19%  0.5%  264deg);
-    --color-gray-100: oklch(20%  1.5%  264deg);
-    --color-gray-200: oklch(28%  1.5%  264deg);
-    --color-gray-300: oklch(35%  1.5%  264deg);
-    --color-gray-400: oklch(45%  2%    264deg);
-    --color-gray-600: oklch(60%  3%    264deg);
-    --color-gray-900: oklch(90%  2%    264deg);
-    --color-gray-950: oklch(95%  1%    264deg);
-
-    --color-background: black;
-    --color-foreground: oklch(90% 2% 264deg);
-    --color-popup:      oklch(13% 2% 264deg);
-    --color-gridline:   oklch(28% 1.5% 264deg);
-  }
 }
 
 /* ─── Reset ──────────────────────────────────────────────────────────────── */
