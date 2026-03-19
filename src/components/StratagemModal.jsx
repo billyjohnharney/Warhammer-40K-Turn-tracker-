@@ -1,5 +1,6 @@
 import { Dialog } from '@base-ui/react/dialog';
 import { useGame } from '../context/GameContext.jsx';
+import { CloseIcon } from './Icons.jsx';
 
 export default function StratagemModal({ wahapediaHook }) {
   const { state, dispatch } = useGame();
@@ -22,7 +23,7 @@ export default function StratagemModal({ wahapediaHook }) {
                 <Dialog.Title className="strat-modal-name">{s?.name || ''}</Dialog.Title>
                 {s?.cp_cost && <div className="strat-modal-cp">{s.cp_cost} CP</div>}
               </div>
-              <Dialog.Close className="strat-modal-close">✕</Dialog.Close>
+              <Dialog.Close className="strat-modal-close" aria-label="Close"><CloseIcon /></Dialog.Close>
             </div>
             <div
               className="strat-modal-body"
