@@ -40,7 +40,7 @@ export default function SplashScreen({ onDismiss }) {
       <div className={`splash-text-group${phase !== 'idle' ? ' splash-text-group--fading' : ''}`}>
         <div className="splash-logo">Tacticum</div>
         <div className="splash-rule" />
-        <div className="splash-subtitle">The rule of engagement</div>
+        <div className="splash-subtitle">The rules of engagement</div>
       </div>
     </div>
   );
