@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useGame } from '../context/GameContext.jsx';
 import { stratagemKeywords } from '../data/keywords.js';
 import { isKeywordVisible } from './PhaseView.jsx';
+import { ChevronDownIcon } from './Icons.jsx';
 
 function fmtAction(text) {
   // text may contain HTML like <b>...</b>, handle separator outside tags
@@ -39,32 +41,6 @@ function KeywordTags({ item }) {
   );
 }
 
-function StepItem({ item, j, phase }) {
-  const { dispatch } = useGame();
-  const fmt = fmtAction(item.text);
-
-  return (
-    <div
-      className="step-item"
-      onClick={() => dispatch({ type: 'OPEN_MODAL', modal: 'step', data: { phaseId: phase.id, itemIndex: j } })}
-    >
-      <div className="item-content">
-        <div className="item-text">
-          {typeof fmt === 'string' ? (
-            <span dangerouslySetInnerHTML={{ __html: fmt }} />
-          ) : (
-            <>
-              <span dangerouslySetInnerHTML={{ __html: fmt.primary }} />
-              <span className="step-support">{fmt.support}</span>
-            </>
-          )}
-        </div>
-        <KeywordTags item={item} />
-      </div>
-    </div>
-  );
-}
-
 function CommandAbilityNotes({ getCommandPhaseAbilities }) {
   const abilities = getCommandPhaseAbilities();
   return abilities.map(({ side, name, text }, i) => (
@@ -74,6 +50,53 @@ function CommandAbilityNotes({ getCommandPhaseAbilities }) {
       <div className="cmd-ability-text">{text}</div>
     </div>
   ));
+}
+
+function StepItem({ item, notes, phase, stepNum, getCommandPhaseAbilities }) {
+  const [expanded, setExpanded] = useState(false);
+  const fmt = fmtAction(item.text);
+  const title = typeof fmt === 'string' ? fmt : fmt.primary;
+  const support = typeof fmt === 'string' ? null : fmt.support;
+
+  const hasNotes = notes.length > 0;
+
+  return (
+    <div className={`step-item${expanded ? ' step-item--expanded' : ''}`}>
+      <div className="step-item-header" onClick={() => hasNotes && setExpanded(e => !e)}
+        style={hasNotes ? undefined : { cursor: 'default' }}>
+        <div className="step-item-header-row">
+          <div className="item-text">
+            <span className="step-number">{stepNum}.</span>{' '}
+            <span dangerouslySetInnerHTML={{ __html: title }} />
+          </div>
+          {hasNotes && (
+            <span className={`step-chevron${expanded ? ' step-chevron--open' : ''}`}>
+              <ChevronDownIcon />
+            </span>
+          )}
+        </div>
+        {support && <span className="step-support">{support}</span>}
+        <KeywordTags item={item} />
+      </div>
+      {expanded && notes.length > 0 && (
+        <div className="step-item-body">
+          {notes.map(({ item: noteItem, j }) => {
+            if (noteItem.type === 'command-abilities') {
+              return <CommandAbilityNotes key={j} getCommandPhaseAbilities={getCommandPhaseAbilities} />;
+            }
+            return (
+              <div key={j} className="note-child">
+                <div className="item-content">
+                  <div className="note-text">{noteItem.text}</div>
+                  <KeywordTags item={noteItem} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function StepsTab({ phase, visibleItems, getCommandPhaseAbilities }) {
@@ -91,28 +114,39 @@ export default function StepsTab({ phase, visibleItems, getCommandPhaseAbilities
     }
   }
 
+  let actionCount = 0;
   return (
     <>
-      {groups.map((group, gi) => (
-        <div key={gi}>
-          {group.action && (
-            <StepItem item={group.action.item} j={group.action.j} phase={phase} />
-          )}
-          {group.notes.map(({ item, j }) => {
-            if (item.type === 'command-abilities') {
-              return <CommandAbilityNotes key={j} getCommandPhaseAbilities={getCommandPhaseAbilities} />;
-            }
-            return (
-              <div key={j} className="note-child">
-                <div className="item-content">
-                  <div className="note-text">{item.text}</div>
-                  <KeywordTags item={item} />
+      {groups.map((group, gi) => {
+        const stepNum = group.action ? ++actionCount : null;
+        return (
+          <div key={gi}>
+            {group.action && (
+              <StepItem
+                item={group.action.item}
+                j={group.action.j}
+                notes={group.notes}
+                phase={phase}
+                stepNum={stepNum}
+                getCommandPhaseAbilities={getCommandPhaseAbilities}
+              />
+            )}
+            {!group.action && group.notes.map(({ item, j }) => {
+              if (item.type === 'command-abilities') {
+                return <CommandAbilityNotes key={j} getCommandPhaseAbilities={getCommandPhaseAbilities} />;
+              }
+              return (
+                <div key={j} className="note-child">
+                  <div className="item-content">
+                    <div className="note-text">{item.text}</div>
+                    <KeywordTags item={item} />
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      ))}
+              );
+            })}
+          </div>
+        );
+      })}
     </>
   );
 }
