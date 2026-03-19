@@ -27,7 +27,6 @@ export default function TurnBar() {
                   className="pill-icon"
                   dangerouslySetInnerHTML={{ __html: meta.svg }}
                 />
-                <span className="pill-label">{meta.label}</span>
               </button>
             );
           })}
