@@ -980,8 +980,8 @@ main {
 }
 
 @keyframes splashLogoMove {
-  from { top: calc(50% - 25px); }
-  to   { top: 2.5rem; }
+  from { top: var(--logo-from-top); }
+  to   { top: 3.75rem; }
 }
 
 .splash-text-group {
