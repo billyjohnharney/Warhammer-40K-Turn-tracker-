@@ -25,6 +25,7 @@ export default function SplashScreen({ onDismiss }) {
       onClick={dismiss}
       onAnimationEnd={handleAnimationEnd}
     >
+      <img src="/warhammer-icon.svg" alt="" className="splash-icon" />
       <div className="splash-logo">Tacticum</div>
       <div className="splash-rule" />
       <div className="splash-subtitle">The rule of engagement</div>
