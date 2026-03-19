@@ -301,6 +301,15 @@ main {
   margin-top: 0.125rem;
 }
 
+.step-keywords-inline {
+  display: block;
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-gray-500);
+  margin-top: 0.25rem;
+}
+
 /* ─── Note items ─────────────────────────────────────────────────────────── */
 .note-child {
   display: flex;

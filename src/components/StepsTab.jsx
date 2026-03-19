@@ -54,11 +54,22 @@ function CommandAbilityNotes({ getCommandPhaseAbilities }) {
 
 function StepItem({ item, notes, phase, stepNum, getCommandPhaseAbilities }) {
   const [expanded, setExpanded] = useState(false);
+  const { state } = useGame();
   const fmt = fmtAction(item.text);
   const title = typeof fmt === 'string' ? fmt : fmt.primary;
   const support = typeof fmt === 'string' ? null : fmt.support;
 
   const hasNotes = notes.length > 0;
+
+  // Collect all unique keywords from all notes for collapsed summary
+  const allNoteKeywords = !expanded && hasNotes
+    ? [...new Set(notes.flatMap(({ item: n }) =>
+        (n.keywords || []).filter(kw =>
+          isKeywordVisible(kw, state.gameConfig, state.roster, state.enemyRoster) &&
+          !stratagemKeywords.has(kw)
+        )
+      ))]
+    : [];
 
   return (
     <div className={`step-item${expanded ? ' step-item--expanded' : ''}`}>
@@ -77,6 +88,9 @@ function StepItem({ item, notes, phase, stepNum, getCommandPhaseAbilities }) {
         </div>
         {support && <span className="step-support">{support}</span>}
         <KeywordTags item={item} />
+        {allNoteKeywords.length > 0 && (
+          <span className="step-keywords-inline">{allNoteKeywords.join(', ')}</span>
+        )}
       </div>
       {expanded && notes.length > 0 && (
         <div className="step-item-body">
