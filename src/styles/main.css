@@ -691,7 +691,23 @@ main {
   margin-bottom: 1.5rem;
 }
 
-.faction-field { margin-bottom: 0.875rem; }
+/* ─── Field (Base UI Field) ──────────────────────────────────────────────── */
+.field-root {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 0.25rem;
+  width: 100%;
+  margin-bottom: 0.875rem;
+}
+
+.field-label {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: var(--color-foreground);
+  cursor: default;
+}
 
 .setup-vs-sep {
   font-size: 0.75rem;
