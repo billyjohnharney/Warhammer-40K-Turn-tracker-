@@ -66,7 +66,7 @@ function SideComponent({ side, wahapediaHook }) {
   const detachments = wahapediaHook.getAvailableDetachments(faction);
   const detLoading = faction && wahapediaHook.wahapedia.loading;
 
-  // When detachments finish loading, re-try matching the raw parsed detachment
+  // When detachments become available (data loaded or faction changed), match the raw parsed detachment
   useEffect(() => {
     if (!detachments.length) return;
     const parsed = rsData.parsed;
@@ -76,7 +76,7 @@ function SideComponent({ side, wahapediaHook }) {
     const detKey = isPlayer ? 'playerDetachment' : 'enemyDetachment';
     const matched = matchDetachment(parsed.detachment, detachments);
     if (matched) dispatch({ type: 'SET_GAME_CONFIG', payload: { [detKey]: matched } });
-  }, [detachments.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [detachments.length, faction, wahapediaHook.wahapedia.loaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function applyAutoDetect(parsed) {
     if (!parsed) return;
