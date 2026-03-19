@@ -226,6 +226,7 @@ export default function SetupScreen({ wahapediaHook, onLaunch }) {
   return (
     <main>
       <div className="faction-screen">
+        <img src={`${import.meta.env.BASE_URL}IMG_8702.png`} alt="" className="setup-logo" />
         <div className="faction-screen-intro">
           Streamline your battles with all rules, abilities and strategies for your army in one place
         </div>
