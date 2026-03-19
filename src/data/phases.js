@@ -29,8 +29,8 @@ export const phases = [
     id: 'shooting',
     title: 'Shooting Phase',
     items: [
-      { type: 'note', text: 'Skip units that Advanced or Fell Back — unless using Assault weapons', keywords: ['ASSAULT'] },
       { type: 'action', text: 'Declare all targets — Complete before rolling', keywords: ['INDIRECT FIRE'] },
+      { type: 'note', text: 'Skip units that Advanced or Fell Back — unless using Assault weapons', keywords: ['ASSAULT'] },
       { type: 'note', text: 'Indirect Fire: may target units not visible', keywords: ['INDIRECT FIRE'], playerOnly: true },
       { type: 'note', text: 'Units in Engagement Range cannot shoot — exceptions: Monsters, Vehicles, Pistol weapons', keywords: ['PISTOL', 'MONSTER', 'VEHICLE'] },
       { type: 'note', text: 'Pistol: must target a unit in Engagement Range, cannot mix with non-Pistol weapons', keywords: ['PISTOL'], playerOnly: true },
