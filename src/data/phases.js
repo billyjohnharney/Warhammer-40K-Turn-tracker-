@@ -103,12 +103,11 @@ export const phases = [
   }
 ];
 
-// Base UI icon style: fill="none", stroke="currentColor", strokeWidth="1.25", strokeLinecap="round"
 export const PHASE_ICONS = {
-  command:  { label: 'Command',  svg: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="2.5"/><line x1="8" y1="1" x2="8" y2="4.5"/><line x1="8" y1="11.5" x2="8" y2="15"/><line x1="1" y1="8" x2="4.5" y2="8"/><line x1="11.5" y1="8" x2="15" y2="8"/></svg>` },
-  movement: { label: 'Movement', svg: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M4 8L8 3L12 8"/><line x1="8" y1="3" x2="8" y2="14"/></svg>` },
-  shooting: { label: 'Shooting', svg: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="3.5"/><line x1="8" y1="1" x2="8" y2="4.5"/><line x1="8" y1="11.5" x2="8" y2="15"/><line x1="1" y1="8" x2="4.5" y2="8"/><line x1="11.5" y1="8" x2="15" y2="8"/></svg>` },
-  charge:   { label: 'Charge',   svg: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M2 5L6 8L2 11"/><path d="M7 5L11 8L7 11"/></svg>` },
-  fight:    { label: 'Fight',    svg: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg>` },
-  end:      { label: 'End',      svg: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><line x1="5" y1="1" x2="5" y2="15"/><path d="M5 2L13 5L5 9"/></svg>` },
+  command:  { label: 'Command',  svg: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M2 12L3.5 7L6.5 9.5L8 4.5L9.5 9.5L12.5 7L14 12Z"/><line x1="2" y1="14" x2="14" y2="14"/></svg>` },
+  movement: { label: 'Movement', svg: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M4 8L8 3L12 8"/><line x1="8" y1="3" x2="8" y2="14"/></svg>` },
+  shooting: { label: 'Shooting', svg: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="3.5"/><line x1="8" y1="1" x2="8" y2="4.5"/><line x1="8" y1="11.5" x2="8" y2="15"/><line x1="1" y1="8" x2="4.5" y2="8"/><line x1="11.5" y1="8" x2="15" y2="8"/></svg>` },
+  charge:   { label: 'Charge',   svg: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M2 5L6 8L2 11"/><path d="M7 5L11 8L7 11"/></svg>` },
+  fight:    { label: 'Fight',    svg: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg>` },
+  end:      { label: 'End',      svg: `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><line x1="5" y1="1" x2="5" y2="15"/><path d="M5 2L13 5L5 9"/></svg>` },
 };
