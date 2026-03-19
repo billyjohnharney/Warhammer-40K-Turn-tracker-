@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
-const TEXT_FADE_MS = 300;
-const LOGO_MOVE_MS = 450;
+const TEXT_FADE_MS = 800;
+const LOGO_MOVE_MS = 900;
 
 export default function SplashScreen({ onDismiss }) {
   const [phase, setPhase] = useState('idle'); // 'idle' | 'text-fade' | 'logo-move'

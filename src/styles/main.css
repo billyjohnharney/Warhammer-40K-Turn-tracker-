@@ -975,7 +975,7 @@ main {
   left: 50%;
   transform: translateX(-50%);
   margin-bottom: 0;
-  animation: splashLogoMove 0.45s ease-in-out forwards;
+  animation: splashLogoMove 0.9s ease-in-out forwards;
   z-index: 1001;
 }
 
@@ -991,13 +991,13 @@ main {
 }
 
 .splash-text-group--fading {
-  animation: splashFadeOut 0.3s ease forwards;
+  animation: splashTextFadeOut 0.8s ease forwards;
   pointer-events: none;
 }
 
-@keyframes splashFadeOut {
-  from { opacity: 1; }
-  to   { opacity: 0; }
+@keyframes splashTextFadeOut {
+  from { opacity: 1; filter: blur(0px); }
+  to   { opacity: 0; filter: blur(12px); }
 }
 
 .setup-logo {
@@ -1008,12 +1008,12 @@ main {
 }
 
 .setup-content {
-  animation: setupContentFadeIn 0.4s ease forwards;
+  animation: setupContentFadeIn 0.9s ease forwards;
 }
 
 @keyframes setupContentFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from { opacity: 0; filter: blur(12px); }
+  to   { opacity: 1; filter: blur(0px); }
 }
 
 .splash-logo {
