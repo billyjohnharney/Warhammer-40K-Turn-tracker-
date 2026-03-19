@@ -197,6 +197,39 @@ export function useWahapedia(gameConfig) {
       };
       setWahapedia(wh);
       buildFactionStrats(wh, config);
+      return;
+    }
+    // No fresh cache — fetch in the background so detachment dropdowns populate
+    setWahapedia(prev => ({ ...prev, loading: true, error: null }));
+    try {
+      const [ft, st] = await Promise.all([
+        fetchLocalCsv('/Factions.csv')
+          .catch(() => fetchText('https://wahapedia.ru/wh40k10ed/Factions.csv')),
+        fetchLocalCsv('/Stratagems.csv')
+          .catch(() => fetchText('https://wahapedia.ru/wh40k10ed/Stratagems.csv')),
+      ]);
+      localStorage.setItem('wh_factions', ft);
+      localStorage.setItem('wh_stratagems', st);
+      localStorage.setItem('wh_cache_date', new Date().toISOString());
+      const wh = {
+        loading: false, loaded: true, error: null,
+        factionRows: parseWahapediaCsv(ft),
+        stratagemRows: parseWahapediaCsv(st),
+      };
+      setWahapedia(wh);
+      buildFactionStrats(wh, config);
+    } catch (e) {
+      if (cf && cs) {
+        const wh = {
+          loading: false, loaded: true, error: null,
+          factionRows: parseWahapediaCsv(cf),
+          stratagemRows: parseWahapediaCsv(cs),
+        };
+        setWahapedia(wh);
+        buildFactionStrats(wh, config);
+      } else {
+        setWahapedia(prev => ({ ...prev, loading: false, error: null }));
+      }
     }
   }, [wahapedia, buildFactionStrats]);
 
