@@ -82,7 +82,7 @@ export const phases = [
       { type: 'note', text: 'Lance: add +1 to Wound rolls if bearer charged this turn', keywords: ['LANCE'], playerOnly: true },
       { type: 'note', text: 'Extra Attacks: bearer attacks with this weapon in addition to other melee weapons', keywords: ['EXTRA ATTACKS'], playerOnly: true },
       { type: 'note', text: 'Precision: when targeting Attached unit, can allocate attack to visible Character', keywords: ['PRECISION'], playerOnly: true },
-      { type: 'action', text: 'Attack: select weapon & targets → roll Hit rolls (unmodified 6s = Critical Hits) → roll Wound rolls (unmodified 6s = Critical Wounds) → apply saves (Invulnerable saves never modified by AP)', keywords: ['LETHAL HITS', 'SUSTAINED HITS X', 'DEVASTATING WOUNDS', 'ANTI-[KEYWORD] X+'] },
+      { type: 'action', text: 'Attack — Select weapon & targets.\nRoll Hit rolls (unmod 6s = Critical Hits) Wound rolls (unmod 6s = Critical Wounds)\nRoll saves (modified by AP) (Invulnerability cannot be modified)\nApply damage', keywords: ['LETHAL HITS', 'SUSTAINED HITS X', 'DEVASTATING WOUNDS', 'ANTI-[KEYWORD] X+'] },
       { type: 'note', text: 'Your Feel No Pain: your models with FNP may roll to negate wounds after saves', keywords: ['FEEL NO PAIN X+'], playerOnly: true },
       { type: 'note', text: 'Enemy Feel No Pain: after your attacks wound, enemy models with FNP may roll to negate those wounds', keywords: ['FEEL NO PAIN X+'], enemyOnly: true },
       { type: 'note', text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'], playerOnly: true },
