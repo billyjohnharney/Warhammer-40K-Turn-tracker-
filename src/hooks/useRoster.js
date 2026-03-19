@@ -3,8 +3,23 @@ import { keywords, normalizeKeyword, scanTextForKeywords } from '../data/keyword
 
 function detectFaction(text) {
   const upper = text.toUpperCase();
+  // Check sub-factions first so e.g. 'Blood Angels' beats 'Space Marines'
+  const subMatch = Object.keys(SUB_FACTION_IDS)
+    .sort((a, b) => b.length - a.length)
+    .find(f => upper.includes(f.toUpperCase()));
+  if (subMatch) return subMatch;
   return [...factions].sort((a, b) => b.length - a.length)
     .find(f => upper.includes(f.toUpperCase())) || null;
+}
+
+export function matchDetachment(raw, availableDetachments) {
+  if (!raw || !availableDetachments.length) return null;
+  const lower = raw.toLowerCase().trim();
+  const exact = availableDetachments.find(d => d.toLowerCase() === lower);
+  if (exact) return exact;
+  return availableDetachments.find(d =>
+    lower.includes(d.toLowerCase()) || d.toLowerCase().includes(lower)
+  ) || null;
 }
 
 function detectDetachment(text, faction, availableDetachments = []) {

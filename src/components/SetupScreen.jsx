@@ -1,9 +1,9 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { Select } from '@base-ui/react/select';
 import { Field } from '@base-ui/react/field';
 import { useGame } from '../context/GameContext.jsx';
 import { factions } from '../data/factions.js';
-import { parseRosXml, parseTextRoster, looksLikeWarhammer } from '../hooks/useRoster.js';
+import { parseRosXml, parseTextRoster, looksLikeWarhammer, matchDetachment } from '../hooks/useRoster.js';
 import { ChevronDownIcon, CheckIcon, CloseIcon } from './Icons.jsx';
 
 function FactionSelect({ id, label, value, onChange, placeholder }) {
@@ -66,6 +66,18 @@ function SideComponent({ side, wahapediaHook }) {
   const detachments = wahapediaHook.getAvailableDetachments(faction);
   const detLoading = faction && wahapediaHook.wahapedia.loading;
 
+  // When detachments finish loading, re-try matching the raw parsed detachment
+  useEffect(() => {
+    if (!detachments.length) return;
+    const parsed = rsData.parsed;
+    if (!parsed?.detachment) return;
+    // Skip if already resolved to a valid detachment option
+    if (selectedDet && detachments.includes(selectedDet)) return;
+    const detKey = isPlayer ? 'playerDetachment' : 'enemyDetachment';
+    const matched = matchDetachment(parsed.detachment, detachments);
+    if (matched) dispatch({ type: 'SET_GAME_CONFIG', payload: { [detKey]: matched } });
+  }, [detachments.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
   function applyAutoDetect(parsed) {
     if (!parsed) return;
     const updates = {};
@@ -73,7 +85,11 @@ function SideComponent({ side, wahapediaHook }) {
       updates[isPlayer ? 'playerFaction' : 'enemyFaction'] = parsed.faction;
     }
     if (parsed.detachment) {
-      updates[isPlayer ? 'playerDetachment' : 'enemyDetachment'] = parsed.detachment;
+      const detKey = isPlayer ? 'playerDetachment' : 'enemyDetachment';
+      // Use already-loaded detachments for an immediate precise match, fall back to raw string
+      const newFaction = parsed.faction || faction;
+      const avail = wahapediaHook.getAvailableDetachments(newFaction);
+      updates[detKey] = matchDetachment(parsed.detachment, avail) ?? parsed.detachment;
     }
     if (Object.keys(updates).length) {
       dispatch({ type: 'SET_GAME_CONFIG', payload: updates });
