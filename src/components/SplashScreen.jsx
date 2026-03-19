@@ -1,13 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 
+const TEXT_FADE_MS = 300;
+const LOGO_MOVE_MS = 450;
+
 export default function SplashScreen({ onDismiss }) {
-  const [fadingOut, setFadingOut] = useState(false);
+  const [phase, setPhase] = useState('idle'); // 'idle' | 'text-fade' | 'logo-move'
   const dismissed = useRef(false);
 
   const dismiss = () => {
     if (dismissed.current) return;
     dismissed.current = true;
-    setFadingOut(true);
+    setPhase('text-fade');
+    setTimeout(() => setPhase('logo-move'), TEXT_FADE_MS);
+    setTimeout(() => onDismiss(), TEXT_FADE_MS + LOGO_MOVE_MS);
   };
 
   useEffect(() => {
@@ -15,21 +20,21 @@ export default function SplashScreen({ onDismiss }) {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleAnimationEnd = () => {
-    if (fadingOut) onDismiss();
-  };
-
   return (
     <div
-      className={`splash-screen${fadingOut ? ' fading-out' : ''}`}
+      className={`splash-screen${phase !== 'idle' ? ' splash-screen--transitioning' : ''}`}
       onClick={dismiss}
-      onAnimationEnd={handleAnimationEnd}
     >
-      <img src={`${import.meta.env.BASE_URL}IMG_8702.png`} alt="" className="splash-icon" />
-      <div className="splash-logo">Tacticum</div>
-      <div className="splash-rule" />
-      <div className="splash-subtitle">The rule of engagement</div>
-      <div className="splash-cta">Tap to begin</div>
+      <img
+        src={`${import.meta.env.BASE_URL}IMG_8702.png`}
+        alt=""
+        className={`splash-icon${phase === 'logo-move' ? ' splash-icon--moving' : ''}`}
+      />
+      <div className={`splash-text-group${phase !== 'idle' ? ' splash-text-group--fading' : ''}`}>
+        <div className="splash-logo">Tacticum</div>
+        <div className="splash-rule" />
+        <div className="splash-subtitle">The rule of engagement</div>
+      </div>
     </div>
   );
 }

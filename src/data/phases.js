@@ -7,7 +7,7 @@ export const phases = [
       { type: 'action', text: 'Resolve army abilities — activate any faction or detachment abilities that trigger at the start of your Command phase (see abilities listed below)' },
       { type: 'command-abilities' },
       { type: 'action', text: 'Check for Battle-Shock — for each unit below Half-strength, roll 2D6; equal or beat Leadership to pass', keywords: ['BATTLE-SHOCK', 'INSANE BRAVERY'] },
-      { type: 'note', text: 'Failed Battle-shock: unit OC becomes 0, cannot use Stratagems until next Command phase. Battle-shocked units take Desperate Escape tests when Falling Back', keywords: ['BATTLE-SHOCK'] },
+      { type: 'note', text: 'Failed Battle-shock: unit OC becomes 0, cannot use Stratagems until next Command phase. Battle-shocked units take Desperate Escape tests when Falling Back' },
     ]
   },
   {
@@ -77,7 +77,7 @@ export const phases = [
       { type: 'action', text: 'Resolve fight order', keywords: ['FIGHTS FIRST', 'FIGHTS LAST'] },
       { type: 'note', text: 'Fights First: Units with Fights First ability fight now — all units that charged this turn also fight in this step', keywords: ['FIGHTS FIRST'] },
       { type: 'note', text: 'Fights Last: units with this ability fight after all other units — select them only once all normal units have fought', keywords: ['FIGHTS LAST'] },
-      { type: 'action', text: 'Players alternate selecting eligible units — defending player picks first. Counter-Offensive (2CP) can interrupt the sequence', keywords: ['COUNTER-OFFENSIVE'] },
+      { type: 'action', text: 'Players alternate selecting eligible units — Defending player picks first. Counter-Offensive (2CP) can interrupt the sequence', keywords: ['COUNTER-OFFENSIVE'] },
       { type: 'action', text: 'Pile In: move each model up to 3" — must end closer to the nearest enemy model than it started, remaining in unit coherency' },
       { type: 'note', text: 'Lance: add +1 to Wound rolls if bearer charged this turn', keywords: ['LANCE'], playerOnly: true },
       { type: 'note', text: 'Extra Attacks: bearer attacks with this weapon in addition to other melee weapons', keywords: ['EXTRA ATTACKS'], playerOnly: true },
