@@ -69,10 +69,12 @@ function StepItem({ item, notes, phase, stepNum, getCommandPhaseAbilities }) {
 
   const hasNotes = notes.length > 0;
 
-  // Collect all unique keywords from all notes for collapsed summary
+  // Collect all unique keywords from all notes for collapsed summary, excluding any already shown on the action
+  const actionKws = new Set(item.keywords || []);
   const allNoteKeywords = !expanded && hasNotes
     ? [...new Set(notes.flatMap(({ item: n }) =>
         (n.keywords || []).filter(kw =>
+          !actionKws.has(kw) &&
           isKeywordVisible(kw, state.gameConfig, state.roster, state.enemyRoster) &&
           !stratagemKeywords.has(kw)
         )
