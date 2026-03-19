@@ -89,7 +89,7 @@ export const phases = [
       { type: 'note', text: 'After fighting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'], playerOnly: true },
       { type: 'note', text: 'Your Deadly Demise: if your models with this ability are destroyed in this fight, roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], playerOnly: true },
       { type: 'note', text: 'Enemy Deadly Demise: when you destroy an enemy model with this ability, roll D6 — on a 6 your nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], enemyOnly: true },
-      { type: 'action', text: 'Consolidate: Move each model up to 3" closer to nearest enemy model or toward an objective marker.' },
+      { type: 'action', text: 'Consolidate — Move each model up to 3" closer to nearest enemy model or toward an objective marker.' },
       { type: 'note', text: 'Remaining Combats: all remaining eligible units now fight — repeat the same sequence above. No unit can fight more than once per phase' },
     ]
   },
