@@ -955,8 +955,7 @@ main {
   animation: splashFadeIn 0.4s ease forwards;
 }
 
-.splash-screen.fading-out {
-  animation: splashFadeOut 0.4s ease forwards;
+.splash-screen--transitioning {
   pointer-events: none;
 }
 
@@ -965,15 +964,40 @@ main {
   to   { opacity: 1; }
 }
 
-@keyframes splashFadeOut {
-  from { opacity: 1; }
-  to   { opacity: 0; }
-}
-
 .splash-icon {
   width: 50px;
   height: auto;
   margin-bottom: 1.25rem;
+}
+
+.splash-icon--moving {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 0;
+  animation: splashLogoMove 0.45s ease-in-out forwards;
+  z-index: 1001;
+}
+
+@keyframes splashLogoMove {
+  from { top: calc(50% - 25px); }
+  to   { top: 2.5rem; }
+}
+
+.splash-text-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.splash-text-group--fading {
+  animation: splashFadeOut 0.3s ease forwards;
+  pointer-events: none;
+}
+
+@keyframes splashFadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
 }
 
 .setup-logo {
@@ -981,6 +1005,15 @@ main {
   height: auto;
   display: block;
   margin: 0 auto 1rem;
+}
+
+.setup-content {
+  animation: setupContentFadeIn 0.4s ease forwards;
+}
+
+@keyframes setupContentFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .splash-logo {
@@ -1004,18 +1037,4 @@ main {
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--color-gray-600);
-  margin-bottom: 3.75rem;
-}
-
-.splash-cta {
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-gray-400);
-  animation: splashBlink 1.4s ease-in-out infinite;
-}
-
-@keyframes splashBlink {
-  0%, 100% { opacity: 0.4; }
-  50%       { opacity: 1; }
 }
