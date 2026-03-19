@@ -302,11 +302,9 @@ main {
 }
 
 .step-keywords-inline {
-  display: block;
-  font-size: 0.625rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-gray-500);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
   margin-top: 0.25rem;
 }
 

@@ -54,7 +54,7 @@ function CommandAbilityNotes({ getCommandPhaseAbilities }) {
 
 function StepItem({ item, notes, phase, stepNum, getCommandPhaseAbilities }) {
   const [expanded, setExpanded] = useState(false);
-  const { state } = useGame();
+  const { state, dispatch } = useGame();
   const fmt = fmtAction(item.text);
   const title = typeof fmt === 'string' ? fmt : fmt.primary;
   const support = typeof fmt === 'string' ? null : fmt.support;
@@ -89,7 +89,14 @@ function StepItem({ item, notes, phase, stepNum, getCommandPhaseAbilities }) {
         {support && <span className="step-support">{support}</span>}
         <KeywordTags item={item} />
         {allNoteKeywords.length > 0 && (
-          <span className="step-keywords-inline">{allNoteKeywords.join(', ')}</span>
+          <div className="step-keywords-inline">
+            {allNoteKeywords.map(kw => (
+              <span key={kw} className="keyword-tag" onClick={e => {
+                e.stopPropagation();
+                dispatch({ type: 'OPEN_MODAL', modal: 'keyword', data: kw });
+              }}>{kw}</span>
+            ))}
+          </div>
         )}
       </div>
       {expanded && notes.length > 0 && (
