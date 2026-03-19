@@ -926,8 +926,8 @@ main {
 }
 
 .splash-icon {
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: auto;
   margin-bottom: 1.25rem;
 }
 
