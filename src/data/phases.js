@@ -30,7 +30,8 @@ export const phases = [
     title: 'Shooting Phase',
     items: [
       { type: 'note', text: 'Skip units that Advanced or Fell Back — unless using Assault weapons', keywords: ['ASSAULT'] },
-      { type: 'action', text: 'Declare all targets — Complete before rolling. Indirect Fire weapons may target units not visible', keywords: ['INDIRECT FIRE'] },
+      { type: 'action', text: 'Declare all targets — Complete before rolling', keywords: ['INDIRECT FIRE'] },
+      { type: 'note', text: 'Indirect Fire: may target units not visible', keywords: ['INDIRECT FIRE'], playerOnly: true },
       { type: 'note', text: 'Units in Engagement Range cannot shoot — exceptions: Monsters, Vehicles, Pistol weapons', keywords: ['PISTOL', 'MONSTER', 'VEHICLE'] },
       { type: 'note', text: 'Pistol: must target a unit in Engagement Range, cannot mix with non-Pistol weapons', keywords: ['PISTOL'], playerOnly: true },
       { type: 'note', text: 'Your Lone Operative units cannot be targeted by ranged attacks from more than 12" away', keywords: ['LONE OPERATIVE'], playerOnly: true },
