@@ -58,17 +58,22 @@ function StepItem({ item, notes, phase, stepNum, getCommandPhaseAbilities }) {
   const title = typeof fmt === 'string' ? fmt : fmt.primary;
   const support = typeof fmt === 'string' ? null : fmt.support;
 
+  const hasNotes = notes.length > 0;
+
   return (
     <div className={`step-item${expanded ? ' step-item--expanded' : ''}`}>
-      <div className="step-item-header" onClick={() => setExpanded(e => !e)}>
+      <div className="step-item-header" onClick={() => hasNotes && setExpanded(e => !e)}
+        style={hasNotes ? undefined : { cursor: 'default' }}>
         <div className="step-item-header-row">
           <div className="item-text">
             <span className="step-number">{stepNum}.</span>{' '}
             <span dangerouslySetInnerHTML={{ __html: title }} />
           </div>
-          <span className={`step-chevron${expanded ? ' step-chevron--open' : ''}`}>
-            <ChevronDownIcon />
-          </span>
+          {hasNotes && (
+            <span className={`step-chevron${expanded ? ' step-chevron--open' : ''}`}>
+              <ChevronDownIcon />
+            </span>
+          )}
         </div>
         {support && <span className="step-support">{support}</span>}
         <KeywordTags item={item} />
