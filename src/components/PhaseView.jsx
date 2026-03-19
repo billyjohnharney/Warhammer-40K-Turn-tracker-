@@ -73,10 +73,10 @@ export default function PhaseView({ wahapediaHook }) {
       <Tabs.Root value={tab} onValueChange={handleTabChange}>
         <Tabs.List className="phase-tabs">
           <Tabs.Tab value="steps" className="phase-tab">
-            Steps<span className="tab-count">{stepItems.length}</span>
+            Steps
           </Tabs.Tab>
           <Tabs.Tab value="stratagems" className="phase-tab">
-            Stratagems<span className="tab-count">{fsCount}</span>
+            Stratagems
           </Tabs.Tab>
         </Tabs.List>
 

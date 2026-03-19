@@ -213,7 +213,10 @@ main {
   cursor: pointer;
 }
 
-.phase-tab[data-selected] { color: var(--color-foreground); }
+.phase-tab[data-selected] {
+  color: var(--color-foreground);
+  box-shadow: inset 0 -2px var(--color-foreground);
+}
 
 @media (hover: hover) {
   .phase-tab:hover { color: var(--color-foreground); }
@@ -226,12 +229,6 @@ main {
   border-radius: 0.25rem;
 }
 
-.tab-count {
-  font-size: 0.75rem;
-  font-weight: 400;
-  color: var(--color-gray-400);
-  margin-left: 0.3rem;
-}
 
 .tab-content { padding-top: 0.25rem; }
 
@@ -247,6 +244,13 @@ main {
 .step-item:hover {
   background-color: var(--color-gray-100);
   border-left-color: var(--color-gray-300);
+}
+
+.step-number {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.45;
+  font-weight: 400;
+  margin-right: 0.125rem;
 }
 
 .step-item .item-text {

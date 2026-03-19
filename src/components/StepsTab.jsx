@@ -39,7 +39,7 @@ function KeywordTags({ item }) {
   );
 }
 
-function StepItem({ item, j, phase }) {
+function StepItem({ item, j, phase, stepNum }) {
   const { dispatch } = useGame();
   const fmt = fmtAction(item.text);
 
@@ -50,6 +50,7 @@ function StepItem({ item, j, phase }) {
     >
       <div className="item-content">
         <div className="item-text">
+          <span className="step-number">{stepNum}.</span>{' '}
           {typeof fmt === 'string' ? (
             <span dangerouslySetInnerHTML={{ __html: fmt }} />
           ) : (
@@ -91,12 +92,15 @@ export default function StepsTab({ phase, visibleItems, getCommandPhaseAbilities
     }
   }
 
+  let actionCount = 0;
   return (
     <>
-      {groups.map((group, gi) => (
+      {groups.map((group, gi) => {
+        const stepNum = group.action ? ++actionCount : null;
+        return (
         <div key={gi}>
           {group.action && (
-            <StepItem item={group.action.item} j={group.action.j} phase={phase} />
+            <StepItem item={group.action.item} j={group.action.j} phase={phase} stepNum={stepNum} />
           )}
           {group.notes.map(({ item, j }) => {
             if (item.type === 'command-abilities') {
@@ -112,7 +116,8 @@ export default function StepsTab({ phase, visibleItems, getCommandPhaseAbilities
             );
           })}
         </div>
-      ))}
+        );
+      })}
     </>
   );
 }
