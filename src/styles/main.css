@@ -586,7 +586,7 @@ main {
   outline: 0;
   border: 1px solid var(--color-gray-200);
   border-radius: 0.375rem;
-  background-color: canvas;
+  background-color: var(--color-background);
   font-family: inherit;
   font-size: 1rem;
   color: var(--color-gray-900);
@@ -599,7 +599,7 @@ main {
   .select-trigger:hover { background-color: var(--color-gray-100); }
 }
 
-.select-trigger[data-popup-open] { background-color: var(--color-gray-100); }
+.select-trigger[data-popup-open] { background-color: var(--color-background); }
 
 .select-trigger:focus-visible {
   outline: 2px solid var(--color-blue);
@@ -623,7 +623,7 @@ main {
 .select-popup {
   box-sizing: border-box;
   border-radius: 0.375rem;
-  background-color: canvas;
+  background-color: var(--color-background);
   color: var(--color-gray-900);
   min-width: var(--anchor-width);
   transform-origin: var(--transform-origin);
@@ -657,6 +657,7 @@ main {
   grid-template-columns: 0.75rem 1fr;
   cursor: default;
   user-select: none;
+  white-space: nowrap;
   font-family: inherit;
 }
 
