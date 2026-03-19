@@ -77,6 +77,8 @@ export const phases = [
       { type: 'action', text: 'Resolve fight order', keywords: ['FIGHTS FIRST', 'FIGHTS LAST'] },
       { type: 'note', text: 'Fights First: Units with Fights First ability fight now — all units that charged this turn also fight in this step', keywords: ['FIGHTS FIRST'] },
       { type: 'note', text: 'Fights Last: units with this ability fight after all other units — select them only once all normal units have fought', keywords: ['FIGHTS LAST'] },
+      { type: 'note', text: 'Conflict — Fights First: if both players have eligible Fights First units, the player whose turn it is selects one to fight first, then players alternate until all Fights First units have fought', keywords: ['FIGHTS FIRST'] },
+      { type: 'note', text: 'Conflict — Fights Last: if both players have Fights Last units remaining when only Fights Last units are left, the player whose turn it is selects one to fight, then players alternate', keywords: ['FIGHTS LAST'] },
       { type: 'action', text: 'Select units — Players alternate selecting eligible units. Defending player picks first.', keywords: ['COUNTER-OFFENSIVE'] },
       { type: 'action', text: 'Pile In — Move each model up to 3". It must end closer to the nearest enemy model than it started, remaining in unit coherency.' },
       { type: 'note', text: 'Lance: add +1 to Wound rolls if bearer charged this turn', keywords: ['LANCE'], playerOnly: true },
