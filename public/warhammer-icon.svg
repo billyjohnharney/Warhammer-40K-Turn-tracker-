@@ -1,15 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#0a0a0a"/>
-  <rect x="8" y="8" width="496" height="496" fill="none" stroke="#1a6b2e" stroke-width="12"/>
-  <!-- Stylised wing / sword cross icon for Dark Angels -->
-  <!-- Vertical sword blade -->
-  <rect x="248" y="60" width="16" height="300" fill="#2ecc71"/>
-  <!-- Crossguard -->
-  <rect x="160" y="200" width="192" height="14" fill="#2ecc71"/>
-  <!-- Diamond pommel -->
-  <polygon points="256,380 240,420 256,460 272,420" fill="#c9a84c"/>
-  <!-- Top point -->
-  <polygon points="256,60 244,90 256,110 268,90" fill="#c9a84c"/>
-  <!-- Subtle glow rings -->
-  <circle cx="256" cy="207" r="30" fill="none" stroke="#1a6b2e" stroke-width="2" opacity="0.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <path d="M4 22L7 13L13 17.5L16 9L19 17.5L25 13L28 22Z" stroke="#141408" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="4" y1="25" x2="28" y2="25" stroke="#141408" stroke-width="1.6" stroke-linecap="round"/>
 </svg>
