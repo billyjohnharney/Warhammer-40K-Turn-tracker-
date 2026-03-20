@@ -146,10 +146,11 @@ export function useWahapedia(gameConfig) {
     setWahapedia(prev => ({ ...prev, loading: true, error: null }));
 
     try {
+      const base = import.meta.env.BASE_URL || '/';
       const [ft, st] = await Promise.all([
-        fetchLocalCsv('/Factions.csv')
+        fetchLocalCsv(`${base}Factions.csv`)
           .catch(() => fetchText('https://wahapedia.ru/wh40k10ed/Factions.csv')),
-        fetchLocalCsv('/Stratagems.csv')
+        fetchLocalCsv(`${base}Stratagems.csv`)
           .catch(() => fetchText('https://wahapedia.ru/wh40k10ed/Stratagems.csv')),
       ]);
       localStorage.setItem('wh_factions', ft);
@@ -202,10 +203,11 @@ export function useWahapedia(gameConfig) {
     // No fresh cache — fetch in the background so detachment dropdowns populate
     setWahapedia(prev => ({ ...prev, loading: true, error: null }));
     try {
+      const base = import.meta.env.BASE_URL || '/';
       const [ft, st] = await Promise.all([
-        fetchLocalCsv('/Factions.csv')
+        fetchLocalCsv(`${base}Factions.csv`)
           .catch(() => fetchText('https://wahapedia.ru/wh40k10ed/Factions.csv')),
-        fetchLocalCsv('/Stratagems.csv')
+        fetchLocalCsv(`${base}Stratagems.csv`)
           .catch(() => fetchText('https://wahapedia.ru/wh40k10ed/Stratagems.csv')),
       ]);
       localStorage.setItem('wh_factions', ft);
