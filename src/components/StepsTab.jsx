@@ -73,13 +73,16 @@ function StepItem({ item, notes, phase, stepNum, getCommandPhaseAbilities }) {
 
   const hasNotes = notes.length > 0;
 
-  // Collect all unique keywords from all notes for collapsed summary, excluding any already shown on the action.
-  // Track per-keyword side: if the same keyword appears in both playerOnly and enemyOnly notes, treat as neutral.
+  // Collect keywords from all notes for collapsed summary, excluding any already shown on the action.
+  // Track unique (keyword, side) pairs so a keyword appearing in both a playerOnly and enemyOnly note
+  // is shown twice — once green, once red — rather than collapsed to neutral.
   const actionKws = new Set(item.keywords || []);
   const allNoteKeywords = !expanded && hasNotes
     ? (() => {
-        const seen = new Map(); // keyword → 'player' | 'enemy' | null (null = neutral/both)
+        const seen = new Set(); // dedupe by `${kw}::${side}`
+        const result = [];
         notes.forEach(({ item: n }) => {
+          const side = n.playerOnly ? 'player' : n.enemyOnly ? 'enemy' : null;
           (n.keywords || [])
             .filter(kw =>
               !actionKws.has(kw) &&
@@ -87,15 +90,14 @@ function StepItem({ item, notes, phase, stepNum, getCommandPhaseAbilities }) {
               !stratagemKeywords.has(kw)
             )
             .forEach(kw => {
-              const side = n.playerOnly ? 'player' : n.enemyOnly ? 'enemy' : null;
-              if (!seen.has(kw)) {
-                seen.set(kw, side);
-              } else if (seen.get(kw) !== side) {
-                seen.set(kw, null); // conflict or neutral → show as neutral
+              const key = `${kw}::${side}`;
+              if (!seen.has(key)) {
+                seen.add(key);
+                result.push({ kw, side });
               }
             });
         });
-        return [...seen.entries()].map(([kw, side]) => ({ kw, side }));
+        return result;
       })()
     : [];
 
@@ -123,7 +125,7 @@ function StepItem({ item, notes, phase, stepNum, getCommandPhaseAbilities }) {
                 : side === 'enemy' ? ' keyword-tag--enemy'
                 : kwSideClass(kw, state.gameConfig, state.roster, state.enemyRoster);
               return (
-                <span key={kw} className={`keyword-tag${cls}`} onClick={e => {
+                <span key={`${kw}::${side}`} className={`keyword-tag${cls}`} onClick={e => {
                   e.stopPropagation();
                   dispatch({ type: 'OPEN_MODAL', modal: 'keyword', data: kw });
                 }}>{kw}</span>
