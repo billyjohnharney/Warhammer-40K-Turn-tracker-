@@ -16,7 +16,11 @@ function fmtAction(text) {
   return { primary, support };
 }
 
-function kwSideClass(kw, gameConfig, roster, enemyRoster) {
+function kwSideClass(kw, gameConfig, roster, enemyRoster, item = null) {
+  // Use item-level context first — playerOnly/enemyOnly flags are the authoritative source
+  if (item?.playerOnly) return ' keyword-tag--player';
+  if (item?.enemyOnly) return ' keyword-tag--enemy';
+  // Fall back to roster-based differentiation when both rosters are loaded
   const isPlayer = kwForPlayer(kw, gameConfig, roster);
   const isEnemy = kwForEnemy(kw, gameConfig, enemyRoster);
   if (isPlayer && !isEnemy) return ' keyword-tag--player';
@@ -36,7 +40,7 @@ function KeywordTags({ item }) {
       {kws.map(kw => (
         <span
           key={kw}
-          className={`keyword-tag${kwSideClass(kw, state.gameConfig, state.roster, state.enemyRoster)}`}
+          className={`keyword-tag${kwSideClass(kw, state.gameConfig, state.roster, state.enemyRoster, item)}`}
           onClick={e => {
             e.stopPropagation();
             dispatch({ type: 'OPEN_MODAL', modal: 'keyword', data: kw });
@@ -69,16 +73,30 @@ function StepItem({ item, notes, phase, stepNum, getCommandPhaseAbilities }) {
 
   const hasNotes = notes.length > 0;
 
-  // Collect all unique keywords from all notes for collapsed summary, excluding any already shown on the action
+  // Collect all unique keywords from all notes for collapsed summary, excluding any already shown on the action.
+  // Track per-keyword side: if the same keyword appears in both playerOnly and enemyOnly notes, treat as neutral.
   const actionKws = new Set(item.keywords || []);
   const allNoteKeywords = !expanded && hasNotes
-    ? [...new Set(notes.flatMap(({ item: n }) =>
-        (n.keywords || []).filter(kw =>
-          !actionKws.has(kw) &&
-          isKeywordVisible(kw, state.gameConfig, state.roster, state.enemyRoster) &&
-          !stratagemKeywords.has(kw)
-        )
-      ))]
+    ? (() => {
+        const seen = new Map(); // keyword → 'player' | 'enemy' | null (null = neutral/both)
+        notes.forEach(({ item: n }) => {
+          (n.keywords || [])
+            .filter(kw =>
+              !actionKws.has(kw) &&
+              isKeywordVisible(kw, state.gameConfig, state.roster, state.enemyRoster) &&
+              !stratagemKeywords.has(kw)
+            )
+            .forEach(kw => {
+              const side = n.playerOnly ? 'player' : n.enemyOnly ? 'enemy' : null;
+              if (!seen.has(kw)) {
+                seen.set(kw, side);
+              } else if (seen.get(kw) !== side) {
+                seen.set(kw, null); // conflict or neutral → show as neutral
+              }
+            });
+        });
+        return [...seen.entries()].map(([kw, side]) => ({ kw, side }));
+      })()
     : [];
 
   return (
@@ -100,12 +118,17 @@ function StepItem({ item, notes, phase, stepNum, getCommandPhaseAbilities }) {
         <KeywordTags item={item} />
         {allNoteKeywords.length > 0 && (
           <div className="step-keywords-inline">
-            {allNoteKeywords.map(kw => (
-              <span key={kw} className={`keyword-tag${kwSideClass(kw, state.gameConfig, state.roster, state.enemyRoster)}`} onClick={e => {
-                e.stopPropagation();
-                dispatch({ type: 'OPEN_MODAL', modal: 'keyword', data: kw });
-              }}>{kw}</span>
-            ))}
+            {allNoteKeywords.map(({ kw, side }) => {
+              const cls = side === 'player' ? ' keyword-tag--player'
+                : side === 'enemy' ? ' keyword-tag--enemy'
+                : kwSideClass(kw, state.gameConfig, state.roster, state.enemyRoster);
+              return (
+                <span key={kw} className={`keyword-tag${cls}`} onClick={e => {
+                  e.stopPropagation();
+                  dispatch({ type: 'OPEN_MODAL', modal: 'keyword', data: kw });
+                }}>{kw}</span>
+              );
+            })}
           </div>
         )}
       </div>
