@@ -492,6 +492,21 @@ main {
 }
 
 /* ─── Faction header badge ───────────────────────────────────────────────── */
+.header-edit-btn {
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--color-gray-300);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+.header-edit-btn:hover { color: var(--color-gray-400); }
+
 .faction-badge {
   font-size: 0.75rem;
   color: var(--color-gray-600);
@@ -499,7 +514,6 @@ main {
   transition: color 100ms;
 }
 
-.faction-badge:hover { color: var(--color-foreground); }
 .faction-badge .vs-sep { color: var(--color-gray-300); margin: 0 0.375rem; }
 .faction-badge .your-side { color: var(--color-foreground); }
 
