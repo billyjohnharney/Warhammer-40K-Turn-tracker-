@@ -103,7 +103,14 @@ export default function PhaseView({ wahapediaHook }) {
           >
             ← {phases[activePhaseIndex - 1].title}
           </button>
-        ) : <span />}
+        ) : (
+          <button
+            className="phase-nav-arrow"
+            onClick={() => dispatch({ type: 'CHANGE_FACTIONS' })}
+          >
+            ← Battle setup
+          </button>
+        )}
 
         {activePhaseIndex < phases.length - 1 ? (
           <button
