@@ -959,6 +959,40 @@ main {
   border-radius: 0.375rem;
 }
 
+/* ─── Pre-game screen ────────────────────────────────────────────────────── */
+.pregame-screen {
+  max-width: 32.5rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 6rem;
+}
+
+.pregame-intro {
+  font-size: 0.875rem;
+  color: var(--color-gray-600);
+  margin: 0 0 1.25rem;
+}
+
+.pregame-card {
+  border: 1px solid var(--color-gray-200);
+  border-radius: 0.375rem;
+  padding: 0.875rem 1rem;
+  margin-bottom: 0.625rem;
+}
+
+.pregame-card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-foreground);
+  margin: 0 0 0.375rem;
+}
+
+.pregame-card-desc {
+  font-size: 0.875rem;
+  color: var(--color-gray-600);
+  line-height: 1.5;
+  margin: 0;
+}
+
 /* ─── Splash screen ──────────────────────────────────────────────────────── */
 .splash-screen {
   position: fixed;
