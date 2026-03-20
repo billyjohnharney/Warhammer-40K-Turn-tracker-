@@ -67,7 +67,7 @@ async function fetchText(url) {
   for (const fn of strategies) {
     try {
       const text = await fn();
-      if (text && text.trim().length > 200 && text.indexOf(',') < 80) return text;
+      if (text && text.trim().length > 200 && (text.indexOf('|') < 80 || text.indexOf(',') < 80)) return text;
     } catch (_) { /* try next */ }
   }
   throw new Error('All fetch attempts failed');
