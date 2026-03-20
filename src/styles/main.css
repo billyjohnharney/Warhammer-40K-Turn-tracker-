@@ -134,7 +134,7 @@ main {
 .phase-pill.active {
   background-color: transparent;
   border: 2px solid #3c5424;
-  color: var(--color-foreground);
+  color: var(--color-gray-600);
 }
 
 .phase-pill.done {

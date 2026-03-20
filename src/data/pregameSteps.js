@@ -1,5 +1,13 @@
 export const pregameSteps = [
   {
+    title: 'Select Attacker & Defender',
+    description: 'For missions that require it, determine which player is the Attacker and which is the Defender. Both players roll one D6; the player who rolls highest chooses. On a tie, re-roll. The Attacker typically deploys and takes the first turn first, unless the mission specifies otherwise.',
+  },
+  {
+    title: 'Declare Battle Formations',
+    description: 'Each player secretly chooses a Battle Formation for their army and reveals them simultaneously. Battle Formations grant different bonuses and affect how your army is organised on the battlefield. Once declared, a Battle Formation cannot be changed for the rest of the battle.',
+  },
+  {
     title: 'Deploy Armies',
     description: 'Players alternate deploying units into their deployment zones. Units with INFILTRATORS are set up now, more than 9\u201d from the enemy deployment zone and more than 9\u201d from all enemy models. They cannot be placed in Strategic Reserves.',
   },
