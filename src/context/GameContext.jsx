@@ -41,11 +41,14 @@ function reducer(state, action) {
       return { ...state, rsState: { ...state.rsState, [side]: { parsed: null, error: '' } } };
     }
 
+    case 'BEGIN_BATTLE':
+      return { ...state, appStep: 'game' };
+
     case 'LAUNCH_GAME': {
       const { playerParsed, enemyParsed } = action;
       return {
         ...state,
-        appStep: 'game',
+        appStep: 'pregame',
         activePhaseIndex: 0,
         phaseTab: {},
         roster: playerParsed

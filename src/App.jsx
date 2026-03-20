@@ -3,6 +3,7 @@ import { GameProvider, useGame } from './context/GameContext.jsx';
 import { useWahapedia } from './hooks/useWahapedia.js';
 import SplashScreen from './components/SplashScreen.jsx';
 import SetupScreen from './components/SetupScreen.jsx';
+import PreGameScreen from './components/PreGameScreen.jsx';
 import GameScreen from './components/GameScreen.jsx';
 
 function AppInner() {
@@ -21,6 +22,11 @@ function AppInner() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [dispatch, state.rsState, state.gameConfig, wahapediaHook]);
 
+  const handleBeginBattle = useCallback(() => {
+    dispatch({ type: 'BEGIN_BATTLE' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [dispatch]);
+
   const handleChangeFactions = useCallback(() => {
     dispatch({ type: 'CHANGE_FACTIONS' });
   }, [dispatch]);
@@ -34,6 +40,15 @@ function AppInner() {
       <SetupScreen
         wahapediaHook={wahapediaHook}
         onLaunch={handleLaunchGame}
+      />
+    );
+  }
+
+  if (state.appStep === 'pregame') {
+    return (
+      <PreGameScreen
+        onBeginBattle={handleBeginBattle}
+        onChangeFactions={handleChangeFactions}
       />
     );
   }

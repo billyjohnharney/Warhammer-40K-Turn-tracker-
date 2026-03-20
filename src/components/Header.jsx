@@ -4,7 +4,7 @@ export default function Header({ onChangeFactions }) {
   const { state } = useGame();
   const { playerFaction, enemyFaction } = state.gameConfig;
 
-  if (state.appStep !== 'game') return null;
+  if (state.appStep !== 'game' && state.appStep !== 'pregame') return null;
 
   return (
     <header>
