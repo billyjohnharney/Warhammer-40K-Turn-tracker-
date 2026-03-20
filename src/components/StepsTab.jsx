@@ -155,6 +155,29 @@ function StepItem({ item, notes, phase, stepNum, getCommandPhaseAbilities }) {
   );
 }
 
+function deduplicateNotes(notes) {
+  const seen = new Map(); // text → index in result
+  const result = [];
+  for (const entry of notes) {
+    const { item } = entry;
+    if (item.type !== 'note' || !item.text) { result.push(entry); continue; }
+    const existing = seen.get(item.text);
+    if (existing == null) {
+      // Clone item so we can mutate keywords without affecting source data
+      result.push({ ...entry, item: { ...item, keywords: item.keywords ? [...item.keywords] : [] } });
+      seen.set(item.text, result.length - 1);
+    } else {
+      // Merge any new keywords from the duplicate into the retained note
+      const retained = result[existing];
+      const retainedKws = retained.item.keywords || [];
+      for (const kw of (item.keywords || [])) {
+        if (!retainedKws.includes(kw)) retainedKws.push(kw);
+      }
+    }
+  }
+  return result;
+}
+
 export default function StepsTab({ phase, visibleItems, getCommandPhaseAbilities }) {
   // Group: action → following notes
   const groups = [];
@@ -168,6 +191,10 @@ export default function StepsTab({ phase, visibleItems, getCommandPhaseAbilities
       if (!currentGroup) { currentGroup = { action: null, notes: [] }; groups.push(currentGroup); }
       currentGroup.notes.push({ item, j });
     }
+  }
+
+  for (const group of groups) {
+    group.notes = deduplicateNotes(group.notes);
   }
 
   let actionCount = 0;
