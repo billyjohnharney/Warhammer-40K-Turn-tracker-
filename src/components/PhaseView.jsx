@@ -106,7 +106,7 @@ export default function PhaseView({ wahapediaHook }) {
         ) : (
           <button
             className="phase-nav-arrow"
-            onClick={() => dispatch({ type: 'CHANGE_FACTIONS' })}
+            onClick={() => dispatch({ type: 'SET_APP_STEP', payload: 'pregame' })}
           >
             ← Battle setup
           </button>
