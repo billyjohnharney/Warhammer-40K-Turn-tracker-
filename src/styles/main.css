@@ -1025,15 +1025,60 @@ main {
 .pregame-card {
   border: 1px solid var(--color-gray-200);
   border-radius: 0.375rem;
-  padding: 0.875rem 1rem;
   margin-bottom: 0.625rem;
+  overflow: hidden;
+}
+
+.pregame-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  font-family: inherit;
+  text-align: left;
+  padding: 0.875rem 1rem 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .pregame-card-title {
   font-size: 0.9375rem;
   font-weight: 600;
   color: var(--color-foreground);
-  margin: 0 0 0.375rem;
+}
+
+.pregame-card-chevron {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-gray-400);
+  transition: transform 200ms ease;
+}
+
+.pregame-card.is-open .pregame-card-chevron {
+  transform: rotate(180deg);
+}
+
+.pregame-card-summary {
+  font-size: 0.8125rem;
+  color: var(--color-gray-500);
+  margin: 0.25rem 1rem 0.875rem;
+  line-height: 1.4;
+}
+
+.pregame-card.is-open .pregame-card-summary {
+  display: none;
+}
+
+.pregame-card-body {
+  display: none;
+  padding: 0.375rem 1rem 0.875rem;
+}
+
+.pregame-card.is-open .pregame-card-body {
+  display: block;
 }
 
 .pregame-card-desc {
