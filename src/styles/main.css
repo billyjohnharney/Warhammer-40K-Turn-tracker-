@@ -1063,7 +1063,7 @@ main {
 
 .pregame-card-summary {
   font-size: 0.8125rem;
-  color: var(--color-gray-500);
+  color: var(--color-gray-400);
   margin: 0.25rem 1rem 0.875rem;
   line-height: 1.4;
 }
