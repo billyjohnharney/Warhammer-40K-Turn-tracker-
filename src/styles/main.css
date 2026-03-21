@@ -794,6 +794,24 @@ main {
   padding: 0.5rem 0 1rem;
 }
 
+.setup-add-enemy-btn {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: var(--color-gray-400);
+  text-align: center;
+  padding: 0.5rem 0 1rem;
+  cursor: pointer;
+  transition: color 100ms;
+}
+
+.setup-add-enemy-btn:hover { color: var(--color-foreground); }
+
 .setup-start-bar {
   position: fixed;
   bottom: 0;
@@ -876,6 +894,21 @@ main {
 }
 
 .side-clear:hover { color: var(--color-red); }
+
+.side-remove-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-gray-400);
+  cursor: pointer;
+  padding: 0;
+  transition: color 100ms;
+}
+
+.side-remove-btn:hover { color: var(--color-red); }
 
 /* ─── Roster buttons ─────────────────────────────────────────────────────── */
 .roster-btn-row {
