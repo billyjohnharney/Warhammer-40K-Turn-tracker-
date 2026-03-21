@@ -808,9 +808,11 @@ main {
   padding: 0.5rem 0 1rem;
   cursor: pointer;
   transition: color 100ms;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .setup-add-enemy-btn:hover { color: var(--color-foreground); }
+.setup-add-enemy-btn:active { color: var(--color-gray-400); }
 
 .setup-start-bar {
   position: fixed;
@@ -906,9 +908,11 @@ main {
   cursor: pointer;
   padding: 0;
   transition: color 100ms;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .side-remove-btn:hover { color: var(--color-red); }
+.side-remove-btn:active { color: var(--color-gray-400); }
 
 /* ─── Roster buttons ─────────────────────────────────────────────────────── */
 .roster-btn-row {
