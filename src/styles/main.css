@@ -704,10 +704,15 @@ main {
   max-height: 17.5rem;
 }
 
-.select-popup[data-starting-style],
+.select-popup[data-starting-style] {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
 .select-popup[data-ending-style] {
   opacity: 0;
   transform: scale(0.95);
+  transition-duration: 50ms;
 }
 
 .select-item {
@@ -1063,7 +1068,7 @@ main {
 
 .pregame-card-summary {
   font-size: 0.8125rem;
-  color: var(--color-gray-500);
+  color: var(--color-gray-400);
   margin: 0.25rem 1rem 0.875rem;
   line-height: 1.4;
 }
