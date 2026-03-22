@@ -1,15 +1,5 @@
 export const pregameSteps = [
   {
-    title: 'Muster Armies',
-    summary: 'Agree on battle size and muster your army accordingly.',
-    description: 'Agree on a battle size with your opponent — Incursion, Strike Force, or Onslaught. Each player musters an army from their collection according to the mission rules. Your army must include at least one Character model eligible to be your Warlord.',
-  },
-  {
-    title: 'Create the Battlefield',
-    summary: 'Set up terrain features and place objective markers per the mission.',
-    description: 'Players set up terrain features on the battlefield. The standard minimum battlefield size for Incursion and Strike Force is 44" × 60"; for Onslaught it is 44" × 90". Objective markers are then placed as directed by the mission — recommended as flat round 40mm markers. In matched play, models can end any type of move on top of an objective marker.',
-  },
-  {
     title: 'Determine Attacker & Defender',
     summary: 'Roll off — the winner chooses who is Attacker and who is Defender.',
     description: 'Both players roll one D6. The player who rolls highest chooses whether to be the Attacker or the Defender; their opponent takes the other role. On a tie, re-roll. The deployment map will show each player\'s deployment zone based on this result.',
