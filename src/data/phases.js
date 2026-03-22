@@ -98,16 +98,6 @@ export const phases = [
       { type: 'note', text: 'Remaining Combats: all remaining eligible units now fight — repeat the same sequence above. No unit can fight more than once per phase' },
     ]
   },
-  {
-    id: 'end',
-    title: 'End of Turn',
-    items: [
-      { type: 'action', text: 'Check unit coherency — each model must be within 2" horizontally and 5" vertically of at least one other model in its unit; remove models that cannot maintain coherency' },
-      { type: 'action', text: 'Score objectives — units with Objective Secured control markers even against non-ObjSec enemies', keywords: ['OBJECTIVE SECURED'] },
-      { type: 'action', text: 'Note victory points scored this turn — tally VPs from Primary Mission objectives, Secondary Mission cards, and any other scoring rules triggered this turn' },
-      { type: 'action', text: 'Pass to your opponent — your turn ends; opponent takes their turn. After both players have gone, the Battle Round is complete (game lasts 5 Battle Rounds)' },
-    ]
-  }
 ];
 
 export const PHASE_ICONS = {
@@ -116,5 +106,4 @@ export const PHASE_ICONS = {
   shooting: { label: 'Shooting', svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 21.23 21.28"><path fill="currentColor" d="M16.7,10.14l.59,1.06H16l-.13-.46A7.63,7.63,0,0,0,10.5,5.38L10,5.25V4l1.05.58L11.68,0l2,4.12L16.78.81l-.84,4.48,4.48-.84L17.11,7.59l4.12,2Z"/><path fill="currentColor" d="M6.63,6V7.67a5.4,5.4,0,0,0-2,1.26,5.31,5.31,0,0,0-1.25,2H1.77A7,7,0,0,1,3.55,7.83,6.89,6.89,0,0,1,6.63,6"/><path fill="currentColor" d="M15.18,10.92H13.55a5.28,5.28,0,0,0-1.25-2h0a5.4,5.4,0,0,0-2-1.26V6a6.91,6.91,0,0,1,4.86,4.88"/><rect fill="currentColor" x="12.3" y="11.89" width="4.65" height="1.76"/><rect fill="currentColor" x="7.6" y="4.26" width="1.76" height="4.67"/><path fill="currentColor" d="M15.18,14.61a6.88,6.88,0,0,1-1.78,3.1,7,7,0,0,1-3.08,1.79V17.86a5.25,5.25,0,0,0,2-1.25,5.47,5.47,0,0,0,1.26-2Z"/><rect fill="currentColor" x="0" y="11.89" width="4.65" height="1.76"/><rect fill="currentColor" x="7.6" y="16.61" width="1.76" height="4.67"/><path fill="currentColor" d="M6.63,17.86V19.5a6.9,6.9,0,0,1-4.86-4.89H3.4a5.43,5.43,0,0,0,1.25,2,5.25,5.25,0,0,0,2,1.25"/></svg>` },
   charge:   { label: 'Charge',   svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22.97 24.67"><polygon fill="currentColor" points="11.48 7.11 17.23 14.21 22.97 14.21 11.48 0 0 14.21 5.74 14.21 11.48 7.11"/><polygon fill="currentColor" points="11.48 17.56 17.23 24.67 22.97 24.67 11.48 10.46 0 24.67 5.74 24.67 11.48 17.56"/></svg>` },
   fight:    { label: 'Fight',    svg: `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 7.35 7"><defs><clipPath id="melee-clip" transform="translate(-2.21 -1.51)"><rect fill="none" width="12.29" height="10.15"/></clipPath></defs><g clip-path="url(#melee-clip)"><path fill="currentColor" d="M3.81,5.85l-.13-.31-.53.54.53.53-.59.59-.41.41-.13-.14-.34.34.35.35.35.35.34-.34L3.12,8l.4-.41L4.11,7l.53.53L5.18,7l-.31-.13-.19-.19L6.24,5.16l.65-.65c.38-.38,2.25-2.39,2.32-3-.62.05-2.62,1.94-3,2.32l-.62.63L4,6Z" transform="translate(-2.21 -1.51)"/><path fill="currentColor" d="M6.9,6.91,6.6,7l.53.53L7.66,7l.59.59L8.66,8l-.14.13.34.34.35-.35.35-.35-.33-.34-.14.14L8.68,7.2l-.59-.59.53-.53-.53-.54L8,5.85,7.77,6,6.21,4.48l-.65-.65c-.38-.38-2.38-2.25-3-2.32.06.62,1.95,2.62,2.32,3,0,0,.31.3.63.63L7.1,6.72Z" transform="translate(-2.21 -1.51)"/></g></svg>` },
-  end:      { label: 'End',      svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14.95 21.2"><path fill="currentColor" d="M12.79,14.08c-.11.5-.48,1.28-.89,1.37s-3-.52-3.59-1.37C8,13.62,9.73,13.44,10.62,13s1.07-.78,1.58-.51a1.53,1.53,0,0,1,.59,1.56m-4.52,3.5c-.33,0-.43-.94-.79-1s-.47.94-.79,1-.5-.25-.18-1.23a2.41,2.41,0,0,1,1-1.35,2.42,2.42,0,0,1,1,1.35c.32,1,.15,1.28-.17,1.23M3.05,15.45c-.41-.09-.78-.87-.89-1.37a1.54,1.54,0,0,1,.6-1.56c.5-.27.68.1,1.57.51s2.65.59,2.31,1.05c-.61.85-3.18,1.46-3.59,1.37M14.32,9.21c.21-.54,1.52-2.44-.4-5.81S7.48,0,7.48,0,3,0,1,3.4.42,8.67.64,9.21A5.43,5.43,0,0,1,1,11.87c-.21.79-.85,1.43-.79,1.89s.7.82.79,1.49-.09,1.71.86,2,1.77-.15,2,.15-.46,2.53-.21,3,1,.52,1,.52S4.54,20,5.23,20c.35,0,.58.28.58.69a2.14,2.14,0,0,1,0,.5,2.78,2.78,0,0,0,1.12,0S6.69,20,7.48,20s.57,1.17.57,1.17a2.82,2.82,0,0,0,1.13,0,2.14,2.14,0,0,1,0-.5c0-.41.22-.69.58-.69.68,0,.5.95.5.95s.79-.06,1-.52-.49-2.68-.22-3,1.1.12,2-.15.76-1.31.85-2,.73-1,.79-1.49-.58-1.1-.79-1.89a5.31,5.31,0,0,1,.37-2.66"/></svg>` },
 };
