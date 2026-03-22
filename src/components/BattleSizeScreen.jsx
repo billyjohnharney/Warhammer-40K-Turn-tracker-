@@ -7,21 +7,25 @@ const BATTLE_SIZES = [
   {
     id: 'combat-patrol',
     label: 'Combat Patrol',
+    points: '500 pts',
     desc: 'Small-scale engagements ideal for fast, focused skirmishes.',
   },
   {
     id: 'incursion',
     label: 'Incursion',
+    points: '1,000 pts',
     desc: 'Mid-sized battles offering more tactical depth than Combat Patrol.',
   },
   {
     id: 'strike-force',
     label: 'Strike Force',
+    points: '2,000 pts',
     desc: 'Standard matched play battles — the definitive Warhammer 40,000 experience.',
   },
   {
     id: 'onslaught',
     label: 'Onslaught',
+    points: '3,000 pts',
     desc: 'Massive clashes fought across a wider battlefield with larger armies.',
   },
 ];
@@ -47,6 +51,7 @@ function getFilteredZones(selectedSize, selectedMission) {
 
 export default function BattleSizeScreen({ onSelect }) {
   const [page, setPage] = useState(0);
+  const [maxPage, setMaxPage] = useState(0);
   const [selectedMission, setSelectedMission] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedDeployment, setSelectedDeployment] = useState(null);
@@ -60,6 +65,11 @@ export default function BattleSizeScreen({ onSelect }) {
     setModalMissionId(missionId);
   }
 
+  function goToPage(i) {
+    setPage(i);
+    setMaxPage(prev => Math.max(prev, i));
+  }
+
   function handleSizeClick(sizeId) {
     setSelectedSize(sizeId);
     // Reset deployment if it's no longer in the filtered list
@@ -67,7 +77,7 @@ export default function BattleSizeScreen({ onSelect }) {
       z => z.id === selectedDeployment,
     );
     if (!stillValid) setSelectedDeployment(null);
-    setPage(2);
+    goToPage(2);
   }
 
   function handleDone() {
@@ -90,9 +100,10 @@ export default function BattleSizeScreen({ onSelect }) {
           <button
             key={i}
             className={`bb-dot${i === page ? ' bb-dot--active' : ''}${i < page ? ' bb-dot--done' : ''}`}
-            onClick={() => { if (i < page) setPage(i); }}
+            onClick={() => { if (i <= maxPage) goToPage(i); }}
             aria-label={label}
             aria-current={i === page ? 'step' : undefined}
+            disabled={i > maxPage}
           >
             <span className="bb-dot-pip" />
           </button>
@@ -134,8 +145,8 @@ export default function BattleSizeScreen({ onSelect }) {
               </div>
             ))}
           </div>
-          <div className="bb-nav">
-            <button className="bb-nav-next" onClick={() => setPage(1)}>
+          <div className="setup-start-bar">
+            <button className="faction-start-btn" onClick={() => goToPage(1)}>
               Next
             </button>
           </div>
@@ -153,7 +164,10 @@ export default function BattleSizeScreen({ onSelect }) {
                 className={`battle-size-card${selectedSize === size.id ? ' battle-size-card--selected' : ''}`}
                 onClick={() => handleSizeClick(size.id)}
               >
-                <span className="battle-size-label">{size.label}</span>
+                <div className="battle-size-header">
+                  <span className="battle-size-label">{size.label}</span>
+                  <span className="battle-size-points">{size.points}</span>
+                </div>
                 <span className="battle-size-desc">{size.desc}</span>
               </button>
             ))}
@@ -165,20 +179,22 @@ export default function BattleSizeScreen({ onSelect }) {
       {page === 2 && (
         <>
           <p className="options-subtitle">Select a deployment zone.</p>
-          <div className="mission-cards">
+          <div className="battle-size-cards">
             {filteredZones.map(zone => (
               <button
                 key={zone.id}
-                className={`mission-card${selectedDeployment === zone.id ? ' mission-card--selected' : ''}`}
+                className={`battle-size-card${selectedDeployment === zone.id ? ' battle-size-card--selected' : ''}`}
                 onClick={() => setSelectedDeployment(zone.id)}
               >
-                <span className="mission-card-title">{zone.name}</span>
-                <span className="mission-card-summary">{zone.desc}</span>
+                <div className="battle-size-header">
+                  <span className="battle-size-label">{zone.name}</span>
+                </div>
+                <span className="battle-size-desc">{zone.desc}</span>
               </button>
             ))}
           </div>
-          <div className="bb-nav">
-            <button className="bb-nav-next" onClick={handleDone}>
+          <div className="setup-start-bar">
+            <button className="faction-start-btn" onClick={handleDone}>
               Begin Setup
             </button>
           </div>
