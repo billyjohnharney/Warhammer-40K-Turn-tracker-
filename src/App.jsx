@@ -2,6 +2,8 @@ import { useState, useCallback } from 'react';
 import { GameProvider, useGame } from './context/GameContext.jsx';
 import { useWahapedia } from './hooks/useWahapedia.js';
 import SplashScreen from './components/SplashScreen.jsx';
+import OptionsScreen from './components/OptionsScreen.jsx';
+import BattleSizeScreen from './components/BattleSizeScreen.jsx';
 import SetupScreen from './components/SetupScreen.jsx';
 import PreGameScreen from './components/PreGameScreen.jsx';
 import GameScreen from './components/GameScreen.jsx';
@@ -11,6 +13,19 @@ function AppInner() {
   const wahapediaHook = useWahapedia(state.gameConfig);
 
   const handleDismissSplash = useCallback(() => {
+    dispatch({ type: 'SET_APP_STEP', payload: 'options' });
+  }, [dispatch]);
+
+  const handleQuickStart = useCallback(() => {
+    dispatch({ type: 'SET_APP_STEP', payload: 'setup' });
+  }, [dispatch]);
+
+  const handleBuildBattle = useCallback(() => {
+    dispatch({ type: 'SET_APP_STEP', payload: 'battlesize' });
+  }, [dispatch]);
+
+  const handleBattleSizeSelect = useCallback((size) => {
+    dispatch({ type: 'SET_GAME_CONFIG', payload: { battleSize: size } });
     dispatch({ type: 'SET_APP_STEP', payload: 'setup' });
   }, [dispatch]);
 
@@ -33,6 +48,14 @@ function AppInner() {
 
   if (state.appStep === 'splash') {
     return <SplashScreen onDismiss={handleDismissSplash} />;
+  }
+
+  if (state.appStep === 'options') {
+    return <OptionsScreen onQuickStart={handleQuickStart} onBuildBattle={handleBuildBattle} />;
+  }
+
+  if (state.appStep === 'battlesize') {
+    return <BattleSizeScreen onSelect={handleBattleSizeSelect} />;
   }
 
   if (state.appStep === 'setup') {
