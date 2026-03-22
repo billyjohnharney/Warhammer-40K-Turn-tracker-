@@ -2,8 +2,8 @@ name: Check GW Rules Updates
 
 on:
   schedule:
-    # Every Monday at 09:00 UTC
-    - cron: "0 9 * * 1"
+    # Trigger at midnight UTC every Monday — random delay added in job below
+    - cron: "0 0 * * 1"
   workflow_dispatch: # Allow manual trigger from GitHub UI
 
 permissions:
@@ -15,6 +15,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Random delay (0–23 hours)
+        # Sleep a random number of seconds so the job fires at a different
+        # time each Monday rather than always at midnight UTC.
+        # RANDOM in bash is 0–32767; multiply to get 0–82800 seconds (23 hrs).
+        # Skipped when triggered manually via workflow_dispatch.
+        if: github.event_name == 'schedule'
+        run: sleep $((RANDOM * RANDOM % 82800))
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
