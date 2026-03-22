@@ -5,7 +5,7 @@ import { smSuccessors } from '../data/factions.js';
 
 const initialState = {
   appStep: 'splash',
-  gameConfig: { playerFaction: '', enemyFaction: '', playerDetachment: '', enemyDetachment: '' },
+  gameConfig: { playerFaction: '', enemyFaction: '', playerDetachment: '', enemyDetachment: '', battleSize: '', mission: '', deploymentZone: '' },
   activePhaseIndex: 0,
   phaseTab: {},
   roster: { loaded: false, units: [], activeKeywords: new Set() },

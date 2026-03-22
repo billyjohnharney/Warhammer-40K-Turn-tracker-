@@ -94,20 +94,19 @@ main {
   justify-content: center;
   gap: 0.25rem;
   aspect-ratio: 1;
-  border: 1px solid var(--color-gray-200);
+  border: none;
   border-radius: 0.375rem;
-  color: var(--color-gray-600);
+  color: var(--color-gray-300);
   cursor: pointer;
   padding: 0.375rem 0.25rem;
   min-width: 0;
   background: none;
   font-family: inherit;
-  transition: background-color 100ms, color 100ms, border-color 100ms;
+  transition: color 100ms;
 }
 
 .phase-pill:hover {
-  background-color: var(--color-gray-100);
-  color: var(--color-foreground);
+  color: var(--color-gray-400);
 }
 
 .phase-pill .pill-icon {
@@ -132,19 +131,15 @@ main {
 }
 
 .phase-pill.active {
-  background-color: transparent;
-  border: 2px solid #3c5424;
-  color: var(--color-gray-600);
+  color: #3c5424;
 }
 
 .phase-pill.done {
-  background-color: var(--color-gray-100);
-  border-color: var(--color-gray-200);
-  color: var(--color-gray-600);
+  color: var(--color-gray-300);
 }
 
 /* ─── Phase view ─────────────────────────────────────────────────────────── */
-.phase-view { padding-bottom: 1rem; }
+.phase-view { padding-bottom: calc(5rem + env(safe-area-inset-bottom) + 8px); }
 
 .phase-view-header {
   display: flex;
@@ -173,6 +168,23 @@ main {
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--color-foreground);
+}
+
+.mission-obj-btn {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-accent, #c8a96e);
+  background: none;
+  border: 1px solid currentColor;
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  cursor: pointer;
+  line-height: 1.5;
+}
+
+.mission-obj-btn:hover {
+  opacity: 0.75;
 }
 
 .phase-progress {
@@ -463,12 +475,16 @@ main {
 
 /* ─── Phase nav ──────────────────────────────────────────────────────────── */
 .phase-nav-row {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 2rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--color-gridline);
+  padding: 0.75rem 1.5rem calc(0.75rem + env(safe-area-inset-bottom) + 8px);
+  background-color: var(--color-background);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.12);
 }
 
 .phase-nav-arrow {
@@ -497,6 +513,21 @@ main {
 }
 
 /* ─── Faction header badge ───────────────────────────────────────────────── */
+.header-edit-btn {
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--color-gray-300);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+.header-edit-btn:hover { color: var(--color-gray-400); }
+
 .faction-badge {
   font-size: 0.75rem;
   color: var(--color-gray-600);
@@ -504,7 +535,6 @@ main {
   transition: color 100ms;
 }
 
-.faction-badge:hover { color: var(--color-foreground); }
 .faction-badge .vs-sep { color: var(--color-gray-300); margin: 0 0.375rem; }
 .faction-badge .your-side { color: var(--color-foreground); }
 
@@ -691,10 +721,15 @@ main {
   max-height: 17.5rem;
 }
 
-.select-popup[data-starting-style],
+.select-popup[data-starting-style] {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
 .select-popup[data-ending-style] {
   opacity: 0;
   transform: scale(0.95);
+  transition-duration: 50ms;
 }
 
 .select-item {
@@ -781,12 +816,32 @@ main {
   padding: 0.5rem 0 1rem;
 }
 
+.setup-add-enemy-btn {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: var(--color-gray-400);
+  text-align: center;
+  padding: 0.5rem 0 1rem;
+  cursor: pointer;
+  transition: color 100ms;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.setup-add-enemy-btn:hover { color: var(--color-foreground); }
+.setup-add-enemy-btn:active { color: var(--color-gray-400); }
+
 .setup-start-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 0.75rem 1.5rem calc(0.75rem + env(safe-area-inset-bottom));
+  padding: 0.75rem 1.5rem calc(0.75rem + env(safe-area-inset-bottom) + 8px);
   background-color: var(--color-background);
   border-top: 1px solid var(--color-gray-200);
 }
@@ -863,6 +918,23 @@ main {
 }
 
 .side-clear:hover { color: var(--color-red); }
+
+.side-remove-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-gray-400);
+  cursor: pointer;
+  padding: 0;
+  transition: color 100ms;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.side-remove-btn:hover { color: var(--color-red); }
+.side-remove-btn:active { color: var(--color-gray-400); }
 
 /* ─── Roster buttons ─────────────────────────────────────────────────────── */
 .roster-btn-row {
@@ -966,24 +1038,81 @@ main {
   padding: 1.5rem 1.5rem 6rem;
 }
 
+.pregame-page-title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+}
+
 .pregame-intro {
   font-size: 0.875rem;
   color: var(--color-gray-600);
   margin: 0 0 1.25rem;
 }
 
+.pregame-step-number {
+  color: var(--color-gray-400);
+  font-weight: 500;
+  margin-right: 0.25rem;
+}
+
 .pregame-card {
   border: 1px solid var(--color-gray-200);
   border-radius: 0.375rem;
-  padding: 0.875rem 1rem;
   margin-bottom: 0.625rem;
+  overflow: hidden;
+}
+
+.pregame-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  font-family: inherit;
+  text-align: left;
+  padding: 0.875rem 1rem 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .pregame-card-title {
   font-size: 0.9375rem;
   font-weight: 600;
   color: var(--color-foreground);
-  margin: 0 0 0.375rem;
+}
+
+.pregame-card-chevron {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-gray-400);
+  transition: transform 200ms ease;
+}
+
+.pregame-card.is-open .pregame-card-chevron {
+  transform: rotate(180deg);
+}
+
+.pregame-card-summary {
+  font-size: 0.8125rem;
+  color: var(--color-gray-400);
+  margin: 0.25rem 1rem 0.875rem;
+  line-height: 1.4;
+}
+
+.pregame-card.is-open .pregame-card-summary {
+  display: none;
+}
+
+.pregame-card-body {
+  display: none;
+  padding: 0.375rem 1rem 0.875rem;
+}
+
+.pregame-card.is-open .pregame-card-body {
+  display: block;
 }
 
 .pregame-card-desc {
@@ -1059,6 +1188,15 @@ main {
   margin: 0 auto 1rem;
 }
 
+.setup-page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-align: center;
+  margin: 0 0 1rem;
+  text-transform: uppercase;
+}
+
 .setup-content {
   animation: setupContentFadeIn 0.9s ease forwards;
 }
@@ -1066,6 +1204,427 @@ main {
 @keyframes setupContentFadeIn {
   from { opacity: 0; filter: blur(12px); }
   to   { opacity: 1; filter: blur(0px); }
+}
+
+/* ─── Options screen ─────────────────────────────────────────────────────── */
+.options-screen {
+  max-width: 32.5rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.options-subtitle {
+  font-size: 0.875rem;
+  color: var(--color-gray-600);
+  text-align: center;
+  margin: 0 0 0.75rem;
+}
+
+.options-cards {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  animation: setupContentFadeIn 0.9s ease forwards;
+}
+
+.options-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.375rem;
+  width: 100%;
+  background: none;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 0.375rem;
+  padding: 1.125rem 1.25rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 100ms, border-color 100ms;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.options-card:hover {
+  background-color: var(--color-gray-100);
+  border-color: var(--color-gray-300);
+}
+
+.options-card:active { background-color: var(--color-gray-200); }
+
+.options-card:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: -1px;
+}
+
+.options-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-foreground);
+}
+
+.options-card-desc {
+  font-size: 0.8125rem;
+  color: var(--color-gray-600);
+  line-height: 1.5;
+}
+
+/* ─── Battle size screen ──────────────────────────────────────────────────── */
+.battle-size-cards {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  animation: setupContentFadeIn 0.9s ease forwards;
+}
+
+.battle-size-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.375rem;
+  width: 100%;
+  background: none;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 0.375rem;
+  padding: 1.125rem 1.25rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 100ms, border-color 100ms;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.battle-size-card:hover {
+  background-color: var(--color-gray-100);
+  border-color: var(--color-gray-300);
+}
+
+.battle-size-card:active { background-color: var(--color-gray-200); }
+
+.battle-size-card:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: -1px;
+}
+
+.battle-size-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.5rem;
+}
+
+.battle-size-label {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-foreground);
+}
+
+.battle-size-points {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--color-gray-600);
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.battle-size-desc {
+  font-size: 0.8125rem;
+  color: var(--color-gray-600);
+  line-height: 1.5;
+}
+
+/* ─── Battle builder pagination ──────────────────────────────────────────── */
+.bb-dots {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.bb-dot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: default;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bb-dot--done  { cursor: pointer; }
+.bb-dot:disabled { cursor: default; opacity: 0.35; }
+
+.bb-dot-pip {
+  display: block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-gray-400);
+  background: transparent;
+  transition: background-color 150ms, border-color 150ms;
+}
+
+.bb-dot--active .bb-dot-pip {
+  background: var(--color-foreground);
+  border-color: var(--color-foreground);
+}
+
+.bb-dot--done .bb-dot-pip {
+  background: var(--color-gray-400);
+  border-color: var(--color-gray-400);
+}
+
+
+/* ─── Battle size selected state ─────────────────────────────────────────── */
+.battle-size-card--selected {
+  border-color: var(--color-gray-900);
+  background-color: var(--color-gray-100);
+}
+
+/* ─── Mission selection ───────────────────────────────────────────────────── */
+.mission-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  animation: setupContentFadeIn 0.9s ease forwards;
+  margin-bottom: 0.25rem;
+}
+
+.mission-category-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mission-category-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-gray-600);
+  margin: 0;
+}
+
+.mission-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mission-card {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  width: 100%;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 0.375rem;
+  overflow: hidden;
+  transition: border-color 100ms;
+}
+
+.mission-card--selected {
+  border-color: var(--color-gray-900);
+}
+
+/* Radio click zone */
+.mission-radio-zone {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  background: none;
+  border: none;
+  border-right: 1px solid var(--color-gray-200);
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 100ms;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mission-radio-zone:hover  { background-color: var(--color-gray-100); }
+.mission-radio-zone:active { background-color: var(--color-gray-200); }
+
+.mission-radio-zone:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: -2px;
+}
+
+/* Radio pip */
+.mission-radio {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-gray-400);
+  position: relative;
+  transition: border-color 150ms;
+}
+
+.mission-card--selected .mission-radio {
+  border-color: var(--color-gray-900);
+}
+
+.mission-card--selected .mission-radio::after {
+  content: '';
+  position: absolute;
+  inset: 0.175rem;
+  border-radius: 50%;
+  background: var(--color-gray-900);
+}
+
+/* Content click zone */
+.mission-content-zone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  background: none;
+  border: none;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  min-width: 0;
+  transition: background-color 100ms;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mission-content-zone:hover  { background-color: var(--color-gray-100); }
+.mission-content-zone:active { background-color: var(--color-gray-200); }
+
+.mission-content-zone:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: -2px;
+}
+
+.mission-card-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-foreground);
+}
+
+.mission-card-summary {
+  font-size: 0.8125rem;
+  color: var(--color-gray-600);
+  line-height: 1.45;
+}
+
+.battle-size-subtitle {
+  margin-top: 1.25rem;
+}
+
+/* ─── Deployment carousel ─────────────────────────────────────────────────── */
+.dz-carousel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 0.5rem;
+  animation: setupContentFadeIn 0.9s ease forwards;
+}
+
+.dz-frame {
+  width: 100%;
+  aspect-ratio: 7 / 10;
+  background: var(--color-background);
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+/* Chevrons flank the title + description */
+.dz-nav-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.dz-chevron {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: none;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 0.375rem;
+  cursor: pointer;
+  color: var(--color-gray-600);
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 100ms, border-color 100ms;
+}
+
+.dz-chevron svg { width: 1.125rem; height: 1.125rem; }
+
+.dz-chevron:hover  { background-color: var(--color-gray-100); border-color: var(--color-gray-300); }
+.dz-chevron:active { background-color: var(--color-gray-200); }
+.dz-chevron:focus-visible { outline: 2px solid var(--color-blue); outline-offset: -1px; }
+
+.dz-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.25rem;
+}
+
+.dz-counter {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-gray-400);
+}
+
+.dz-name {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-foreground);
+}
+
+.dz-desc {
+  font-size: 0.8125rem;
+  color: var(--color-gray-600);
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* ─── Mission modal ───────────────────────────────────────────────────────── */
+.mission-modal-category {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-gray-600);
+  margin-bottom: 0.125rem;
+}
+
+.mission-modal-details {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  white-space: pre-line;
+  color: var(--color-foreground);
 }
 
 .splash-logo {
