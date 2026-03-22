@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { MISSIONS } from '../data/missions.js';
 import { DEPLOYMENT_ZONES } from '../data/deploymentZones.js';
 import MissionModal from './MissionModal.jsx';
+import DeploymentCarousel from './DeploymentCarousel.jsx';
 
 const BATTLE_SIZES = [
   {
@@ -54,7 +55,6 @@ export default function BattleSizeScreen({ onSelect }) {
   const [maxPage, setMaxPage] = useState(0);
   const [selectedMission, setSelectedMission] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
-  const [selectedDeployment, setSelectedDeployment] = useState(null);
   const [modalMissionId, setModalMissionId] = useState(null);
 
   function handleRadioClick(missionId) {
@@ -72,11 +72,6 @@ export default function BattleSizeScreen({ onSelect }) {
 
   function handleSizeClick(sizeId) {
     setSelectedSize(sizeId);
-    // Reset deployment if it's no longer in the filtered list
-    const stillValid = getFilteredZones(sizeId, selectedMission).some(
-      z => z.id === selectedDeployment,
-    );
-    if (!stillValid) setSelectedDeployment(null);
     goToPage(2);
   }
 
@@ -84,7 +79,7 @@ export default function BattleSizeScreen({ onSelect }) {
     onSelect({
       battleSize: selectedSize,
       mission: selectedMission,
-      deploymentZone: selectedDeployment,
+      deploymentZone: '',
     });
   }
 
@@ -178,21 +173,8 @@ export default function BattleSizeScreen({ onSelect }) {
       {/* ── Page 2: Deployment zone ────────────────────────────────────── */}
       {page === 2 && (
         <>
-          <p className="options-subtitle">Select a deployment zone.</p>
-          <div className="battle-size-cards">
-            {filteredZones.map(zone => (
-              <button
-                key={zone.id}
-                className={`battle-size-card${selectedDeployment === zone.id ? ' battle-size-card--selected' : ''}`}
-                onClick={() => setSelectedDeployment(zone.id)}
-              >
-                <div className="battle-size-header">
-                  <span className="battle-size-label">{zone.name}</span>
-                </div>
-                <span className="battle-size-desc">{zone.desc}</span>
-              </button>
-            ))}
-          </div>
+          <p className="options-subtitle">Reference your deployment zone.</p>
+          <DeploymentCarousel zones={filteredZones} />
           <div className="setup-start-bar">
             <button className="faction-start-btn" onClick={handleDone}>
               Begin Setup
