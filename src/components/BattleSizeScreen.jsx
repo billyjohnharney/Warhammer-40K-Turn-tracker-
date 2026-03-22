@@ -134,8 +134,8 @@ export default function BattleSizeScreen({ onSelect }) {
               </div>
             ))}
           </div>
-          <div className="bb-nav">
-            <button className="bb-nav-next" onClick={() => setPage(1)}>
+          <div className="setup-start-bar">
+            <button className="faction-start-btn" onClick={() => setPage(1)}>
               Next
             </button>
           </div>
@@ -177,8 +177,8 @@ export default function BattleSizeScreen({ onSelect }) {
               </button>
             ))}
           </div>
-          <div className="bb-nav">
-            <button className="bb-nav-next" onClick={handleDone}>
+          <div className="setup-start-bar">
+            <button className="faction-start-btn" onClick={handleDone}>
               Begin Setup
             </button>
           </div>
