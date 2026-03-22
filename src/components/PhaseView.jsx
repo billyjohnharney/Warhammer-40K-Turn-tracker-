@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Tabs } from '@base-ui/react/tabs';
 import { useGame } from '../context/GameContext.jsx';
 import { phases } from '../data/phases.js';
@@ -6,6 +7,7 @@ import { keywordFactions } from '../data/factions.js';
 import { wahapediaPhaseId } from '../hooks/useWahapedia.js';
 import StepsTab from './StepsTab.jsx';
 import StratagemTab from './StratagemTab.jsx';
+import MissionModal from './MissionModal.jsx';
 
 export function kwForPlayer(kw, gameConfig, roster) {
   if (coreAlwaysVisible.has(kw)) return true;
@@ -40,6 +42,7 @@ export function shouldShowItem(item, gameConfig, roster, enemyRoster, commandPha
 export default function PhaseView({ wahapediaHook }) {
   const { state, dispatch, getCommandPhaseAbilities } = useGame();
   const { activePhaseIndex, gameConfig, roster, enemyRoster, phaseTab } = state;
+  const [missionModalOpen, setMissionModalOpen] = useState(false);
   const phase = phases[activePhaseIndex];
   const tab = phaseTab[phase.id] || 'steps';
 
@@ -69,7 +72,15 @@ export default function PhaseView({ wahapediaHook }) {
         <div className="phase-header-left">
           <span className="phase-title">{phase.title}</span>
         </div>
+        {gameConfig.mission && (
+          <button className="mission-obj-btn" onClick={() => setMissionModalOpen(true)}>
+            Obj.1
+          </button>
+        )}
       </div>
+      {missionModalOpen && (
+        <MissionModal missionId={gameConfig.mission} onClose={() => setMissionModalOpen(false)} />
+      )}
 
       <Tabs.Root value={tab} onValueChange={handleTabChange}>
         <Tabs.List className="phase-tabs">

@@ -14,13 +14,14 @@ export default function PreGameScreen({ onBeginBattle, onChangeFactions }) {
     <>
       <Header onChangeFactions={onChangeFactions} />
       <main className="pregame-screen">
+        <h1 className="pregame-page-title">Pre-battle</h1>
         <p className="pregame-intro">Complete these steps before the first turn begins.</p>
         {pregameSteps.map((step, i) => {
           const isOpen = !!expanded[i];
           return (
             <div key={i} className={`pregame-card ${isOpen ? 'is-open' : ''}`}>
               <button className="pregame-card-header" onClick={() => toggle(i)} aria-expanded={isOpen}>
-                <span className="pregame-card-title">{step.title}</span>
+                <span className="pregame-card-title"><span className="pregame-step-number">{i + 1}.</span> {step.title}</span>
                 <ChevronDownIcon className="pregame-card-chevron" />
               </button>
               <p className="pregame-card-summary">{step.summary}</p>
