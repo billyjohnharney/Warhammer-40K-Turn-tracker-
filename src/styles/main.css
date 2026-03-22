@@ -170,6 +170,23 @@ main {
   color: var(--color-foreground);
 }
 
+.mission-obj-btn {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-accent, #c8a96e);
+  background: none;
+  border: 1px solid currentColor;
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  cursor: pointer;
+  line-height: 1.5;
+}
+
+.mission-obj-btn:hover {
+  opacity: 0.75;
+}
+
 .phase-progress {
   font-size: 0.75rem;
   color: var(--color-gray-600);
