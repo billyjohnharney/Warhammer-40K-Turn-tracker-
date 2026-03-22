@@ -1500,6 +1500,87 @@ main {
   margin-top: 1.25rem;
 }
 
+/* ─── Deployment carousel ─────────────────────────────────────────────────── */
+.dz-carousel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 1rem;
+  animation: setupContentFadeIn 0.9s ease forwards;
+}
+
+.dz-viewer {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 0.5rem;
+}
+
+.dz-chevron {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: none;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 0.375rem;
+  cursor: pointer;
+  color: var(--color-gray-600);
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 100ms, border-color 100ms;
+}
+
+.dz-chevron svg { width: 1.125rem; height: 1.125rem; }
+
+.dz-chevron:hover  { background-color: var(--color-gray-100); border-color: var(--color-gray-300); }
+.dz-chevron:active { background-color: var(--color-gray-200); }
+.dz-chevron:focus-visible { outline: 2px solid var(--color-blue); outline-offset: -1px; }
+
+.dz-frame {
+  flex: 1;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  aspect-ratio: 10 / 7;
+  background: var(--color-background);
+}
+
+.dz-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.375rem;
+  width: 100%;
+}
+
+.dz-counter {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-gray-400);
+}
+
+.dz-name {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-foreground);
+}
+
+.dz-desc {
+  font-size: 0.875rem;
+  color: var(--color-gray-600);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 32ch;
+}
+
 /* ─── Mission modal ───────────────────────────────────────────────────────── */
 .mission-modal-category {
   display: block;
