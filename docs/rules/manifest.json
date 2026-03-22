@@ -1,4 +1,47 @@
 {
-  "last_checked": null,
-  "known_pdfs": []
+  "last_checked": "2026-03-22",
+  "known_pdfs": [
+    {
+      "name": "eng_04-03_wh40k_core&key_balance_dataslate-ysn1jjtd9x-qogz1pqkky.pdf",
+      "title": "Balance Dataslate (Apr 2025)",
+      "url": null,
+      "downloaded": "2026-03-22",
+      "sha256": "0ee995b021e3a8ba5b4e283ee04abd5a4dfcf55b0863661248c2a76ee803a90d"
+    },
+    {
+      "name": "eng_04-03_wh40k_core&key_munitorum_field_manual-wusmp8gbdw-poy2kdhoy0.pdf",
+      "title": "Munitorum Field Manual (Apr 2025)",
+      "url": null,
+      "downloaded": "2026-03-22",
+      "sha256": "3871ceee3d45f7e55d1818bc02d3d9a28200498426ffe9aa0cd3201960f64f60"
+    },
+    {
+      "name": "eng_11-02_wh40k_core&key_chapter_approved_tournament_companion-fzhlwjzwf4-agxpall6br.pdf",
+      "title": "Chapter Approved Tournament Companion (Feb 2025)",
+      "url": null,
+      "downloaded": "2026-03-22",
+      "sha256": "a3d0972f0083a1c42945520ae561f8101c0e842c7b4a9fd7ce7b4508f111e9c4"
+    },
+    {
+      "name": "eng_22-10_warhammer40000_core_rules_updates-kikyythcsl-5iydvuj9w6 (1).pdf",
+      "title": "Warhammer 40,000 Core Rules Updates (Oct 2024)",
+      "url": null,
+      "downloaded": "2026-03-22",
+      "sha256": "27960a4d4affecd450af69c54d7583bcc2941b00ba5845f5786a630bdec7f4ba"
+    },
+    {
+      "name": "warhammer40000_core&key_corerules_eng_24.09-5xfayxjekm.pdf",
+      "title": "Warhammer 40,000 Core Rules (Sep 2024)",
+      "url": null,
+      "downloaded": "2026-03-22",
+      "sha256": "4d0e8019cbfddd6f46781d5b4ed31d46fb21eb2d0d10a0f6fabefac0ce054364"
+    },
+    {
+      "name": "warhammer40000_core&key_quickstartguide_eng_24.09-s2afk26smk.pdf",
+      "title": "Warhammer 40,000 Quick Start Guide (Sep 2024)",
+      "url": null,
+      "downloaded": "2026-03-22",
+      "sha256": "75edde244cd7857afcaf5f6e2e56ae1079cca0029ee667607a91d106d51b8abe"
+    }
+  ]
 }
