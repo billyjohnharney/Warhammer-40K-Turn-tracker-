@@ -35,7 +35,7 @@ export default function DeploymentCarousel({ zones, battleSize }) {
           <img
             src={imgSrc}
             alt={zone.name}
-            style={{ display: 'block', width: '100%', height: '100%', objectFit: 'contain' }}
+            style={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center bottom' }}
           />
         )}
       </div>
