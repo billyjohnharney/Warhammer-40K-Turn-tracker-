@@ -5,6 +5,11 @@ const BATTLE_SIZES = [
     desc: 'Small-scale engagements ideal for fast, focused skirmishes.',
   },
   {
+    id: 'incursion',
+    label: 'Incursion',
+    desc: 'Mid-sized battles offering more tactical depth than Combat Patrol.',
+  },
+  {
     id: 'strike-force',
     label: 'Strike Force',
     desc: 'Standard matched play battles — the definitive Warhammer 40,000 experience.',
