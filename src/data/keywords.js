@@ -197,8 +197,9 @@ export const keywords = {
     "One Character model's melee attacks gain [PRECISION] for the phase."
   ],
   'FIRE OVERWATCH': [
-    "1 CP — Opponent's Movement or Charge phase, when an enemy unit is selected to move or charge.",
-    'One friendly unit within 24" of the moving/arriving enemy shoots at it — hits only on unmodified 6s. Once per turn.'
+    "1 CP — Opponent's Movement or Charge phase, when an enemy unit is set up, moves, or declares a charge.",
+    'One friendly unit within 24" of that enemy shoots at it — hits only on unmodified 6s. Cannot target Titanic units. Once per turn.',
+    'Out-of-phase restriction: only the shooting action is permitted — no other Shooting phase rules or Stratagems apply to those attacks.'
   ],
   'GO TO GROUND': [
     "1 CP — Opponent's Shooting phase, when one of your INFANTRY units is selected as the target.",
@@ -209,20 +210,20 @@ export const keywords = {
     'A GRENADES unit not in Engagement Range rolls 6D6 against a visible enemy within 8" — each 4+ deals 1 mortal wound.'
   ],
   'HEROIC INTERVENTION': [
-    "2 CP — Opponent's Charge phase, after an enemy Charge move is made.",
+    "1 CP — Opponent's Charge phase, after an enemy Charge move is made.",
     'One friendly unit within 6" of the charging enemy makes an immediate charge against it. No Fights First bonus.',
     'VEHICLE units may only use this if they also have the WALKER keyword.'
   ],
   'INSANE BRAVERY': [
-    '1 CP — Command phase, Battle-shock step. Once per battle.',
-    'One unit automatically passes one Battle-shock test.'
+    '1 CP — Command phase, Battle-shock step, just before a Battle-shock test is taken. Once per battle.',
+    'That unit automatically passes the test — use this before rolling, not after failing.'
   ],
   'NEW ORDERS': [
     '1 CP — Your Command phase or end of any of your phases. Once per battle.',
     'Discard your current Secondary Mission card and draw a new one.'
   ],
   'RAPID INGRESS': [
-    "1 CP — End of opponent's Movement phase (Reinforcements step).",
+    "1 CP — Opponent's Movement or Charge phase, just after an enemy unit is set up, moves, or declares a charge.",
     'One of your Reserves units arrives immediately using normal Reinforcements rules.',
     'Deep Strike rules apply if the unit has Deep Strike. Cannot arrive a round earlier than normally allowed.'
   ],

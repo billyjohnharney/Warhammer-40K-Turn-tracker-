@@ -4,10 +4,11 @@ export const phases = [
     title: 'Command Phase',
     items: [
       { type: 'action', text: 'Both players gain 1CP — Command Points are spent to activate Stratagems during any phase' },
+      { type: 'note', text: 'CP cap: each player can gain at most 1 additional CP per battle round from any other source — maximum 2CP total per battle round (the 1CP gained here counts toward this cap)' },
       { type: 'action', text: 'Resolve army abilities — activate any faction or detachment abilities that trigger at the start of your Command phase (see abilities listed below)' },
       { type: 'command-abilities' },
       { type: 'action', text: 'Check for Battle-Shock — for each unit below Half-strength, roll 2D6; equal or beat Leadership to pass', keywords: ['BATTLE-SHOCK', 'INSANE BRAVERY'] },
-      { type: 'note', text: 'Failed Battle-shock: unit OC becomes 0, cannot use Stratagems until next Command phase. Battle-shocked units take Desperate Escape tests when Falling Back' },
+      { type: 'note', text: 'Failed Battle-shock: unit OC becomes 0, cannot use Stratagems until next Command phase, and all models in it are individually Battle-shocked. Battle-shocked units take Desperate Escape tests when Falling Back' },
     ]
   },
   {
@@ -15,6 +16,7 @@ export const phases = [
     title: 'Movement Phase',
     items: [
       { type: 'action', text: 'Select each unit to move — Normal Move, Advance, Remain Stationary, or Fall Back' },
+      { type: 'note', text: 'A unit cannot make more than one Normal move per phase' },
       { type: 'note', text: 'Units in Engagement Range can only Remain Stationary or Fall Back' },
       { type: 'note', text: 'Units that Advance cannot shoot or charge this turn — exception: Assault weapons can still fire', keywords: ['ASSAULT'], playerOnly: true },
       { type: 'note', text: 'Units that Remain Stationary get +1 to Hit rolls for Heavy weapons this turn', keywords: ['HEAVY'], playerOnly: true },
@@ -54,6 +56,7 @@ export const phases = [
       { type: 'note', text: 'Ignores Cover: target cannot use Benefit of Cover', keywords: ['IGNORES COVER'], playerOnly: true },
       { type: 'note', text: 'Twin-linked: re-roll Wound rolls', keywords: ['TWIN-LINKED'], playerOnly: true },
       { type: 'note', text: 'Melta X: check if target is within half range, if so add X to Damage', keywords: ['MELTA X'], playerOnly: true },
+      { type: 'note', text: 'Mortal wounds carry over — excess damage from mortal wounds passes to the next model in the unit if the current model is destroyed. Exception: mortal wounds from Hazardous or Devastating Wounds are lost when the allocated model is destroyed' },
       { type: 'note', text: 'After shooting: if Hazardous weapons used, roll 1D6 per weapon — on a 1, one model destroyed', keywords: ['HAZARDOUS'], playerOnly: true },
       { type: 'note', text: 'Your Deadly Demise: if your models with this ability are destroyed (e.g. from Hazardous), roll D6 — on a 6 nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], playerOnly: true },
       { type: 'note', text: 'Enemy Deadly Demise: when you destroy an enemy model with this ability, roll D6 — on a 6 your nearby units take mortal wounds', keywords: ['DEADLY DEMISE X'], enemyOnly: true },
@@ -67,7 +70,7 @@ export const phases = [
       { type: 'note', text: 'Targets do not need to be visible' },
       { type: 'action', text: 'Charge — Roll 2D6; move up to that distance. Must end within Engagement Range (≤1" horizontally) of all declared targets without moving within 1" of undeclared enemies, or the charge fails', keywords: ['COMMAND RE-ROLL'] },
       { type: 'note', text: 'Successful charge gives unit Fights First this turn', keywords: ['FIGHTS FIRST'] },
-      { type: 'note', text: 'Heroic Intervention (2CP): after this charge, the opponent may spend 2CP to move one eligible unit within 6" into Engagement Range of your charging unit', keywords: ['HEROIC INTERVENTION'] },
+      { type: 'note', text: 'Heroic Intervention (1CP): after this charge, the opponent may spend 1CP to move one eligible unit within 6" into Engagement Range of your charging unit', keywords: ['HEROIC INTERVENTION'] },
     ]
   },
   {
