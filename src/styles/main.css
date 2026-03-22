@@ -1220,7 +1220,7 @@ main {
   font-size: 0.875rem;
   color: var(--color-gray-600);
   text-align: center;
-  margin: 0 0 1.5rem;
+  margin: 0 0 0.75rem;
 }
 
 .options-cards {
@@ -1534,7 +1534,7 @@ main {
   display: flex;
   flex-direction: column;
   width: 100%;
-  gap: 1rem;
+  gap: 0.5rem;
   animation: setupContentFadeIn 0.9s ease forwards;
 }
 
