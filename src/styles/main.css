@@ -1295,6 +1295,107 @@ main {
   line-height: 1.5;
 }
 
+/* ─── Mission selection ───────────────────────────────────────────────────── */
+.mission-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  animation: setupContentFadeIn 0.9s ease forwards;
+  margin-bottom: 0.25rem;
+}
+
+.mission-category-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mission-category-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-gray-600);
+  margin: 0;
+}
+
+.mission-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mission-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  width: 100%;
+  background: none;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 0.375rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 100ms, border-color 100ms;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mission-card:hover {
+  background-color: var(--color-gray-100);
+  border-color: var(--color-gray-300);
+}
+
+.mission-card:active { background-color: var(--color-gray-200); }
+
+.mission-card:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: -1px;
+}
+
+.mission-card--selected {
+  border-color: var(--color-gray-900);
+  background-color: var(--color-gray-100);
+}
+
+.mission-card-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-foreground);
+}
+
+.mission-card-summary {
+  font-size: 0.8125rem;
+  color: var(--color-gray-600);
+  line-height: 1.45;
+}
+
+.battle-size-subtitle {
+  margin-top: 1.25rem;
+}
+
+/* ─── Mission modal ───────────────────────────────────────────────────────── */
+.mission-modal-category {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-gray-600);
+  margin-bottom: 0.125rem;
+}
+
+.mission-modal-details {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  white-space: pre-line;
+  color: var(--color-foreground);
+}
+
 .splash-logo {
   font-size: 2.5rem;
   font-weight: 700;

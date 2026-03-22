@@ -24,8 +24,8 @@ function AppInner() {
     dispatch({ type: 'SET_APP_STEP', payload: 'battlesize' });
   }, [dispatch]);
 
-  const handleBattleSizeSelect = useCallback((size) => {
-    dispatch({ type: 'SET_GAME_CONFIG', payload: { battleSize: size } });
+  const handleBattleSizeSelect = useCallback(({ battleSize, mission }) => {
+    dispatch({ type: 'SET_GAME_CONFIG', payload: { battleSize, mission: mission ?? '' } });
     dispatch({ type: 'SET_APP_STEP', payload: 'setup' });
   }, [dispatch]);
 
