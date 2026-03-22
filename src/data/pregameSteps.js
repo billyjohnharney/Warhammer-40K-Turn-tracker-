@@ -1,37 +1,42 @@
 export const pregameSteps = [
   {
-    title: 'Select Attacker & Defender',
-    summary: 'Roll off to determine who chooses Attacker or Defender.',
-    description: 'For missions that require it, determine which player is the Attacker and which is the Defender. Both players roll one D6; the player who rolls highest chooses. On a tie, re-roll. The Attacker typically deploys and takes the first turn first, unless the mission specifies otherwise.',
+    title: 'Muster Armies',
+    summary: 'Agree on battle size and muster your army accordingly.',
+    description: 'Agree on a battle size with your opponent — Incursion, Strike Force, or Onslaught. Each player musters an army from their collection according to the mission rules. Your army must include at least one Character model eligible to be your Warlord.',
+  },
+  {
+    title: 'Create the Battlefield',
+    summary: 'Set up terrain features and place objective markers per the mission.',
+    description: 'Players set up terrain features on the battlefield. The standard minimum battlefield size for Incursion and Strike Force is 44" × 60"; for Onslaught it is 44" × 90". Objective markers are then placed as directed by the mission — recommended as flat round 40mm markers. In matched play, models can end any type of move on top of an objective marker.',
+  },
+  {
+    title: 'Determine Attacker & Defender',
+    summary: 'Roll off — the winner chooses who is Attacker and who is Defender.',
+    description: 'Both players roll one D6. The player who rolls highest chooses whether to be the Attacker or the Defender; their opponent takes the other role. On a tie, re-roll. The deployment map will show each player\'s deployment zone based on this result.',
   },
   {
     title: 'Declare Battle Formations',
-    summary: 'Secretly choose and simultaneously reveal your Battle Formation.',
-    description: 'Each player secretly chooses a Battle Formation for their army and reveals them simultaneously. Battle Formations grant different bonuses and affect how your army is organised on the battlefield. Once declared, a Battle Formation cannot be changed for the rest of the battle.',
+    summary: 'Secretly note, then simultaneously reveal: Leader attachments, embarked units, and Reserves.',
+    description: 'Each player secretly notes down the following in order, then both players reveal their choices simultaneously:\n1. Which Leader units are attached to which Bodyguard units.\n2. Which units are embarked within which Transport models at the start of the battle.\n3. Which units will start the battle in Reserves (including Strategic Reserves) — no more than half your total units by count, and their combined points value cannot exceed half your army\'s total points.',
   },
   {
     title: 'Deploy Armies',
-    summary: 'Alternate deploying units, including INFILTRATORS, into deployment zones.',
-    description: 'Players alternate deploying units into their deployment zones. Units with INFILTRATORS are set up now, more than 9″ from the enemy deployment zone and more than 9″ from all enemy models. They cannot be placed in Strategic Reserves.',
+    summary: 'Alternate deploying units into your deployment zone, Attacker first.',
+    description: 'Players alternate deploying units one at a time, starting with the Attacker. All models must be set up wholly within their controlling player\'s deployment zone. If one player finishes deploying first, their opponent continues deploying the remainder of their units. Units with abilities that allow them to be set up after both armies are deployed (e.g. Infiltrators) are set up last — if both players have such units, roll off and alternate, starting with the winner.',
   },
   {
-    title: 'Declare Strategic Reserves',
-    summary: 'Declare units starting off-board; max 25% of army points.',
-    description: 'Declare any units that will start the battle in Strategic Reserves (e.g. units with DEEP STRIKE). These units cannot arrive until Battle Round 2 unless their rules state otherwise. Strategic Reserves cannot exceed 25\u2060% of your army\u2019s total points value.',
-  },
-  {
-    title: 'Declare Hover Mode',
-    summary: 'Units with HOVER declare whether they use Hover mode.',
-    description: 'Any units with the HOVER ability must declare whether they are using Hover mode before the first Battle Round begins. A unit in Hover mode has a Move of 20″ and loses all AIRCRAFT rules for the battle.',
+    title: 'Redeploy Units',
+    summary: 'Resolve any rules that allow units to redeploy after deployment.',
+    description: 'Some rules allow players to redeploy certain units after both armies are fully deployed. Unless otherwise stated, these are resolved now — before the first turn is determined. Players alternate resolving any such rules, starting with the Attacker.',
   },
   {
     title: 'Determine First Turn',
-    summary: 'Roll off — first-finished deployer adds 1 — to decide who goes first.',
-    description: 'Both players roll one D6. The player who finished deploying their army first may add 1 to their roll. The player who rolls highest chooses who takes the first turn. On a tie, re-roll.',
+    summary: 'Roll off — the winner chooses who takes the first turn.',
+    description: 'Both players roll one D6. The player who rolls highest chooses who takes the first turn. On a tie, re-roll. The same player always takes the first turn in each subsequent battle round.',
   },
   {
-    title: 'Resolve Scout Moves',
-    summary: 'Units with SCOUTS X″ make a Normal Move before Battle Round 1.',
-    description: 'Units with the SCOUTS X\u201d ability make a Normal Move of up to X\u201d before the first Battle Round begins. They cannot end this move within Engagement Range of any enemy models. If both players have units with SCOUTS, the player taking the first turn resolves their Scout moves first. Units that made a Scout move cannot declare a charge in the first Battle Round.',
+    title: 'Resolve Pre-Battle Rules',
+    summary: 'Resolve Scout moves and any other pre-battle abilities, first-turn player goes first.',
+    description: 'Players alternate resolving any pre-battle rules their units have, starting with the player who will take the first turn. This includes Scout moves — units with the Scouts X" ability make a Normal Move of up to X" before the first battle round begins. Scouts moves must end more than 9" horizontally from all enemy models. Units that made a Scout move cannot declare a charge in the first battle round.',
   },
 ];
