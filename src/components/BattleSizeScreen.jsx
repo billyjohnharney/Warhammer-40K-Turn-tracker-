@@ -179,15 +179,17 @@ export default function BattleSizeScreen({ onSelect }) {
       {page === 2 && (
         <>
           <p className="options-subtitle">Select a deployment zone.</p>
-          <div className="mission-cards">
+          <div className="battle-size-cards">
             {filteredZones.map(zone => (
               <button
                 key={zone.id}
-                className={`mission-card${selectedDeployment === zone.id ? ' mission-card--selected' : ''}`}
+                className={`battle-size-card${selectedDeployment === zone.id ? ' battle-size-card--selected' : ''}`}
                 onClick={() => setSelectedDeployment(zone.id)}
               >
-                <span className="mission-card-title">{zone.name}</span>
-                <span className="mission-card-summary">{zone.desc}</span>
+                <div className="battle-size-header">
+                  <span className="battle-size-label">{zone.name}</span>
+                </div>
+                <span className="battle-size-desc">{zone.desc}</span>
               </button>
             ))}
           </div>
