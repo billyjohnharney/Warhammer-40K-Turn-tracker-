@@ -11,45 +11,89 @@ const C = {
 };
 
 // Portrait board: 196 × 280, 10px padding → board area 176 × 260, centre (98,140)
+// Scale: 176px = 44"  →  1" = 4px horizontal
+//        260px = 60"  →  1" ≈ 4.33px vertical
+// 9" offsets: 36px horizontal, 39px vertical
 const W = 196, H = 280, P = 10;
 const bw = W - 2 * P; // 176
 const bh = H - 2 * P; // 260
-const cx = P + bw / 2; // 98
-const cy = P + bh / 2; // 140
+const cx = P + bw / 2; // 98  — board centre x
+const cy = P + bh / 2; // 140 — board centre y
+
+// Standard 5-objective cross positions (9" from centre)
+const OBJ = {
+  c:  { x: cx,      y: cy      }, // 1 — centre
+  l:  { x: cx - 36, y: cy      }, // 2 — left   (9" W)
+  r:  { x: cx + 36, y: cy      }, // 3 — right  (9" E)
+  t:  { x: cx,      y: cy - 39 }, // 4 — top    (9" N)
+  b:  { x: cx,      y: cy + 39 }, // 5 — bottom (9" S)
+};
 
 // ─── Shared primitives ────────────────────────────────────────────────────────
-// n = objective number label; dx/dy nudge the label off the circle
-function Obj({ x, y, n = '', dx = 7, dy = -7 }) {
+function Obj({ x, y, n, dx = 7, dy = -7 }) {
   return (
     <g>
       <circle cx={x} cy={y} r={5.5} fill="none" stroke={C.obj} strokeWidth={1.5} />
       <circle cx={x} cy={y} r={2}   fill={C.obj} />
-      {n !== '' && (
-        <text x={x + dx} y={y + dy}
-          fontSize="9" fontWeight="700" fill={C.obj}
-          fontFamily="system-ui, sans-serif"
-          dominantBaseline="auto" textAnchor="start"
-        >{n}</text>
+      <text x={x + dx} y={y + dy}
+        fontSize="9" fontWeight="700" fill={C.obj}
+        fontFamily="system-ui, sans-serif"
+        dominantBaseline="auto" textAnchor="start"
+      >{n}</text>
+    </g>
+  );
+}
+
+// Dimension line — auto-detects horizontal vs vertical.
+// Vertical:   horizontal tick marks at each end; label to the RIGHT of midpoint.
+// Horizontal: vertical tick marks at each end; label ABOVE the midpoint.
+function Dim({ x1, y1, x2, y2, label }) {
+  const isV = Math.abs(x2 - x1) < Math.abs(y2 - y1);
+  const mx = (x1 + x2) / 2;
+  const my = (y1 + y2) / 2;
+  return (
+    <g stroke={C.obj} strokeWidth={0.8} fill={C.obj}>
+      <line x1={x1} y1={y1} x2={x2} y2={y2} />
+      {isV ? (
+        // Vertical line — horizontal end ticks, label to the right
+        <>
+          <line x1={x1 - 3} y1={y1} x2={x1 + 3} y2={y1} />
+          <line x1={x2 - 3} y1={y2} x2={x2 + 3} y2={y2} />
+          <text x={mx + 4} y={my + 3}
+            fontSize="8" fontWeight="600"
+            fontFamily="system-ui, sans-serif"
+            textAnchor="start" dominantBaseline="middle"
+            fill={C.obj}
+          >{label}</text>
+        </>
+      ) : (
+        // Horizontal line — vertical end ticks, label above
+        <>
+          <line x1={x1} y1={y1 - 3} x2={x1} y2={y1 + 3} />
+          <line x1={x2} y1={y2 - 3} x2={x2} y2={y2 + 3} />
+          <text x={mx} y={my - 4}
+            fontSize="8" fontWeight="600"
+            fontFamily="system-ui, sans-serif"
+            textAnchor="middle" dominantBaseline="auto"
+            fill={C.obj}
+          >{label}</text>
+        </>
       )}
     </g>
   );
 }
 
-// Dimension line: draws a ruled measurement annotation in green
-// x1,y1 → x2,y2 with a centred label; orient='h' or 'v'
-function Dim({ x1, y1, x2, y2, label }) {
-  const mx = (x1 + x2) / 2;
-  const my = (y1 + y2) / 2;
+// Standard cross objective dimensions — one horizontal "9″" + one vertical "9″".
+// Lines run from left/top objective to centre, placed slightly offset to avoid
+// overlapping the objective circles.
+function CrossDims() {
   return (
-    <g stroke={C.obj} strokeWidth={1} fill={C.obj}>
-      <line x1={x1} y1={y1} x2={x2} y2={y2} />
-      <line x1={x1 - 3} y1={y1} x2={x1 + 3} y2={y1} />
-      <line x1={x2 - 3} y1={y2} x2={x2 + 3} y2={y2} />
-      <text x={mx} y={my - 3} fontSize="8" fontWeight="600"
-        fontFamily="system-ui, sans-serif"
-        textAnchor="middle" dominantBaseline="auto"
-      >{label}</text>
-    </g>
+    <>
+      {/* Horizontal: left obj → centre, line runs above the objectives */}
+      <Dim x1={OBJ.l.x} y1={OBJ.l.y - 9} x2={OBJ.c.x} y2={OBJ.c.y - 9} label='9"' />
+      {/* Vertical: top obj → centre, line runs to the right of the objectives */}
+      <Dim x1={OBJ.t.x + 9} y1={OBJ.t.y} x2={OBJ.c.x + 9} y2={OBJ.c.y} label='9"' />
+    </>
   );
 }
 
@@ -78,106 +122,119 @@ const ZONE_MAPS = {
         fill={C.zA} stroke={C.sk} strokeWidth={1} />
       <polygon points={`${W-P},${P} ${W-P},${H-P} ${P},${H-P}`}
         fill={C.zB} stroke={C.sk} strokeWidth={1} />
-      <Obj x={cx}  y={cy}  n={1} dx={7}  dy={-7} />
-      <Obj x={58}  y={72}  n={2} dx={7}  dy={-7} />
-      <Obj x={138} y={208} n={3} dx={7}  dy={-7} />
-      <Obj x={52}  y={198} n={4} dx={7}  dy={-7} />
-      <Obj x={144} y={82}  n={5} dx={7}  dy={-7} />
+      <CrossDims />
+      <Obj x={OBJ.c.x} y={OBJ.c.y} n={1} />
+      <Obj x={OBJ.l.x} y={OBJ.l.y} n={2} />
+      <Obj x={OBJ.r.x} y={OBJ.r.y} n={3} />
+      <Obj x={OBJ.t.x} y={OBJ.t.y} n={4} />
+      <Obj x={OBJ.b.x} y={OBJ.b.y} n={5} />
     </Board>
   ),
 
-  // Strips along the short (top/bottom) edges
-  'dawn-of-war': () => (
-    <Board>
-      <rect x={P}  y={P}       width={bw} height={60} fill={C.zA} stroke={C.sk} strokeWidth={1} />
-      <rect x={P}  y={H-P-60}  width={bw} height={60} fill={C.zB} stroke={C.sk} strokeWidth={1} />
-      {/* Zone depth dimension */}
-      <Dim x1={188} y1={P} x2={188} y2={P+60} label='12"' />
-      <Obj x={cx}  y={cy}  n={1} dx={7}  dy={-7} />
-      <Obj x={57}  y={cy}  n={2} dx={7}  dy={-7} />
-      <Obj x={139} y={cy}  n={3} dx={7}  dy={-7} />
-      <Obj x={cx}  y={100} n={4} dx={7}  dy={-7} />
-      <Obj x={cx}  y={180} n={5} dx={7}  dy={-7} />
-    </Board>
-  ),
+  // Strips along the short (top/bottom) edges — 12" deep
+  'dawn-of-war': () => {
+    const zoneH = 52; // 12" × 260/60 ≈ 52px
+    return (
+      <Board>
+        <rect x={P} y={P}          width={bw} height={zoneH} fill={C.zA} stroke={C.sk} strokeWidth={1} />
+        <rect x={P} y={H-P-zoneH}  width={bw} height={zoneH} fill={C.zB} stroke={C.sk} strokeWidth={1} />
+        {/* Zone depth — vertical line inside the top zone, left side */}
+        <Dim x1={P + 8} y1={P} x2={P + 8} y2={P + zoneH} label='12"' />
+        <CrossDims />
+        <Obj x={OBJ.c.x} y={OBJ.c.y} n={1} />
+        <Obj x={OBJ.l.x} y={OBJ.l.y} n={2} />
+        <Obj x={OBJ.r.x} y={OBJ.r.y} n={3} />
+        <Obj x={OBJ.t.x} y={OBJ.t.y} n={4} />
+        <Obj x={OBJ.b.x} y={OBJ.b.y} n={5} />
+      </Board>
+    );
+  },
 
-  // Strips along the long (left/right) edges
-  'hammer-and-anvil': () => (
-    <Board>
-      <rect x={P}       y={P} width={50}  height={bh} fill={C.zA} stroke={C.sk} strokeWidth={1} />
-      <rect x={W-P-50}  y={P} width={50}  height={bh} fill={C.zB} stroke={C.sk} strokeWidth={1} />
-      {/* Zone depth dimension */}
-      <Dim x1={P} y1={272} x2={P+50} y2={272} label='9"' />
-      <Obj x={cx}  y={cy}  n={1} dx={7}  dy={-7} />
-      <Obj x={cx}  y={88}  n={2} dx={7}  dy={-7} />
-      <Obj x={cx}  y={192} n={3} dx={7}  dy={-7} />
-      <Obj x={57}  y={cy}  n={4} dx={7}  dy={-7} />
-      <Obj x={139} y={cy}  n={5} dx={7}  dy={-7} />
-    </Board>
-  ),
+  // Strips along the long (left/right) edges — 9" deep
+  'hammer-and-anvil': () => {
+    const zoneW = 36; // 9" × 176/44 = 36px
+    return (
+      <Board>
+        <rect x={P}          y={P} width={zoneW} height={bh} fill={C.zA} stroke={C.sk} strokeWidth={1} />
+        <rect x={W-P-zoneW}  y={P} width={zoneW} height={bh} fill={C.zB} stroke={C.sk} strokeWidth={1} />
+        {/* Zone depth — horizontal line inside the left zone, top area */}
+        <Dim x1={P} y1={P + 10} x2={P + zoneW} y2={P + 10} label='9"' />
+        <CrossDims />
+        <Obj x={OBJ.c.x} y={OBJ.c.y} n={1} />
+        <Obj x={OBJ.l.x} y={OBJ.l.y} n={2} />
+        <Obj x={OBJ.r.x} y={OBJ.r.y} n={3} />
+        <Obj x={OBJ.t.x} y={OBJ.t.y} n={4} />
+        <Obj x={OBJ.b.x} y={OBJ.b.y} n={5} />
+      </Board>
+    );
+  },
 
   // Opposite corner quadrants
   'search-and-destroy': () => (
     <Board>
-      <rect x={P}   y={P}   width={88} height={130} fill={C.zA} stroke={C.sk} strokeWidth={1} />
-      <rect x={98}  y={140} width={88} height={130} fill={C.zB} stroke={C.sk} strokeWidth={1} />
-      <Obj x={cx}  y={cy}  n={1} dx={7}  dy={-7} />
-      <Obj x={54}  y={196} n={2} dx={7}  dy={-7} />
-      <Obj x={142} y={84}  n={3} dx={7}  dy={-7} />
-      <Obj x={54}  y={84}  n={4} dx={7}  dy={-7} />
-      <Obj x={142} y={196} n={5} dx={7}  dy={-7} />
+      <rect x={P}  y={P}   width={88} height={130} fill={C.zA} stroke={C.sk} strokeWidth={1} />
+      <rect x={98} y={140} width={88} height={130} fill={C.zB} stroke={C.sk} strokeWidth={1} />
+      <CrossDims />
+      <Obj x={OBJ.c.x} y={OBJ.c.y} n={1} />
+      <Obj x={OBJ.l.x} y={OBJ.l.y} n={2} />
+      <Obj x={OBJ.r.x} y={OBJ.r.y} n={3} />
+      <Obj x={OBJ.t.x} y={OBJ.t.y} n={4} />
+      <Obj x={OBJ.b.x} y={OBJ.b.y} n={5} />
     </Board>
   ),
 
   // Long-edge strips with interlocking flank protrusions
   'sweeping-engagement': () => (
     <Board>
-      {/* Zone A: full-width top band + right-side protrusion toward centre */}
       <polygon points="10,10 186,10 186,140 98,140 98,80 10,80"
         fill={C.zA} stroke={C.sk} strokeWidth={1} />
-      {/* Zone B: left-side protrusion + full-width bottom band */}
       <polygon points="10,140 98,140 98,200 186,200 186,270 10,270"
         fill={C.zB} stroke={C.sk} strokeWidth={1} />
-      <Obj x={cx}  y={cy}  n={1} dx={7}  dy={-7} />
-      <Obj x={57}  y={50}  n={2} dx={7}  dy={-7} />
-      <Obj x={139} y={230} n={3} dx={7}  dy={-7} />
-      <Obj x={57}  y={230} n={4} dx={7}  dy={-7} />
-      <Obj x={139} y={50}  n={5} dx={7}  dy={-7} />
+      <CrossDims />
+      <Obj x={OBJ.c.x} y={OBJ.c.y} n={1} />
+      <Obj x={OBJ.l.x} y={OBJ.l.y} n={2} />
+      <Obj x={OBJ.r.x} y={OBJ.r.y} n={3} />
+      <Obj x={OBJ.t.x} y={OBJ.t.y} n={4} />
+      <Obj x={OBJ.b.x} y={OBJ.b.y} n={5} />
     </Board>
   ),
 
   // Asymmetric interlocking L-shapes
   'tipping-point': () => (
     <Board>
-      {/* Zone A: top band + left column */}
       <polygon points="10,10 186,10 186,80 98,80 98,186 10,186"
         fill={C.zA} stroke={C.sk} strokeWidth={1} />
-      {/* Zone B: right column + bottom band */}
       <polygon points="98,80 186,80 186,270 10,270 10,186 98,186"
         fill={C.zB} stroke={C.sk} strokeWidth={1} />
-      <Obj x={cx}  y={cy}  n={1} dx={7}  dy={-7} />
-      <Obj x={57}  y={50}  n={2} dx={7}  dy={-7} />
-      <Obj x={139} y={230} n={3} dx={7}  dy={-7} />
-      <Obj x={60}  y={160} n={4} dx={7}  dy={-7} />
-      <Obj x={136} y={120} n={5} dx={7}  dy={-7} />
+      <CrossDims />
+      <Obj x={OBJ.c.x} y={OBJ.c.y} n={1} />
+      <Obj x={OBJ.l.x} y={OBJ.l.y} n={2} />
+      <Obj x={OBJ.r.x} y={OBJ.r.y} n={3} />
+      <Obj x={OBJ.t.x} y={OBJ.t.y} n={4} />
+      <Obj x={OBJ.b.x} y={OBJ.b.y} n={5} />
     </Board>
   ),
 
   // Attacker wide top strip; Defender pointed triangle at bottom
-  'tip-of-the-spear': () => (
-    <Board>
-      <rect x={P} y={P} width={bw} height={65}
-        fill={C.zA} stroke={C.sk} strokeWidth={1} />
-      <polygon points="56,270 140,270 98,195"
-        fill={C.zB} stroke={C.sk} strokeWidth={1} />
-      {/* Zone depth dimension */}
-      <Dim x1={188} y1={P} x2={188} y2={P+65} label='12"' />
-      <Obj x={cx}  y={cy}  n={1} dx={7}  dy={-7} />
-      <Obj x={57}  y={cy}  n={2} dx={7}  dy={-7} />
-      <Obj x={139} y={cy}  n={3} dx={7}  dy={-7} />
-      <Obj x={cx}  y={88}  n={4} dx={7}  dy={-7} />
-    </Board>
-  ),
+  'tip-of-the-spear': () => {
+    const zoneH = 52; // 12" deep
+    return (
+      <Board>
+        <rect x={P} y={P} width={bw} height={zoneH}
+          fill={C.zA} stroke={C.sk} strokeWidth={1} />
+        <polygon points="56,270 140,270 98,200"
+          fill={C.zB} stroke={C.sk} strokeWidth={1} />
+        {/* Attacker zone depth */}
+        <Dim x1={P + 8} y1={P} x2={P + 8} y2={P + zoneH} label='12"' />
+        {/* Objective position dims — horizontal only (3 in a row) */}
+        <Dim x1={OBJ.l.x} y1={OBJ.l.y - 9} x2={OBJ.c.x} y2={OBJ.c.y - 9} label='9"' />
+        <Obj x={OBJ.c.x} y={OBJ.c.y} n={1} />
+        <Obj x={OBJ.l.x} y={OBJ.l.y} n={2} />
+        <Obj x={OBJ.r.x} y={OBJ.r.y} n={3} />
+        <Obj x={OBJ.t.x} y={OBJ.t.y} n={4} />
+      </Board>
+    );
+  },
 
   // Diagonal split — attacker large flank, defender diagonal stronghold
   'defensive-line': () => (
@@ -186,11 +243,12 @@ const ZONE_MAPS = {
         fill={C.zA} stroke={C.sk} strokeWidth={1} />
       <polygon points="116,10 186,10 186,270 76,270"
         fill={C.zB} stroke={C.sk} strokeWidth={1} />
-      <Obj x={cx}  y={cy}  n={1} dx={7}  dy={-7} />
-      <Obj x={52}  y={80}  n={2} dx={7}  dy={-7} />
-      <Obj x={52}  y={210} n={3} dx={7}  dy={-7} />
-      <Obj x={144} y={80}  n={4} dx={7}  dy={-7} />
-      <Obj x={144} y={210} n={5} dx={7}  dy={-7} />
+      <CrossDims />
+      <Obj x={OBJ.c.x} y={OBJ.c.y} n={1} />
+      <Obj x={OBJ.l.x} y={OBJ.l.y} n={2} />
+      <Obj x={OBJ.r.x} y={OBJ.r.y} n={3} />
+      <Obj x={OBJ.t.x} y={OBJ.t.y} n={4} />
+      <Obj x={OBJ.b.x} y={OBJ.b.y} n={5} />
     </Board>
   ),
 
@@ -202,13 +260,14 @@ const ZONE_MAPS = {
       <rect x={10}  y={155} width={80} height={115}
         fill={C.zA} stroke={C.sk} strokeWidth={1} />
       {/* Defender centre — dashed outline */}
-      <rect x={50}  y={95}  width={96} height={90}
+      <rect x={50} y={95} width={96} height={90}
         fill="none" stroke={C.sk} strokeWidth={1} strokeDasharray="5 3" />
-      <Obj x={cx}  y={cy}  n={1} dx={7}  dy={-7} />
-      <Obj x={146} y={62}  n={2} dx={7}  dy={-7} />
-      <Obj x={50}  y={218} n={3} dx={7}  dy={-7} />
-      <Obj x={50}  y={62}  n={4} dx={7}  dy={-7} />
-      <Obj x={146} y={218} n={5} dx={7}  dy={-7} />
+      <CrossDims />
+      <Obj x={OBJ.c.x} y={OBJ.c.y} n={1} />
+      <Obj x={OBJ.l.x} y={OBJ.l.y} n={2} />
+      <Obj x={OBJ.r.x} y={OBJ.r.y} n={3} />
+      <Obj x={OBJ.t.x} y={OBJ.t.y} n={4} />
+      <Obj x={OBJ.b.x} y={OBJ.b.y} n={5} />
     </Board>
   ),
 };
