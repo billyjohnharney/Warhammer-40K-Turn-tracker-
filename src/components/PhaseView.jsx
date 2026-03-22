@@ -17,6 +17,7 @@ export function kwForPlayer(kw, gameConfig, roster) {
 
 export function kwForEnemy(kw, gameConfig, enemyRoster) {
   if (coreAlwaysVisible.has(kw)) return true;
+  if (!gameConfig.enemyFaction && !enemyRoster.loaded) return false;
   const fl = keywordFactions[kw];
   if (fl && !fl.includes(gameConfig.enemyFaction)) return false;
   if (enemyRoster.loaded) return enemyRoster.activeKeywords.has(kw);
