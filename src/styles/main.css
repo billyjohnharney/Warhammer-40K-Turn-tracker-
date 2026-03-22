@@ -1338,17 +1338,6 @@ main {
   border-color: var(--color-gray-400);
 }
 
-.bb-dot-label {
-  font-size: 0.625rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-gray-400);
-  transition: color 150ms;
-}
-
-.bb-dot--active .bb-dot-label { color: var(--color-foreground); }
-.bb-dot--done .bb-dot-label   { color: var(--color-gray-400); }
 
 .bb-nav {
   width: 100%;
@@ -1414,35 +1403,90 @@ main {
 
 .mission-card {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.2rem;
+  flex-direction: row;
+  align-items: stretch;
   width: 100%;
-  background: none;
   border: 1px solid var(--color-gray-200);
   border-radius: 0.375rem;
-  padding: 0.75rem 1rem;
-  cursor: pointer;
-  text-align: left;
-  transition: background-color 100ms, border-color 100ms;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.mission-card:hover {
-  background-color: var(--color-gray-100);
-  border-color: var(--color-gray-300);
-}
-
-.mission-card:active { background-color: var(--color-gray-200); }
-
-.mission-card:focus-visible {
-  outline: 2px solid var(--color-blue);
-  outline-offset: -1px;
+  overflow: hidden;
+  transition: border-color 100ms;
 }
 
 .mission-card--selected {
   border-color: var(--color-gray-900);
-  background-color: var(--color-gray-100);
+}
+
+/* Radio click zone */
+.mission-radio-zone {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  background: none;
+  border: none;
+  border-right: 1px solid var(--color-gray-200);
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 100ms;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mission-radio-zone:hover  { background-color: var(--color-gray-100); }
+.mission-radio-zone:active { background-color: var(--color-gray-200); }
+
+.mission-radio-zone:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: -2px;
+}
+
+/* Radio pip */
+.mission-radio {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-gray-400);
+  position: relative;
+  transition: border-color 150ms;
+}
+
+.mission-card--selected .mission-radio {
+  border-color: var(--color-gray-900);
+}
+
+.mission-card--selected .mission-radio::after {
+  content: '';
+  position: absolute;
+  inset: 0.175rem;
+  border-radius: 50%;
+  background: var(--color-gray-900);
+}
+
+/* Content click zone */
+.mission-content-zone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  background: none;
+  border: none;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  min-width: 0;
+  transition: background-color 100ms;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mission-content-zone:hover  { background-color: var(--color-gray-100); }
+.mission-content-zone:active { background-color: var(--color-gray-200); }
+
+.mission-content-zone:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: -2px;
 }
 
 .mission-card-title {

@@ -52,8 +52,11 @@ export default function BattleSizeScreen({ onSelect }) {
   const [selectedDeployment, setSelectedDeployment] = useState(null);
   const [modalMissionId, setModalMissionId] = useState(null);
 
+  function handleRadioClick(missionId) {
+    setSelectedMission(prev => (prev === missionId ? null : missionId));
+  }
+
   function handleMissionClick(missionId) {
-    setSelectedMission(missionId);
     setModalMissionId(missionId);
   }
 
@@ -92,7 +95,6 @@ export default function BattleSizeScreen({ onSelect }) {
             aria-current={i === page ? 'step' : undefined}
           >
             <span className="bb-dot-pip" />
-            <span className="bb-dot-label">{label}</span>
           </button>
         ))}
       </div>
@@ -107,14 +109,26 @@ export default function BattleSizeScreen({ onSelect }) {
                 <p className="mission-category-label">{category}</p>
                 <div className="mission-cards">
                   {MISSIONS.filter(m => m.category === category).map(mission => (
-                    <button
+                    <div
                       key={mission.id}
                       className={`mission-card${selectedMission === mission.id ? ' mission-card--selected' : ''}`}
-                      onClick={() => handleMissionClick(mission.id)}
                     >
-                      <span className="mission-card-title">{mission.title}</span>
-                      <span className="mission-card-summary">{mission.summary}</span>
-                    </button>
+                      <button
+                        className="mission-radio-zone"
+                        onClick={() => handleRadioClick(mission.id)}
+                        aria-label={`Select ${mission.title}`}
+                        aria-pressed={selectedMission === mission.id}
+                      >
+                        <span className="mission-radio" />
+                      </button>
+                      <button
+                        className="mission-content-zone"
+                        onClick={() => handleMissionClick(mission.id)}
+                      >
+                        <span className="mission-card-title">{mission.title}</span>
+                        <span className="mission-card-summary">{mission.summary}</span>
+                      </button>
+                    </div>
                   ))}
                 </div>
               </div>
