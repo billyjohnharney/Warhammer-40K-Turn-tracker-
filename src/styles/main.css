@@ -1281,12 +1281,29 @@ main {
   outline-offset: -1px;
 }
 
+.battle-size-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.5rem;
+}
+
 .battle-size-label {
   font-size: 1rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--color-foreground);
+}
+
+.battle-size-points {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--color-gray-600);
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
 }
 
 .battle-size-desc {

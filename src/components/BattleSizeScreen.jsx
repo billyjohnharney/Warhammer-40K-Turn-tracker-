@@ -7,21 +7,25 @@ const BATTLE_SIZES = [
   {
     id: 'combat-patrol',
     label: 'Combat Patrol',
+    points: '500 pts',
     desc: 'Small-scale engagements ideal for fast, focused skirmishes.',
   },
   {
     id: 'incursion',
     label: 'Incursion',
+    points: '1,000 pts',
     desc: 'Mid-sized battles offering more tactical depth than Combat Patrol.',
   },
   {
     id: 'strike-force',
     label: 'Strike Force',
+    points: '2,000 pts',
     desc: 'Standard matched play battles — the definitive Warhammer 40,000 experience.',
   },
   {
     id: 'onslaught',
     label: 'Onslaught',
+    points: '3,000 pts',
     desc: 'Massive clashes fought across a wider battlefield with larger armies.',
   },
 ];
@@ -153,7 +157,10 @@ export default function BattleSizeScreen({ onSelect }) {
                 className={`battle-size-card${selectedSize === size.id ? ' battle-size-card--selected' : ''}`}
                 onClick={() => handleSizeClick(size.id)}
               >
-                <span className="battle-size-label">{size.label}</span>
+                <div className="battle-size-header">
+                  <span className="battle-size-label">{size.label}</span>
+                  <span className="battle-size-points">{size.points}</span>
+                </div>
                 <span className="battle-size-desc">{size.desc}</span>
               </button>
             ))}
