@@ -174,7 +174,7 @@ export default function BattleSizeScreen({ onSelect }) {
       {page === 2 && (
         <>
           <p className="options-subtitle">Reference your deployment zone.</p>
-          <DeploymentCarousel zones={filteredZones} />
+          <DeploymentCarousel zones={filteredZones} battleSize={selectedSize} />
           <div className="setup-start-bar">
             <button className="faction-start-btn" onClick={handleDone}>
               Begin Setup
