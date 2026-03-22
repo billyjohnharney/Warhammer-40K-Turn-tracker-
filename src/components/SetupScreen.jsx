@@ -255,11 +255,8 @@ export default function SetupScreen({ wahapediaHook, onLaunch }) {
   return (
     <main>
       <div className="faction-screen">
-        <img src={`${import.meta.env.BASE_URL}IMG_8702.png`} alt="" className="setup-logo" />
+        <h1 className="setup-page-title">Muster Armies</h1>
         <div className="setup-content">
-          <div className="faction-screen-intro">
-            All your army rules, abilities and strategy combined.
-          </div>
           <SideComponent side="player" wahapediaHook={wahapediaHook} />
           {showEnemy ? (
             <>
