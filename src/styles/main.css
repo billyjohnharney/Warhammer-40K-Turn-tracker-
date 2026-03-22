@@ -1333,7 +1333,8 @@ main {
   -webkit-tap-highlight-color: transparent;
 }
 
-.bb-dot--done { cursor: pointer; }
+.bb-dot--done  { cursor: pointer; }
+.bb-dot:disabled { cursor: default; opacity: 0.35; }
 
 .bb-dot-pip {
   display: block;

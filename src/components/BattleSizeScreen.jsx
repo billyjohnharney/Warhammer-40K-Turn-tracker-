@@ -51,6 +51,7 @@ function getFilteredZones(selectedSize, selectedMission) {
 
 export default function BattleSizeScreen({ onSelect }) {
   const [page, setPage] = useState(0);
+  const [maxPage, setMaxPage] = useState(0);
   const [selectedMission, setSelectedMission] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedDeployment, setSelectedDeployment] = useState(null);
@@ -64,6 +65,11 @@ export default function BattleSizeScreen({ onSelect }) {
     setModalMissionId(missionId);
   }
 
+  function goToPage(i) {
+    setPage(i);
+    setMaxPage(prev => Math.max(prev, i));
+  }
+
   function handleSizeClick(sizeId) {
     setSelectedSize(sizeId);
     // Reset deployment if it's no longer in the filtered list
@@ -71,7 +77,7 @@ export default function BattleSizeScreen({ onSelect }) {
       z => z.id === selectedDeployment,
     );
     if (!stillValid) setSelectedDeployment(null);
-    setPage(2);
+    goToPage(2);
   }
 
   function handleDone() {
@@ -94,9 +100,10 @@ export default function BattleSizeScreen({ onSelect }) {
           <button
             key={i}
             className={`bb-dot${i === page ? ' bb-dot--active' : ''}${i < page ? ' bb-dot--done' : ''}`}
-            onClick={() => { if (i < page) setPage(i); }}
+            onClick={() => { if (i <= maxPage) goToPage(i); }}
             aria-label={label}
             aria-current={i === page ? 'step' : undefined}
+            disabled={i > maxPage}
           >
             <span className="bb-dot-pip" />
           </button>
@@ -139,7 +146,7 @@ export default function BattleSizeScreen({ onSelect }) {
             ))}
           </div>
           <div className="setup-start-bar">
-            <button className="faction-start-btn" onClick={() => setPage(1)}>
+            <button className="faction-start-btn" onClick={() => goToPage(1)}>
               Next
             </button>
           </div>
