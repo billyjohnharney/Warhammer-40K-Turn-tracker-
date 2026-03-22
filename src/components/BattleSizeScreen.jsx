@@ -87,7 +87,7 @@ export default function BattleSizeScreen({ onSelect }) {
 
   return (
     <main className="options-screen">
-      <h1 className="setup-page-title">Build Battle</h1>
+      <h1 className="setup-page-title">Battle Builder</h1>
 
       {/* ── Pagination dots ────────────────────────────────────────────── */}
       <div className="bb-dots" aria-label="Steps">
