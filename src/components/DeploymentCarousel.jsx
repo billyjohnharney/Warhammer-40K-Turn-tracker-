@@ -1,5 +1,12 @@
 import { useState } from 'react';
 
+const BATTLEFIELD_DIMENSIONS = {
+  'combat-patrol': '22" × 30"',
+  'incursion':     '44" × 30"',
+  'strike-force':  '44" × 60"',
+  'onslaught':     '44" × 90"',
+};
+
 function Chevron({ dir }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -48,6 +55,9 @@ export default function DeploymentCarousel({ zones, battleSize }) {
         <div className="dz-info">
           <span className="dz-counter">{idx + 1} / {zones.length}</span>
           <span className="dz-name">{zone.name}</span>
+          {BATTLEFIELD_DIMENSIONS[battleSize] && (
+            <span className="dz-dimensions">{BATTLEFIELD_DIMENSIONS[battleSize]} battlefield</span>
+          )}
           <p className="dz-desc">{zone.desc}</p>
         </div>
 

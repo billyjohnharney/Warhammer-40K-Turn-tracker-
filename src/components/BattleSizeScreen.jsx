@@ -72,7 +72,12 @@ export default function BattleSizeScreen({ onSelect }) {
 
   function handleSizeClick(sizeId) {
     setSelectedSize(sizeId);
-    goToPage(2);
+    const zones = getFilteredZones(sizeId, selectedMission);
+    if (zones.length === 0) {
+      onSelect({ battleSize: sizeId, mission: selectedMission, deploymentZone: '' });
+    } else {
+      goToPage(2);
+    }
   }
 
   function handleDone() {
