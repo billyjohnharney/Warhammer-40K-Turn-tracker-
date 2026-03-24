@@ -4,6 +4,13 @@ import { DEPLOYMENT_ZONES } from '../data/deploymentZones.js';
 import MissionModal from './MissionModal.jsx';
 import DeploymentCarousel from './DeploymentCarousel.jsx';
 
+const BATTLEFIELD_DIMENSIONS = {
+  'combat-patrol': '22" × 30"',
+  'incursion':     '44" × 30"',
+  'strike-force':  '44" × 60"',
+  'onslaught':     '44" × 90"',
+};
+
 const BATTLE_SIZES = [
   {
     id: 'combat-patrol',
@@ -72,12 +79,7 @@ export default function BattleSizeScreen({ onSelect }) {
 
   function handleSizeClick(sizeId) {
     setSelectedSize(sizeId);
-    const zones = getFilteredZones(sizeId, selectedMission);
-    if (zones.length === 0) {
-      onSelect({ battleSize: sizeId, mission: selectedMission, deploymentZone: '' });
-    } else {
-      goToPage(2);
-    }
+    goToPage(2);
   }
 
   function handleDone() {
@@ -179,7 +181,14 @@ export default function BattleSizeScreen({ onSelect }) {
       {page === 2 && (
         <>
           <p className="options-subtitle">Reference your deployment zone.</p>
-          <DeploymentCarousel zones={filteredZones} battleSize={selectedSize} />
+          {filteredZones.length > 0 ? (
+            <DeploymentCarousel zones={filteredZones} battleSize={selectedSize} />
+          ) : (
+            <div className="dz-dimensions-card">
+              <span className="dz-dimensions-card-label">Recommended Battlefield</span>
+              <span className="dz-dimensions-card-value">{BATTLEFIELD_DIMENSIONS[selectedSize]}</span>
+            </div>
+          )}
           <div className="setup-start-bar">
             <button className="faction-start-btn" onClick={handleDone}>
               Begin Setup

@@ -1615,6 +1615,35 @@ main {
   margin: 0;
 }
 
+/* ─── Dimensions-only card (no zone images available) ────────────────────── */
+.dz-dimensions-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 3rem 1.5rem;
+  background: var(--color-surface);
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-gray-200);
+}
+
+.dz-dimensions-card-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-gray-400);
+}
+
+.dz-dimensions-card-value {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--color-foreground);
+}
+
 /* ─── Mission modal ───────────────────────────────────────────────────────── */
 .mission-modal-category {
   display: block;
