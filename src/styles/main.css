@@ -628,7 +628,6 @@ main {
 }
 
 .strat-modal-body {
-  padding: 1rem;
   font-size: 0.875rem;
   line-height: 1.6;
   color: var(--color-foreground);
@@ -1655,12 +1654,144 @@ main {
   margin-bottom: 0.125rem;
 }
 
-.mission-modal-details {
+/* Structured block layout */
+.mission-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem 1rem;
+}
+
+/* Setup / intro text */
+.mission-block-setup {
   margin: 0;
-  font-size: 0.875rem;
-  line-height: 1.6;
-  white-space: pre-line;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--color-gray-600);
+}
+
+/* Shared header band (sections + actions) */
+.mission-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-foreground);
+  color: var(--color-background);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.6rem;
+  border-radius: 0.25rem 0.25rem 0 0;
+}
+
+.mission-block-badge {
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: rgba(255,255,255,0.2);
+  border-radius: 0.2rem;
+  padding: 0.15rem 0.4rem;
+}
+
+/* Scoring section */
+.mission-block-section {
+  border: 1px solid var(--color-gray-200);
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+
+.mission-section-when {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  padding: 0.35rem 0.6rem;
+  background: var(--color-gray-100);
+  border-bottom: 1px solid var(--color-gray-200);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-gray-600);
+}
+
+.mission-section-when-label {
+  flex-shrink: 0;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-gray-400);
+}
+
+.mission-section-preamble {
+  margin: 0;
+  padding: 0.45rem 0.6rem 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--color-gray-600);
+}
+
+.mission-scoring-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.mission-scoring-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.45rem 0.6rem;
+  border-top: 1px solid var(--color-gray-200);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.mission-scoring-row:first-child {
+  border-top: none;
+}
+
+.mission-scoring-condition {
+  flex: 1;
   color: var(--color-foreground);
+}
+
+.mission-scoring-vp {
+  flex-shrink: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--color-foreground);
+  white-space: nowrap;
+}
+
+/* Action block */
+.mission-block-action {
+  border: 1px solid var(--color-gray-200);
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+
+.mission-action-field {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  border-top: 1px solid var(--color-gray-200);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.mission-action-key {
+  flex-shrink: 0;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-gray-400);
+  padding-top: 0.1rem;
+}
+
+.mission-action-value {
+  color: var(--color-gray-600);
 }
 
 .splash-logo {
