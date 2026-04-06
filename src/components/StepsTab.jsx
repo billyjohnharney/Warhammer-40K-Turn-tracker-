@@ -16,7 +16,11 @@ function fmtAction(text) {
   return { primary, support };
 }
 
-function kwSideClass(kw, gameConfig, roster, enemyRoster) {
+function kwSideClass(kw, gameConfig, roster, enemyRoster, item = null) {
+  // Use item-level context first — playerOnly/enemyOnly flags are the authoritative source
+  if (item?.playerOnly) return ' keyword-tag--player';
+  if (item?.enemyOnly) return ' keyword-tag--enemy';
+  // Fall back to roster-based differentiation when both rosters are loaded
   const isPlayer = kwForPlayer(kw, gameConfig, roster);
   const isEnemy = kwForEnemy(kw, gameConfig, enemyRoster);
   if (isPlayer && !isEnemy) return ' keyword-tag--player';
@@ -36,7 +40,7 @@ function KeywordTags({ item }) {
       {kws.map(kw => (
         <span
           key={kw}
-          className={`keyword-tag${kwSideClass(kw, state.gameConfig, state.roster, state.enemyRoster)}`}
+          className={`keyword-tag${kwSideClass(kw, state.gameConfig, state.roster, state.enemyRoster, item)}`}
           onClick={e => {
             e.stopPropagation();
             dispatch({ type: 'OPEN_MODAL', modal: 'keyword', data: kw });
@@ -69,16 +73,32 @@ function StepItem({ item, notes, phase, stepNum, getCommandPhaseAbilities }) {
 
   const hasNotes = notes.length > 0;
 
-  // Collect all unique keywords from all notes for collapsed summary, excluding any already shown on the action
+  // Collect keywords from all notes for collapsed summary, excluding any already shown on the action.
+  // Track unique (keyword, side) pairs so a keyword appearing in both a playerOnly and enemyOnly note
+  // is shown twice — once green, once red — rather than collapsed to neutral.
   const actionKws = new Set(item.keywords || []);
   const allNoteKeywords = !expanded && hasNotes
-    ? [...new Set(notes.flatMap(({ item: n }) =>
-        (n.keywords || []).filter(kw =>
-          !actionKws.has(kw) &&
-          isKeywordVisible(kw, state.gameConfig, state.roster, state.enemyRoster) &&
-          !stratagemKeywords.has(kw)
-        )
-      ))]
+    ? (() => {
+        const seen = new Set(); // dedupe by `${kw}::${side}`
+        const result = [];
+        notes.forEach(({ item: n }) => {
+          const side = n.playerOnly ? 'player' : n.enemyOnly ? 'enemy' : null;
+          (n.keywords || [])
+            .filter(kw =>
+              !actionKws.has(kw) &&
+              isKeywordVisible(kw, state.gameConfig, state.roster, state.enemyRoster) &&
+              !stratagemKeywords.has(kw)
+            )
+            .forEach(kw => {
+              const key = `${kw}::${side}`;
+              if (!seen.has(key)) {
+                seen.add(key);
+                result.push({ kw, side });
+              }
+            });
+        });
+        return result;
+      })()
     : [];
 
   return (
@@ -100,12 +120,17 @@ function StepItem({ item, notes, phase, stepNum, getCommandPhaseAbilities }) {
         <KeywordTags item={item} />
         {allNoteKeywords.length > 0 && (
           <div className="step-keywords-inline">
-            {allNoteKeywords.map(kw => (
-              <span key={kw} className={`keyword-tag${kwSideClass(kw, state.gameConfig, state.roster, state.enemyRoster)}`} onClick={e => {
-                e.stopPropagation();
-                dispatch({ type: 'OPEN_MODAL', modal: 'keyword', data: kw });
-              }}>{kw}</span>
-            ))}
+            {allNoteKeywords.map(({ kw, side }) => {
+              const cls = side === 'player' ? ' keyword-tag--player'
+                : side === 'enemy' ? ' keyword-tag--enemy'
+                : kwSideClass(kw, state.gameConfig, state.roster, state.enemyRoster);
+              return (
+                <span key={`${kw}::${side}`} className={`keyword-tag${cls}`} onClick={e => {
+                  e.stopPropagation();
+                  dispatch({ type: 'OPEN_MODAL', modal: 'keyword', data: kw });
+                }}>{kw}</span>
+              );
+            })}
           </div>
         )}
       </div>
@@ -130,6 +155,29 @@ function StepItem({ item, notes, phase, stepNum, getCommandPhaseAbilities }) {
   );
 }
 
+function deduplicateNotes(notes) {
+  const seen = new Map(); // text → index in result
+  const result = [];
+  for (const entry of notes) {
+    const { item } = entry;
+    if (item.type !== 'note' || !item.text) { result.push(entry); continue; }
+    const existing = seen.get(item.text);
+    if (existing == null) {
+      // Clone item so we can mutate keywords without affecting source data
+      result.push({ ...entry, item: { ...item, keywords: item.keywords ? [...item.keywords] : [] } });
+      seen.set(item.text, result.length - 1);
+    } else {
+      // Merge any new keywords from the duplicate into the retained note
+      const retained = result[existing];
+      const retainedKws = retained.item.keywords || [];
+      for (const kw of (item.keywords || [])) {
+        if (!retainedKws.includes(kw)) retainedKws.push(kw);
+      }
+    }
+  }
+  return result;
+}
+
 export default function StepsTab({ phase, visibleItems, getCommandPhaseAbilities }) {
   // Group: action → following notes
   const groups = [];
@@ -143,6 +191,10 @@ export default function StepsTab({ phase, visibleItems, getCommandPhaseAbilities
       if (!currentGroup) { currentGroup = { action: null, notes: [] }; groups.push(currentGroup); }
       currentGroup.notes.push({ item, j });
     }
+  }
+
+  for (const group of groups) {
+    group.notes = deduplicateNotes(group.notes);
   }
 
   let actionCount = 0;

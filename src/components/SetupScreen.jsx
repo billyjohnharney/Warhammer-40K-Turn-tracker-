@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { Select } from '@base-ui/react/select';
 import { Field } from '@base-ui/react/field';
 import { useGame } from '../context/GameContext.jsx';
@@ -55,7 +55,7 @@ function DetachmentSelect({ id, label, value, onChange, detachments, loading }) 
   );
 }
 
-function SideComponent({ side, wahapediaHook }) {
+function SideComponent({ side, wahapediaHook, onRemove }) {
   const { state, dispatch } = useGame();
   const isPlayer = side === 'player';
   const rsData = state.rsState[side];
@@ -171,6 +171,9 @@ function SideComponent({ side, wahapediaHook }) {
             <button className="side-clear" onClick={() => dispatch({ type: 'CLEAR_RS_STATE', side })} aria-label="Clear"><CloseIcon /></button>
           </span>
         )}
+        {onRemove && (
+          <button className="side-remove-btn" onClick={onRemove}>Remove</button>
+        )}
       </div>
 
       {!parsed && (
@@ -235,21 +238,36 @@ function SideComponent({ side, wahapediaHook }) {
 }
 
 export default function SetupScreen({ wahapediaHook, onLaunch }) {
-  const { state } = useGame();
+  const { state, dispatch } = useGame();
+  const [showEnemy, setShowEnemy] = useState(false);
   const { playerFaction, playerDetachment, enemyFaction, enemyDetachment } = state.gameConfig;
-  const canStart = !!(playerFaction && playerDetachment && enemyFaction && enemyDetachment);
+
+  const canStart = showEnemy
+    ? !!(playerFaction && playerDetachment && enemyFaction && enemyDetachment)
+    : !!(playerFaction && playerDetachment);
+
+  function handleRemoveEnemy() {
+    setShowEnemy(false);
+    dispatch({ type: 'CLEAR_RS_STATE', side: 'enemy' });
+    dispatch({ type: 'SET_GAME_CONFIG', payload: { enemyFaction: '', enemyDetachment: '' } });
+  }
 
   return (
     <main>
       <div className="faction-screen">
-        <img src={`${import.meta.env.BASE_URL}IMG_8702.png`} alt="" className="setup-logo" />
+        <h1 className="setup-page-title">Muster Armies</h1>
         <div className="setup-content">
-          <div className="faction-screen-intro">
-            All your army rules, abilities and strategy combined.
-          </div>
           <SideComponent side="player" wahapediaHook={wahapediaHook} />
-          <div className="setup-vs-sep">VS</div>
-          <SideComponent side="enemy" wahapediaHook={wahapediaHook} />
+          {showEnemy ? (
+            <>
+              <div className="setup-vs-sep">VS</div>
+              <SideComponent side="enemy" wahapediaHook={wahapediaHook} onRemove={handleRemoveEnemy} />
+            </>
+          ) : (
+            <button className="setup-add-enemy-btn" onClick={() => setShowEnemy(true)}>
+              + Add Enemy
+            </button>
+          )}
         </div>
       </div>
       <div className="setup-start-bar">

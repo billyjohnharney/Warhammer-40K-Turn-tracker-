@@ -80,7 +80,7 @@ export function wahapediaPhaseId(wPhase) {
   if (p.includes('shoot')) return 'shooting';
   if (p.includes('charge') || p.includes('heroic')) return 'charge';
   if (p.includes('fight')) return 'fight';
-  if (p.includes('end') || p.includes('battle round') || p.includes('morale')) return 'end';
+  if (p.includes('battle round') || p.includes('morale')) return 'any';
   return 'any';
 }
 
