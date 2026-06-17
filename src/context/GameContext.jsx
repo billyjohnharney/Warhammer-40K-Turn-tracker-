@@ -8,8 +8,8 @@ const initialState = {
   gameConfig: { playerFaction: '', enemyFaction: '', playerDetachment: '', enemyDetachment: '', battleSize: '', mission: '', deploymentZone: '' },
   activePhaseIndex: 0,
   phaseTab: {},
-  roster: { loaded: false, units: [], activeKeywords: new Set() },
-  enemyRoster: { loaded: false, units: [], activeKeywords: new Set() },
+  roster: { loaded: false, units: [], activeKeywords: new Set(), unitAbilities: {} },
+  enemyRoster: { loaded: false, units: [], activeKeywords: new Set(), unitAbilities: {} },
   rsState: {
     player: { parsed: null, error: '' },
     enemy: { parsed: null, error: '' },
@@ -52,11 +52,11 @@ function reducer(state, action) {
         activePhaseIndex: 0,
         phaseTab: {},
         roster: playerParsed
-          ? { loaded: true, units: playerParsed.units, activeKeywords: playerParsed.activeKeywords }
-          : { loaded: false, units: [], activeKeywords: new Set() },
+          ? { loaded: true, units: playerParsed.units, activeKeywords: playerParsed.activeKeywords, unitAbilities: playerParsed.unitAbilities ?? {} }
+          : { loaded: false, units: [], activeKeywords: new Set(), unitAbilities: {} },
         enemyRoster: enemyParsed
-          ? { loaded: true, units: enemyParsed.units, activeKeywords: enemyParsed.activeKeywords }
-          : { loaded: false, units: [], activeKeywords: new Set() },
+          ? { loaded: true, units: enemyParsed.units, activeKeywords: enemyParsed.activeKeywords, unitAbilities: enemyParsed.unitAbilities ?? {} }
+          : { loaded: false, units: [], activeKeywords: new Set(), unitAbilities: {} },
       };
     }
 
@@ -64,8 +64,8 @@ function reducer(state, action) {
       return {
         ...state,
         appStep: 'setup',
-        roster: { loaded: false, units: [], activeKeywords: new Set() },
-        enemyRoster: { loaded: false, units: [], activeKeywords: new Set() },
+        roster: { loaded: false, units: [], activeKeywords: new Set(), unitAbilities: {} },
+        enemyRoster: { loaded: false, units: [], activeKeywords: new Set(), unitAbilities: {} },
         rsState: {
           player: { parsed: null, error: '' },
           enemy: { parsed: null, error: '' },
