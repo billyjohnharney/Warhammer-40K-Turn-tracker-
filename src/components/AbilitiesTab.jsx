@@ -1,14 +1,53 @@
 import { useMemo } from 'react';
 
 function detectPhases(html) {
-  const t = html.toLowerCase().replace(/<[^>]+>/g, ' ');
-  const phases = [];
-  if (t.includes('fight phase') || t.includes('melee attack')) phases.push('fight');
-  if (t.includes('shooting phase')) phases.push('shooting');
-  if (t.includes('movement phase') || t.includes('advance roll') || t.includes('fall back')) phases.push('movement');
-  if (t.includes('command phase') || t.includes('battle-shock')) phases.push('command');
-  if (t.includes('charge phase') || t.includes('heroic intervention')) phases.push('charge');
-  return phases.length ? phases : ['any'];
+  const t = html.toLowerCase().replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+  const phases = new Set();
+
+  // Explicit "any phase" → all phases
+  if (/\bany phase\b/.test(t)) return ['command', 'movement', 'shooting', 'charge', 'fight'];
+
+  // Command phase
+  if (/\bcommand phase\b/.test(t))                    phases.add('command');
+  if (/\bbattle[- ]shock\b/.test(t))                  phases.add('command');
+  if (/\bcommand point/.test(t))                      phases.add('command');
+  if (/\bstart of (your|the) (command )?turn\b/.test(t)) phases.add('command');
+
+  // Movement phase
+  if (/\bmovement phase\b/.test(t))                   phases.add('movement');
+  if (/\bnormal move\b/.test(t))                      phases.add('movement');
+  if (/\badvance roll\b/.test(t))                     phases.add('movement');
+  if (/\bwhen (this|a) unit advances\b/.test(t))      phases.add('movement');
+  if (/\bfall(s)? back\b/.test(t))                    phases.add('movement');
+  if (/\bremains stationary\b/.test(t))               phases.add('movement');
+
+  // Shooting phase
+  if (/\bshooting phase\b/.test(t))                   phases.add('shooting');
+  if (/\branged attack\b/.test(t))                    phases.add('shooting');
+  if (/\bselected to shoot\b/.test(t))                phases.add('shooting');
+  if (/\bballistic skill\b/.test(t))                  phases.add('shooting');
+  if (/\bbenefit of cover\b/.test(t))                 phases.add('shooting');
+
+  // Charge phase
+  if (/\bcharge phase\b/.test(t))                     phases.add('charge');
+  if (/\bdeclares? a charge\b/.test(t))               phases.add('charge');
+  if (/\bcharge move\b/.test(t))                      phases.add('charge');
+  if (/\bwhen (this|a) unit charges\b/.test(t))       phases.add('charge');
+  if (/\bheroic intervention\b/.test(t))              phases.add('charge');
+  if (/\boverwatch\b/.test(t))                        phases.add('charge');
+
+  // Fight phase
+  if (/\bfight phase\b/.test(t))                      phases.add('fight');
+  if (/\bmelee attack\b/.test(t))                     phases.add('fight');
+  if (/\bselected to fight\b/.test(t))                phases.add('fight');
+  if (/\bclose[- ]combat\b/.test(t))                  phases.add('fight');
+  if (/\bstrikes? (first|last)\b/.test(t))            phases.add('fight');
+  if (/\bpile[- ]in\b/.test(t))                       phases.add('fight');
+  if (/\bconsolidat(e|ion)\b/.test(t))                phases.add('fight');
+  if (/\bweapon skill\b/.test(t))                     phases.add('fight');
+
+  // Empty → passive ability, shown in no phase tab
+  return [...phases];
 }
 
 function matchesRosterUnit(rosterName, datasheetName) {
@@ -61,7 +100,7 @@ export default function AbilitiesTab({ phaseId, roster, wahapediaHook }) {
           if (seenNames.has(ab.name)) return false;
           seenNames.add(ab.name);
           const phases = detectPhases(ab.description || '');
-          return phases.includes(phaseId) || phases.includes('any');
+          return phases.includes(phaseId);
         });
       if (abilities.length) matched.push({ unitName: rosterUnit, abilities });
     }
