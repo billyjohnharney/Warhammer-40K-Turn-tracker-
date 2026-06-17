@@ -7,46 +7,86 @@ function detectPhases(html) {
   // Explicit "any phase" → all phases
   if (/\bany phase\b/.test(t)) return ['command', 'movement', 'shooting', 'charge', 'fight'];
 
-  // Command phase
-  if (/\bcommand phase\b/.test(t))                    phases.add('command');
-  if (/\bbattle[- ]shock\b/.test(t))                  phases.add('command');
-  if (/\bcommand point/.test(t))                      phases.add('command');
-  if (/\bstart of (your|the) (command )?turn\b/.test(t)) phases.add('command');
+  // ── Explicit phase triggers ───────────────────────────────────────────────
 
-  // Movement phase
-  if (/\bmovement phase\b/.test(t))                   phases.add('movement');
-  if (/\bnormal move\b/.test(t))                      phases.add('movement');
-  if (/\badvance roll\b/.test(t))                     phases.add('movement');
-  if (/\bwhen (this|a) unit advances\b/.test(t))      phases.add('movement');
-  if (/\bfall(s)? back\b/.test(t))                    phases.add('movement');
-  if (/\bremains stationary\b/.test(t))               phases.add('movement');
+  // Command
+  if (/\bcommand phase\b/.test(t))                         phases.add('command');
+  if (/\bbattle[- ]shock\b/.test(t))                       phases.add('command');
+  if (/\bcommand point/.test(t))                           phases.add('command');
+  if (/\bstart of (your|the) (command )?turn\b/.test(t))   phases.add('command');
+  if (/\bleadership\b/.test(t))                            phases.add('command');
 
-  // Shooting phase
-  if (/\bshooting phase\b/.test(t))                   phases.add('shooting');
-  if (/\branged attack\b/.test(t))                    phases.add('shooting');
-  if (/\bselected to shoot\b/.test(t))                phases.add('shooting');
-  if (/\bballistic skill\b/.test(t))                  phases.add('shooting');
-  if (/\bbenefit of cover\b/.test(t))                 phases.add('shooting');
+  // Movement
+  if (/\bmovement phase\b/.test(t))                        phases.add('movement');
+  if (/\bnormal move\b/.test(t))                           phases.add('movement');
+  if (/\badvance roll\b/.test(t))                          phases.add('movement');
+  if (/\bwhen (this|a) unit advances\b/.test(t))           phases.add('movement');
+  if (/\bfall(s)? back\b/.test(t))                         phases.add('movement');
+  if (/\bremains stationary\b/.test(t))                    phases.add('movement');
+  if (/\bdeep strike\b/.test(t))                           phases.add('movement');
+  if (/\bfly\b/.test(t))                                   phases.add('movement');
 
-  // Charge phase
-  if (/\bcharge phase\b/.test(t))                     phases.add('charge');
-  if (/\bdeclares? a charge\b/.test(t))               phases.add('charge');
-  if (/\bcharge move\b/.test(t))                      phases.add('charge');
-  if (/\bwhen (this|a) unit charges\b/.test(t))       phases.add('charge');
-  if (/\bheroic intervention\b/.test(t))              phases.add('charge');
-  if (/\boverwatch\b/.test(t))                        phases.add('charge');
+  // Shooting
+  if (/\bshooting phase\b/.test(t))                        phases.add('shooting');
+  if (/\branged attack\b/.test(t))                         phases.add('shooting');
+  if (/\bselected to shoot\b/.test(t))                     phases.add('shooting');
+  if (/\bballistic skill\b/.test(t))                       phases.add('shooting');
+  if (/\bbenefit of cover\b/.test(t))                      phases.add('shooting');
+  if (/\branged weapon\b/.test(t))                         phases.add('shooting');
+  if (/\bignores? cover\b/.test(t))                        phases.add('shooting');
+  if (/\blone operative\b/.test(t))                        phases.add('shooting');
+  if (/\bstealth\b/.test(t))                               phases.add('shooting');
 
-  // Fight phase
-  if (/\bfight phase\b/.test(t))                      phases.add('fight');
-  if (/\bmelee attack\b/.test(t))                     phases.add('fight');
-  if (/\bselected to fight\b/.test(t))                phases.add('fight');
-  if (/\bclose[- ]combat\b/.test(t))                  phases.add('fight');
-  if (/\bstrikes? (first|last)\b/.test(t))            phases.add('fight');
-  if (/\bpile[- ]in\b/.test(t))                       phases.add('fight');
-  if (/\bconsolidat(e|ion)\b/.test(t))                phases.add('fight');
-  if (/\bweapon skill\b/.test(t))                     phases.add('fight');
+  // Charge
+  if (/\bcharge phase\b/.test(t))                          phases.add('charge');
+  if (/\bdeclares? a charge\b/.test(t))                    phases.add('charge');
+  if (/\bcharge move\b/.test(t))                           phases.add('charge');
+  if (/\bwhen (this|a) unit charges\b/.test(t))            phases.add('charge');
+  if (/\bheroic intervention\b/.test(t))                   phases.add('charge');
+  if (/\boverwatch\b/.test(t))                             phases.add('charge');
 
-  // Empty → passive ability, shown in no phase tab
+  // Fight
+  if (/\bfight phase\b/.test(t))                           phases.add('fight');
+  if (/\bmelee attack\b/.test(t))                          phases.add('fight');
+  if (/\bselected to fight\b/.test(t))                     phases.add('fight');
+  if (/\bclose[- ]combat\b/.test(t))                       phases.add('fight');
+  if (/\bstrikes? (first|last)\b/.test(t))                 phases.add('fight');
+  if (/\bpile[- ]in\b/.test(t))                            phases.add('fight');
+  if (/\bconsolidat(e|ion)\b/.test(t))                     phases.add('fight');
+  if (/\bweapon skill\b/.test(t))                          phases.add('fight');
+  if (/\bmelee weapon\b/.test(t))                          phases.add('fight');
+
+  // ── Passive but phase-relevant ────────────────────────────────────────────
+  // Abilities that resolve during attack sequences apply to both attack phases.
+  // If explicit signals already placed this in one of the two, extend to both.
+  const attackPatterns = [
+    /\bfeel no pain\b/,
+    /\binvulnerable save\b/,
+    /\beach time (a |an |this )?(model |unit )?(in this unit )?is allocated (a |an )?wound\b/,
+    /\beach time (a |an )?attack is allocated\b/,
+    /\beach time this (model|unit) (is |)suffer(s|ed)? (a |an )?wound\b/,
+    /\bsave roll\b/,
+    /\bsaving throw\b/,
+    /\bignore(s)? (wounds?|damage)\b/,
+    /\bnegate(s)? (wounds?|damage)\b/,
+    /\breduces? (the )?damage\b/,
+    /\bdamage characteristic\b/,
+    /\bhit roll\b/,
+    /\bwound roll\b/,
+    /\bto hit\b/,
+    /\bto wound\b/,
+  ];
+  if (attackPatterns.some(re => re.test(t))) {
+    phases.add('shooting');
+    phases.add('fight');
+  }
+
+  // Abilities keyed to ranged weapons only extend to shooting alone
+  if (!phases.has('fight') && /\branged\b/.test(t) && phases.has('shooting')) {
+    // already correctly scoped to shooting only — do nothing
+  }
+
+  // Empty → passive ability with no detectable phase, not shown in any tab
   return [...phases];
 }
 
