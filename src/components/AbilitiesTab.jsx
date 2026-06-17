@@ -21,18 +21,16 @@ function stripPoints(name) {
   return name.replace(/\s*[\[(]?\d+\s*pts?[\])]?\s*/gi, '').trim();
 }
 
-function briefText(html) {
-  const raw = (html || '').replace(/<[^>]+>/g, '').trim();
-  return raw.length > 110 ? raw.slice(0, 107) + '…' : raw;
-}
-
 function AbilityItem({ ab }) {
   return (
     <div className="stratagem-item ability-item">
       <div className="item-content">
         <span className="strat-name">{ab.name}</span>
-        {briefText(ab.description) && (
-          <div className="strat-legend">{briefText(ab.description)}</div>
+        {ab.description && (
+          <div
+            className="strat-legend"
+            dangerouslySetInnerHTML={{ __html: ab.description }}
+          />
         )}
       </div>
     </div>
