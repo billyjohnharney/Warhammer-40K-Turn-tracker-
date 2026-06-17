@@ -5,7 +5,7 @@ import { keywords } from '../data/keywords.js';
 const CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
 
 function parseWahapediaCsv(text) {
-  const lines = text.replace(/^\uFEFF/, '').replace(/\r/g, '').trim().split('\n');
+  const lines = text.replace(/^﻿/, '').replace(/\r/g, '').trim().split('\n');
   if (lines.length < 2) return [];
   const headers = lines[0].split('|').map(h => h.trim());
   return lines.slice(1).map(line => {
@@ -18,7 +18,7 @@ function parseWahapediaCsv(text) {
 
 function matchFactionIds(appName, factionRows) {
   if (SUB_FACTION_IDS[appName]) return new Set(SUB_FACTION_IDS[appName]);
-  const norm = s => s.toLowerCase().replace(/['\u2019\u2018]/g, '').replace(/[^a-z0-9]/g, '');
+  const norm = s => s.toLowerCase().replace(/['’‘]/g, '').replace(/[^a-z0-9]/g, '');
   const n = norm(appName);
   const ids = new Set();
   for (const f of factionRows) {
@@ -34,7 +34,7 @@ async function fetchLocalCsv(path) {
   const r = await fetch(path);
   if (!r.ok) throw new Error(r.status);
   const text = await r.text();
-  if (!text || text.replace(/^\uFEFF/, '').trim().length < 50) throw new Error('empty');
+  if (!text || text.replace(/^﻿/, '').trim().length < 50) throw new Error('empty');
   return text;
 }
 
@@ -86,7 +86,8 @@ export function wahapediaPhaseId(wPhase) {
 
 export function useWahapedia(gameConfig) {
   const [wahapedia, setWahapedia] = useState({
-    loading: false, loaded: false, error: null, factionRows: [], stratagemRows: [],
+    loading: false, loaded: false, error: null,
+    factionRows: [], stratagemRows: [], datasheetRows: [], datasheetAbilityRows: [],
   });
   const [factionStrats, setFactionStrats] = useState({ player: [], enemy: [], universal: [] });
 
@@ -124,6 +125,26 @@ export function useWahapedia(gameConfig) {
     return [...dets].sort();
   }, [wahapedia]);
 
+  const loadUnitData = useCallback(async () => {
+    try {
+      const base = import.meta.env.BASE_URL || '/';
+      const [dt, at] = await Promise.all([
+        fetchLocalCsv(`${base}Datasheets.csv`)
+          .catch(() => fetchText('https://wahapedia.ru/wh40k10ed/Datasheets.csv')),
+        fetchLocalCsv(`${base}Datasheets_abilities.csv`)
+          .catch(() => fetchText('https://wahapedia.ru/wh40k10ed/Datasheets_abilities.csv')),
+      ]);
+      try { localStorage.setItem('wh_datasheets', dt); } catch (_) {}
+      try { localStorage.setItem('wh_datasheet_abilities', at); } catch (_) {}
+      localStorage.setItem('wh_units_cache_date', new Date().toISOString());
+      setWahapedia(prev => ({
+        ...prev,
+        datasheetRows: parseWahapediaCsv(dt),
+        datasheetAbilityRows: parseWahapediaCsv(at),
+      }));
+    } catch (_) { /* unit abilities unavailable — stratagems still work */ }
+  }, []);
+
   const load = useCallback(async (config) => {
     if (wahapedia.loaded) { buildFactionStrats(wahapedia, config); return; }
 
@@ -131,15 +152,23 @@ export function useWahapedia(gameConfig) {
     const cacheAge = cacheDate ? Date.now() - new Date(cacheDate).getTime() : Infinity;
     const cf = localStorage.getItem('wh_factions');
     const cs = localStorage.getItem('wh_stratagems');
+    const cd = localStorage.getItem('wh_datasheets');
+    const ca = localStorage.getItem('wh_datasheet_abilities');
+    const unitCacheDate = localStorage.getItem('wh_units_cache_date');
+    const unitCacheAge = unitCacheDate ? Date.now() - new Date(unitCacheDate).getTime() : Infinity;
+    const unitsCached = cd && ca && unitCacheAge < CACHE_TTL;
 
     if (cf && cs && cacheAge < CACHE_TTL) {
       const wh = {
         loading: false, loaded: true, error: null,
         factionRows: parseWahapediaCsv(cf),
         stratagemRows: parseWahapediaCsv(cs),
+        datasheetRows: unitsCached ? parseWahapediaCsv(cd) : [],
+        datasheetAbilityRows: unitsCached ? parseWahapediaCsv(ca) : [],
       };
       setWahapedia(wh);
       buildFactionStrats(wh, config);
+      if (!unitsCached) loadUnitData();
       return;
     }
 
@@ -160,15 +189,20 @@ export function useWahapedia(gameConfig) {
         loading: false, loaded: true, error: null,
         factionRows: parseWahapediaCsv(ft),
         stratagemRows: parseWahapediaCsv(st),
+        datasheetRows: unitsCached ? parseWahapediaCsv(cd) : [],
+        datasheetAbilityRows: unitsCached ? parseWahapediaCsv(ca) : [],
       };
       setWahapedia(wh);
       buildFactionStrats(wh, config);
+      if (!unitsCached) loadUnitData();
     } catch (e) {
       if (cf && cs) {
         const wh = {
           loading: false, loaded: true, error: null,
           factionRows: parseWahapediaCsv(cf),
           stratagemRows: parseWahapediaCsv(cs),
+          datasheetRows: unitsCached ? parseWahapediaCsv(cd) : [],
+          datasheetAbilityRows: unitsCached ? parseWahapediaCsv(ca) : [],
         };
         setWahapedia(wh);
         buildFactionStrats(wh, config);
@@ -179,7 +213,7 @@ export function useWahapedia(gameConfig) {
         }));
       }
     }
-  }, [wahapedia, buildFactionStrats]);
+  }, [wahapedia, buildFactionStrats, loadUnitData]);
 
   const prefetch = useCallback(async (config) => {
     if (wahapedia.loaded || wahapedia.loading) {
@@ -190,14 +224,23 @@ export function useWahapedia(gameConfig) {
     const cacheAge = cacheDate ? Date.now() - new Date(cacheDate).getTime() : Infinity;
     const cf = localStorage.getItem('wh_factions');
     const cs = localStorage.getItem('wh_stratagems');
+    const cd = localStorage.getItem('wh_datasheets');
+    const ca = localStorage.getItem('wh_datasheet_abilities');
+    const unitCacheDate = localStorage.getItem('wh_units_cache_date');
+    const unitCacheAge = unitCacheDate ? Date.now() - new Date(unitCacheDate).getTime() : Infinity;
+    const unitsCached = cd && ca && unitCacheAge < CACHE_TTL;
+
     if (cf && cs && cacheAge < CACHE_TTL) {
       const wh = {
         loading: false, loaded: true, error: null,
         factionRows: parseWahapediaCsv(cf),
         stratagemRows: parseWahapediaCsv(cs),
+        datasheetRows: unitsCached ? parseWahapediaCsv(cd) : [],
+        datasheetAbilityRows: unitsCached ? parseWahapediaCsv(ca) : [],
       };
       setWahapedia(wh);
       buildFactionStrats(wh, config);
+      if (!unitsCached) loadUnitData();
       return;
     }
     // No fresh cache — fetch in the background so detachment dropdowns populate
@@ -217,15 +260,20 @@ export function useWahapedia(gameConfig) {
         loading: false, loaded: true, error: null,
         factionRows: parseWahapediaCsv(ft),
         stratagemRows: parseWahapediaCsv(st),
+        datasheetRows: [],
+        datasheetAbilityRows: [],
       };
       setWahapedia(wh);
       buildFactionStrats(wh, config);
+      loadUnitData();
     } catch (e) {
       if (cf && cs) {
         const wh = {
           loading: false, loaded: true, error: null,
           factionRows: parseWahapediaCsv(cf),
           stratagemRows: parseWahapediaCsv(cs),
+          datasheetRows: [],
+          datasheetAbilityRows: [],
         };
         setWahapedia(wh);
         buildFactionStrats(wh, config);
@@ -233,7 +281,7 @@ export function useWahapedia(gameConfig) {
         setWahapedia(prev => ({ ...prev, loading: false, error: null }));
       }
     }
-  }, [wahapedia, buildFactionStrats]);
+  }, [wahapedia, buildFactionStrats, loadUnitData]);
 
   return { wahapedia, factionStrats, load, prefetch, getAvailableDetachments, buildFactionStrats };
 }

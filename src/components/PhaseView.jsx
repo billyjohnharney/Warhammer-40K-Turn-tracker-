@@ -107,7 +107,7 @@ export default function PhaseView({ wahapediaHook }) {
           <StratagemTab phaseId={phase.id} wahapediaHook={wahapediaHook} />
         </Tabs.Panel>
         <Tabs.Panel value="abilities" className="tab-content">
-          <AbilitiesTab phaseId={phase.id} roster={roster} enemyRoster={enemyRoster} />
+          <AbilitiesTab phaseId={phase.id} roster={roster} wahapediaHook={wahapediaHook} />
         </Tabs.Panel>
       </Tabs.Root>
 
