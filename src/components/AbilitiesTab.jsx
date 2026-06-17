@@ -71,10 +71,6 @@ function detectPhases(html) {
     /\bnegate(s)? (wounds?|damage)\b/,
     /\breduces? (the )?damage\b/,
     /\bdamage characteristic\b/,
-    /\bhit roll\b/,
-    /\bwound roll\b/,
-    /\bto hit\b/,
-    /\bto wound\b/,
   ];
   if (attackPatterns.some(re => re.test(t))) {
     phases.add('shooting');
