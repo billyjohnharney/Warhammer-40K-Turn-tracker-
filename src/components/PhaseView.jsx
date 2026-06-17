@@ -7,6 +7,7 @@ import { keywordFactions } from '../data/factions.js';
 import { wahapediaPhaseId } from '../hooks/useWahapedia.js';
 import StepsTab from './StepsTab.jsx';
 import StratagemTab from './StratagemTab.jsx';
+import AbilitiesTab from './AbilitiesTab.jsx';
 import MissionModal from './MissionModal.jsx';
 
 export function kwForPlayer(kw, gameConfig, roster) {
@@ -90,6 +91,9 @@ export default function PhaseView({ wahapediaHook }) {
           <Tabs.Tab value="stratagems" className="phase-tab">
             Stratagems
           </Tabs.Tab>
+          <Tabs.Tab value="abilities" className="phase-tab">
+            Abilities
+          </Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="steps" className="tab-content">
@@ -101,6 +105,9 @@ export default function PhaseView({ wahapediaHook }) {
         </Tabs.Panel>
         <Tabs.Panel value="stratagems" className="tab-content">
           <StratagemTab phaseId={phase.id} wahapediaHook={wahapediaHook} />
+        </Tabs.Panel>
+        <Tabs.Panel value="abilities" className="tab-content">
+          <AbilitiesTab phaseId={phase.id} roster={roster} enemyRoster={enemyRoster} />
         </Tabs.Panel>
       </Tabs.Root>
 

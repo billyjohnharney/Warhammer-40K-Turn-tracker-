@@ -125,16 +125,39 @@ function detectDetachmentFromXml(doc, faction, availableDetachments = []) {
   return candidates.find(c => c && detPattern.test(c)) || null;
 }
 
+function detectAbilityPhases(text) {
+  const t = text.toLowerCase();
+  const phases = [];
+  if (t.includes('fight phase') || t.includes('melee attack')) phases.push('fight');
+  if (t.includes('shooting phase')) phases.push('shooting');
+  if (t.includes('movement phase') || t.includes('advance roll') || t.includes('fall back')) phases.push('movement');
+  if (t.includes('command phase') || t.includes('battle-shock')) phases.push('command');
+  if (t.includes('charge phase') || t.includes('heroic intervention')) phases.push('charge');
+  return phases.length ? phases : ['any'];
+}
+
 export function parseRosXml(xmlText) {
   const doc = new DOMParser().parseFromString(xmlText, 'application/xml');
   if (doc.querySelector('parsererror')) throw new Error('Could not parse XML — is this a valid .ros file?');
 
   const units = [];
   const activeKeywords = new Set();
+  const unitAbilities = {};
 
   doc.querySelectorAll('forces > force > selections > selection').forEach(el => {
     const name = el.getAttribute('name');
-    if (name) units.push(name);
+    if (name) {
+      units.push(name);
+      const abilities = [];
+      el.querySelectorAll('rule').forEach(rule => {
+        const ruleName = rule.getAttribute('name')?.trim();
+        const text = rule.querySelector('description')?.textContent?.trim() || '';
+        if (!ruleName || !text) return;
+        if (normalizeKeyword(ruleName)) return;
+        abilities.push({ name: ruleName, text, phases: detectAbilityPhases(text) });
+      });
+      if (abilities.length) unitAbilities[name] = abilities;
+    }
   });
 
   doc.querySelectorAll('category').forEach(el => {
@@ -172,7 +195,7 @@ export function parseRosXml(xmlText) {
 
   const faction = detectFactionFromXml(doc);
   const detachment = detectDetachmentFromXml(doc, faction);
-  return { units, activeKeywords, faction, detachment };
+  return { units, activeKeywords, faction, detachment, unitAbilities };
 }
 
 export function parseTextRoster(text) {
