@@ -17,22 +17,42 @@ function matchesRosterUnit(rosterName, datasheetName) {
   return r === d || d.startsWith(r + ' ') || d.startsWith(r + ',') || r.startsWith(d + ' ');
 }
 
+function stripPoints(name) {
+  return name.replace(/\s*[\[(]?\d+\s*pts?[\])]?\s*/gi, '').trim();
+}
+
+function briefText(html) {
+  const raw = (html || '').replace(/<[^>]+>/g, '').trim();
+  return raw.length > 110 ? raw.slice(0, 107) + '…' : raw;
+}
+
+function AbilityItem({ ab }) {
+  return (
+    <div className="stratagem-item ability-item">
+      <div className="item-content">
+        <span className="strat-name">{ab.name}</span>
+        {briefText(ab.description) && (
+          <div className="strat-legend">{briefText(ab.description)}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AbilitiesTab({ phaseId, roster, wahapediaHook }) {
   const { datasheetRows, datasheetAbilityRows } = wahapediaHook.wahapedia;
 
-  const { abilitiesByDatasheetId, datasheetNameById } = useMemo(() => {
+  const { abilitiesByDatasheetId } = useMemo(() => {
     const abilitiesByDatasheetId = {};
     datasheetAbilityRows.forEach(row => {
       if (!abilitiesByDatasheetId[row.datasheet_id]) abilitiesByDatasheetId[row.datasheet_id] = [];
       abilitiesByDatasheetId[row.datasheet_id].push(row);
     });
-    const datasheetNameById = {};
-    datasheetRows.forEach(row => { datasheetNameById[row.id] = row.name; });
-    return { abilitiesByDatasheetId, datasheetNameById };
-  }, [datasheetRows, datasheetAbilityRows]);
+    return { abilitiesByDatasheetId };
+  }, [datasheetAbilityRows]);
 
   const entries = useMemo(() => {
-    if (!roster.loaded || !roster.units.length) return null;
+    if (!roster.loaded || !roster.units.length || !datasheetRows.length) return [];
     const matched = [];
     for (const rosterUnit of roster.units) {
       const matchingSheets = datasheetRows.filter(ds => matchesRosterUnit(rosterUnit, ds.name));
@@ -52,40 +72,39 @@ export default function AbilitiesTab({ phaseId, roster, wahapediaHook }) {
 
   if (!roster.loaded) {
     return (
-      <div className="abilities-empty">
-        <p>Load your roster on the setup screen to see unit abilities here.</p>
+      <div className="fs-section">
+        <div className="fs-status">Load your roster on the setup screen to see unit abilities here.</div>
       </div>
     );
   }
 
   if (!datasheetRows.length) {
     return (
-      <div className="abilities-empty">
-        <p>Loading unit abilities from Wahapedia…</p>
+      <div className="fs-section">
+        <div className="fs-status">Loading unit abilities from Wahapedia…</div>
       </div>
     );
   }
 
-  if (!entries || !entries.length) {
-    return <div className="abilities-empty"><p>No abilities for this phase.</p></div>;
+  if (!entries.length) {
+    return (
+      <div className="fs-section">
+        <div className="fs-status">No abilities for this phase.</div>
+      </div>
+    );
   }
 
   return (
-    <div className="abilities-tab">
+    <div className="fs-section">
       {entries.map(({ unitName, abilities }) => (
-        <div key={unitName} className="abilities-unit-group">
-          <div className="abilities-unit-name">{unitName}</div>
-          {abilities.map(ab => (
-            <div key={ab.name} className="ability-row">
-              <span className="ability-name">{ab.name}</span>
-              <p
-                className="ability-text"
-                dangerouslySetInnerHTML={{ __html: ab.description }}
-              />
-            </div>
-          ))}
+        <div key={unitName}>
+          <div className="fs-subsection-label">{stripPoints(unitName)}</div>
+          {abilities.map(ab => <AbilityItem key={ab.name} ab={ab} />)}
         </div>
       ))}
+      <div className="fs-attribution">
+        Ability data: <a href="https://wahapedia.ru" target="_blank" rel="noopener">Wahapedia</a>
+      </div>
     </div>
   );
 }
