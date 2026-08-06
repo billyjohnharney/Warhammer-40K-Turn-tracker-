@@ -62,6 +62,7 @@ function SideComponent({ side, wahapediaHook, onRemove }) {
   const faction = isPlayer ? state.gameConfig.playerFaction : state.gameConfig.enemyFaction;
   const selectedDet = isPlayer ? state.gameConfig.playerDetachment : state.gameConfig.enemyDetachment;
   const fileRef = useRef(null);
+  const [exporting, setExporting] = useState(false);
 
   const detachments = wahapediaHook.getAvailableDetachments(faction);
   const detLoading = faction && wahapediaHook.wahapedia.loading;
@@ -157,6 +158,30 @@ function SideComponent({ side, wahapediaHook, onRemove }) {
     }
   }
 
+  async function handleExportCards() {
+    const win = window.open('about:blank', '_blank');
+    if (!win) { alert('Allow popups to export unit cards.'); return; }
+    win.document.write('<html><head><title>Generating…</title></head><body style="font-family:sans-serif;padding:2rem;color:#333"><p>Generating unit cards…</p></body></html>');
+    setExporting(true);
+    try {
+      const { generateUnitCardsHtml } = await import('../utils/generateUnitCards.js');
+      const html = await generateUnitCardsHtml(
+        rsData.parsed,
+        wahapediaHook.wahapedia,
+        { playerFaction: faction, playerDetachment: selectedDet },
+      );
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+    } catch (e) {
+      win.document.open();
+      win.document.write(`<html><body style="font-family:sans-serif;padding:2rem;color:#c00"><p>Failed: ${e.message}</p></body></html>`);
+      win.document.close();
+    } finally {
+      setExporting(false);
+    }
+  }
+
   const parsed = rsData.parsed;
   const kws = parsed ? [...parsed.activeKeywords].sort() : [];
 
@@ -231,6 +256,13 @@ function SideComponent({ side, wahapediaHook, onRemove }) {
               {kws.map(k => <span key={k} className="roster-kw-chip">{k}</span>)}
             </div>
           )}
+          <button
+            className="roster-export-btn"
+            onClick={handleExportCards}
+            disabled={exporting}
+          >
+            {exporting ? 'Generating…' : 'Export Unit Cards'}
+          </button>
         </div>
       )}
     </div>

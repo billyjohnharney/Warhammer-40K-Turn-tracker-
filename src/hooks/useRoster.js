@@ -170,9 +170,21 @@ export function parseRosXml(xmlText) {
     if (match) activeKeywords.add(match);
   });
 
+  const unitSelections = {};
+  doc.querySelectorAll('forces > force > selections > selection').forEach(el => {
+    const unitName = el.getAttribute('name');
+    if (!unitName) return;
+    const names = new Set();
+    el.querySelectorAll('selection[type="upgrade"]').forEach(sel => {
+      const n = (sel.getAttribute('name') || '').trim();
+      if (n) names.add(n.toLowerCase());
+    });
+    if (names.size) unitSelections[unitName] = [...names];
+  });
+
   const faction = detectFactionFromXml(doc);
   const detachment = detectDetachmentFromXml(doc, faction);
-  return { units, activeKeywords, faction, detachment };
+  return { units, activeKeywords, faction, detachment, unitSelections };
 }
 
 export function parseTextRoster(text) {
@@ -190,7 +202,7 @@ export function parseTextRoster(text) {
 
   const faction = detectFaction(text);
   const detachment = detectDetachment(text, faction);
-  return { units: units.slice(0, 40), activeKeywords, faction, detachment };
+  return { units: units.slice(0, 40), activeKeywords, faction, detachment, unitSelections: {} };
 }
 
 export function looksLikeWarhammer(text) {
