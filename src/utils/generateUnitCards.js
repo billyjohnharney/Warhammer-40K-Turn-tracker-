@@ -213,43 +213,62 @@ function stubCard(unitName) {
 
 const CSS = `
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-@page{margin:1.2cm;size:A4}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background:#e8e8e8;padding:.75rem;font-size:11px;color:#111;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-h1.pg-hdr{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#444;margin-bottom:.625rem}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.625rem}
-@media(max-width:560px){.grid{grid-template-columns:1fr}}
-.card{background:#fff;border:2px solid #111;border-radius:3px;overflow:hidden;break-inside:avoid;page-break-inside:avoid;display:flex;flex-direction:column}
-.card-hdr{background:#111;color:#fff;padding:.35rem .6rem;display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-shrink:0}
-.unit-name{font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;line-height:1.2;flex:1}
-.pts{font-size:.6rem;color:#bbb;white-space:nowrap;flex-shrink:0}
-.stats-section{background:#f5edd8;border-bottom:2px solid #b8911e;padding:.35rem .5rem}
-.model-lbl{font-size:.5rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#8a6a10;margin-bottom:.1rem}
-.stat-row{display:flex;align-items:center;gap:.125rem}
+@page{size:A4 landscape;margin:1cm}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background:#ccc;padding:.5cm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+h1.pg-hdr{font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#555;margin-bottom:.4cm}
+.grid{display:grid;grid-template-columns:repeat(2,12.5cm);gap:.6cm;justify-content:center}
+@media print{body{background:white;padding:0}.grid{gap:.4cm}}
+
+/* ── Fixed-size card: 12.5 × 7.5 cm ── */
+.card{
+  width:12.5cm;height:7.5cm;
+  overflow:hidden;
+  background:#fff;
+  border:1.5pt solid #111;
+  border-radius:2pt;
+  break-inside:avoid;page-break-inside:avoid;
+  display:flex;flex-direction:column
+}
+
+/* Header */
+.card-hdr{background:#111;color:#fff;padding:.18cm .35cm;display:flex;justify-content:space-between;align-items:baseline;gap:.25cm;flex-shrink:0}
+.unit-name{font-size:7pt;font-weight:800;text-transform:uppercase;letter-spacing:.07em;line-height:1.3;flex:1}
+.pts{font-size:5.5pt;color:#aaa;white-space:nowrap;flex-shrink:0}
+
+/* Stats */
+.stats-section{background:#f6edcf;border-bottom:1.5pt solid #b8911e;padding:.15cm .35cm;flex-shrink:0}
+.model-lbl{font-size:4.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#8a6a10;margin-bottom:.06cm}
+.stat-row{display:flex;align-items:flex-end;gap:.05cm}
 .stat-box{text-align:center;flex:1;min-width:0}
-.stat-lbl{font-size:.48rem;text-transform:uppercase;letter-spacing:.08em;color:#9a7a20;font-weight:700;line-height:1.2}
-.stat-val{font-size:.875rem;font-weight:900;color:#111;line-height:1.1}
-.invul{background:#8b1c1c;color:#fff;font-size:.55rem;font-weight:700;letter-spacing:.07em;padding:.15rem .4rem;border-radius:2px;white-space:nowrap;margin-left:.375rem;flex-shrink:0}
-.weapons-section{}
-.weapon-table{width:100%;border-collapse:collapse;font-size:.63rem}
+.stat-lbl{font-size:4pt;text-transform:uppercase;letter-spacing:.08em;color:#9a7a20;font-weight:700;line-height:1.2;display:block}
+.stat-val{font-size:9pt;font-weight:900;color:#111;line-height:1.1;display:block}
+.invul{background:#8b1c1c;color:#fff;font-size:5pt;font-weight:700;letter-spacing:.06em;padding:.08cm .22cm;border-radius:2pt;white-space:nowrap;margin-left:.25cm;flex-shrink:0;align-self:center}
+
+/* Weapons */
+.weapon-table{width:100%;border-collapse:collapse}
 .weapon-table thead tr{background:#1e3b18;color:#fff}
-.weapon-table thead th{padding:.2rem .3rem;font-size:.53rem;font-weight:700;letter-spacing:.06em;text-align:center;white-space:nowrap}
-.weapon-table thead th.col-name{text-align:left;padding-left:.5rem}
-.weapon-table thead th.col-kw{text-align:left}
-.weapon-table tbody td{padding:.18rem .3rem;border-bottom:1px solid #ebebeb;text-align:center;vertical-align:top}
-.weapon-table tbody tr:nth-child(even) td{background:#f7f7f7}
-.weapon-table tbody td.col-name{text-align:left;font-weight:600;padding-left:.5rem}
-.weapon-table tbody td.col-kw{text-align:left;font-size:.52rem;color:#555;font-style:italic}
-.abilities-section{padding:.35rem .5rem;flex:1}
-.section-hdr{font-size:.52rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#777;margin-bottom:.2rem;padding-bottom:.15rem;border-bottom:1px solid #eee}
-.ab-row{font-size:.63rem;line-height:1.45;margin-top:.25rem}
+.weapon-table thead th{padding:.1cm .2cm;font-size:4.5pt;font-weight:700;letter-spacing:.06em;text-align:center;white-space:nowrap}
+.weapon-table thead th.col-name{text-align:left;padding-left:.35cm}
+.weapon-table thead th.col-kw{text-align:left;max-width:2.5cm}
+.weapon-table tbody td{padding:.08cm .2cm;border-bottom:.5pt solid #e8e8e8;text-align:center;font-size:5.5pt;vertical-align:top}
+.weapon-table tbody tr:nth-child(even) td{background:#f8f8f8}
+.weapon-table tbody td.col-name{text-align:left;font-weight:600;padding-left:.35cm}
+.weapon-table tbody td.col-kw{text-align:left;font-size:4.5pt;color:#555;font-style:italic;max-width:2.5cm;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+
+/* Abilities */
+.abilities-section{padding:.15cm .35cm;flex:1;overflow:hidden}
+.section-hdr{font-size:4.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#777;margin-bottom:.1cm;padding-bottom:.08cm;border-bottom:.5pt solid #ddd}
+.ab-row{font-size:5.5pt;line-height:1.4;margin-top:.1cm}
 .ab-name{font-weight:700;color:#111}
 .ab-text{color:#333}
-.composition{font-size:.55rem;color:#888;padding:.2rem .5rem;border-top:1px solid #f0f0f0;font-style:italic}
-.damaged{font-size:.6rem;color:#7a1414;background:#fff5f5;border-top:1px solid #f0e0e0;padding:.25rem .5rem;line-height:1.45}
-.damaged-lbl{font-weight:700;text-transform:uppercase;font-size:.5rem;letter-spacing:.06em}
-.footer{margin-top:.625rem;font-size:.55rem;color:#999;text-align:right}
+
+/* Footer rows inside card */
+.composition{font-size:4.5pt;color:#999;padding:.08cm .35cm;border-top:.5pt solid #eee;font-style:italic;flex-shrink:0}
+.damaged{font-size:5pt;color:#7a1414;background:#fff5f5;border-top:.5pt solid #f0e0e0;padding:.1cm .35cm;line-height:1.4;flex-shrink:0}
+.damaged-lbl{font-weight:700;font-size:4.5pt;text-transform:uppercase;letter-spacing:.05em}
+
+.footer{margin-top:.4cm;font-size:5pt;color:#999;text-align:right}
 .footer a{color:#999}
-@media print{body{background:#fff;padding:0}.card{box-shadow:none;border:1.5pt solid #111}}
 `;
 
 export async function generateUnitCardsHtml(roster, wahapediaData, config) {
