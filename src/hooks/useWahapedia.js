@@ -130,13 +130,13 @@ export function useWahapedia(gameConfig) {
       const base = import.meta.env.BASE_URL || '/';
       const [dt, at] = await Promise.all([
         fetchLocalCsv(`${base}Datasheets.csv`)
-          .catch(() => fetchText('https://wahapedia.ru/wh40k10ed/Datasheets.csv')),
+          .catch(() => fetchText('https://wahapedia.ru/wh40k11ed/Datasheets.csv')),
         fetchLocalCsv(`${base}Datasheets_abilities.csv`)
-          .catch(() => fetchText('https://wahapedia.ru/wh40k10ed/Datasheets_abilities.csv')),
+          .catch(() => fetchText('https://wahapedia.ru/wh40k11ed/Datasheets_abilities.csv')),
       ]);
-      try { localStorage.setItem('wh_datasheets', dt); } catch (_) {}
-      try { localStorage.setItem('wh_datasheet_abilities', at); } catch (_) {}
-      localStorage.setItem('wh_units_cache_date', new Date().toISOString());
+      try { localStorage.setItem('wh11_datasheets', dt); } catch (_) {}
+      try { localStorage.setItem('wh11_datasheet_abilities', at); } catch (_) {}
+      localStorage.setItem('wh11_units_cache_date', new Date().toISOString());
       setWahapedia(prev => ({
         ...prev,
         datasheetRows: parseWahapediaCsv(dt),
@@ -148,13 +148,13 @@ export function useWahapedia(gameConfig) {
   const load = useCallback(async (config) => {
     if (wahapedia.loaded) { buildFactionStrats(wahapedia, config); return; }
 
-    const cacheDate = localStorage.getItem('wh_cache_date');
+    const cacheDate = localStorage.getItem('wh11_cache_date');
     const cacheAge = cacheDate ? Date.now() - new Date(cacheDate).getTime() : Infinity;
-    const cf = localStorage.getItem('wh_factions');
-    const cs = localStorage.getItem('wh_stratagems');
-    const cd = localStorage.getItem('wh_datasheets');
-    const ca = localStorage.getItem('wh_datasheet_abilities');
-    const unitCacheDate = localStorage.getItem('wh_units_cache_date');
+    const cf = localStorage.getItem('wh11_factions');
+    const cs = localStorage.getItem('wh11_stratagems');
+    const cd = localStorage.getItem('wh11_datasheets');
+    const ca = localStorage.getItem('wh11_datasheet_abilities');
+    const unitCacheDate = localStorage.getItem('wh11_units_cache_date');
     const unitCacheAge = unitCacheDate ? Date.now() - new Date(unitCacheDate).getTime() : Infinity;
     const unitsCached = cd && ca && unitCacheAge < CACHE_TTL;
 
@@ -178,13 +178,13 @@ export function useWahapedia(gameConfig) {
       const base = import.meta.env.BASE_URL || '/';
       const [ft, st] = await Promise.all([
         fetchLocalCsv(`${base}Factions.csv`)
-          .catch(() => fetchText('https://wahapedia.ru/wh40k10ed/Factions.csv')),
+          .catch(() => fetchText('https://wahapedia.ru/wh40k11ed/Factions.csv')),
         fetchLocalCsv(`${base}Stratagems.csv`)
-          .catch(() => fetchText('https://wahapedia.ru/wh40k10ed/Stratagems.csv')),
+          .catch(() => fetchText('https://wahapedia.ru/wh40k11ed/Stratagems.csv')),
       ]);
-      localStorage.setItem('wh_factions', ft);
-      localStorage.setItem('wh_stratagems', st);
-      localStorage.setItem('wh_cache_date', new Date().toISOString());
+      localStorage.setItem('wh11_factions', ft);
+      localStorage.setItem('wh11_stratagems', st);
+      localStorage.setItem('wh11_cache_date', new Date().toISOString());
       const wh = {
         loading: false, loaded: true, error: null,
         factionRows: parseWahapediaCsv(ft),
@@ -220,13 +220,13 @@ export function useWahapedia(gameConfig) {
       if (wahapedia.loaded) buildFactionStrats(wahapedia, config);
       return;
     }
-    const cacheDate = localStorage.getItem('wh_cache_date');
+    const cacheDate = localStorage.getItem('wh11_cache_date');
     const cacheAge = cacheDate ? Date.now() - new Date(cacheDate).getTime() : Infinity;
-    const cf = localStorage.getItem('wh_factions');
-    const cs = localStorage.getItem('wh_stratagems');
-    const cd = localStorage.getItem('wh_datasheets');
-    const ca = localStorage.getItem('wh_datasheet_abilities');
-    const unitCacheDate = localStorage.getItem('wh_units_cache_date');
+    const cf = localStorage.getItem('wh11_factions');
+    const cs = localStorage.getItem('wh11_stratagems');
+    const cd = localStorage.getItem('wh11_datasheets');
+    const ca = localStorage.getItem('wh11_datasheet_abilities');
+    const unitCacheDate = localStorage.getItem('wh11_units_cache_date');
     const unitCacheAge = unitCacheDate ? Date.now() - new Date(unitCacheDate).getTime() : Infinity;
     const unitsCached = cd && ca && unitCacheAge < CACHE_TTL;
 
@@ -249,13 +249,13 @@ export function useWahapedia(gameConfig) {
       const base = import.meta.env.BASE_URL || '/';
       const [ft, st] = await Promise.all([
         fetchLocalCsv(`${base}Factions.csv`)
-          .catch(() => fetchText('https://wahapedia.ru/wh40k10ed/Factions.csv')),
+          .catch(() => fetchText('https://wahapedia.ru/wh40k11ed/Factions.csv')),
         fetchLocalCsv(`${base}Stratagems.csv`)
-          .catch(() => fetchText('https://wahapedia.ru/wh40k10ed/Stratagems.csv')),
+          .catch(() => fetchText('https://wahapedia.ru/wh40k11ed/Stratagems.csv')),
       ]);
-      localStorage.setItem('wh_factions', ft);
-      localStorage.setItem('wh_stratagems', st);
-      localStorage.setItem('wh_cache_date', new Date().toISOString());
+      localStorage.setItem('wh11_factions', ft);
+      localStorage.setItem('wh11_stratagems', st);
+      localStorage.setItem('wh11_cache_date', new Date().toISOString());
       const wh = {
         loading: false, loaded: true, error: null,
         factionRows: parseWahapediaCsv(ft),
