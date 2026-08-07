@@ -4,10 +4,7 @@ function detectPhases(html) {
   const t = html.toLowerCase().replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
   const phases = new Set();
 
-  // Explicit "any phase" → all phases
   if (/\bany phase\b/.test(t)) return ['command', 'movement', 'shooting', 'charge', 'fight'];
-
-  // ── Explicit phase triggers ───────────────────────────────────────────────
 
   // Command
   if (/\bcommand phase\b/.test(t))                         phases.add('command');
@@ -56,10 +53,8 @@ function detectPhases(html) {
   if (/\bweapon skill\b/.test(t))                          phases.add('fight');
   if (/\bmelee weapon\b/.test(t))                          phases.add('fight');
 
-  // ── Passive but phase-relevant ────────────────────────────────────────────
-  // Abilities that resolve during attack sequences apply to both attack phases.
-  // If explicit signals already placed this in one of the two, extend to both.
-  const attackPatterns = [
+  // Passive attack-resolution abilities (apply when attacks are resolved against you)
+  const defenceResolution = [
     /\bfeel no pain\b/,
     /\binvulnerable save\b/,
     /\beach time (a |an |this )?(model |unit )?(in this unit )?is allocated (a |an )?wound\b/,
@@ -71,23 +66,55 @@ function detectPhases(html) {
     /\bnegate(s)? (wounds?|damage)\b/,
     /\breduces? (the )?damage\b/,
     /\bdamage characteristic\b/,
-    /\bhit roll\b/,
-    /\bwound roll\b/,
-    /\bto hit\b/,
-    /\bto wound\b/,
   ];
-  if (attackPatterns.some(re => re.test(t))) {
+  if (defenceResolution.some(re => re.test(t))) {
     phases.add('shooting');
     phases.add('fight');
   }
 
-  // Abilities keyed to ranged weapons only extend to shooting alone
-  if (!phases.has('fight') && /\branged\b/.test(t) && phases.has('shooting')) {
-    // already correctly scoped to shooting only — do nothing
-  }
-
-  // Empty → passive ability with no detectable phase, not shown in any tab
   return [...phases];
+}
+
+// Classify whether an ability is used on your turn (attack), opponent's turn
+// (defence), or either / always-on (either).
+function detectTurn(html) {
+  const t = html.toLowerCase().replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+
+  const attackSignals = [
+    /\bwhen this (model|unit) is selected to (fight|shoot)\b/,
+    /\bwhen this unit (makes? a )?normal move\b/,
+    /\bwhen this unit (advances|falls? back)\b/,
+    /\bwhen this unit declares? a charge\b/,
+    /\bwhen this unit charges\b/,
+    /\beach time (a model in this unit|this model) makes (a |an )?(melee|ranged) attack\b/,
+    /\bwhen making (a |an )?(melee|ranged) attack\b/,
+    /\bin your (movement|shooting|fight|charge) phase\b/,
+    /\byour (movement|shooting|fight|charge) phase\b/,
+    /\bat the start of your (movement|shooting|fight|charge) phase\b/,
+  ];
+
+  const defenceSignals = [
+    /\bfeel no pain\b/,
+    /\binvulnerable save\b/,
+    /\beach time (a |an )?(model |unit )?(in this unit )?is allocated (a |an )?wound\b/,
+    /\beach time (a |an )?attack is allocated\b/,
+    /\beach time this (model|unit) (is |)suffer(s|ed)? (a |an )?wound\b/,
+    /\bsave roll\b/,
+    /\bsaving throw\b/,
+    /\bignore(s)? (wounds?|damage)\b/,
+    /\bnegate(s)? (wounds?|damage)\b/,
+    /\breduces? (the )?damage\b/,
+    /\bwhen (this unit|a model in this unit) is (selected as the )?target(ed)?\b/,
+    /\bwhen this unit is charged\b/,
+    /\bin (your )?opponent'?s? (turn|phase)\b/,
+  ];
+
+  const isAttack  = attackSignals.some(re => re.test(t));
+  const isDefence = defenceSignals.some(re => re.test(t));
+
+  if (isAttack && !isDefence) return 'attack';
+  if (isDefence && !isAttack) return 'defence';
+  return 'either';
 }
 
 function matchesRosterUnit(rosterName, datasheetName) {
@@ -106,45 +133,68 @@ function AbilityItem({ ab }) {
       <div className="item-content">
         <span className="strat-name">{ab.name}</span>
         {ab.description && (
-          <div
-            className="strat-legend"
-            dangerouslySetInnerHTML={{ __html: ab.description }}
-          />
+          <div className="strat-legend" dangerouslySetInnerHTML={{ __html: ab.description }} />
         )}
       </div>
     </div>
   );
 }
 
+function AbilitySubSection({ label, cls, items }) {
+  if (!items.length) return null;
+
+  // Group by unit within this turn section
+  const byUnit = [];
+  const seen = new Map();
+  for (const { unitName, ab } of items) {
+    if (!seen.has(unitName)) { seen.set(unitName, []); byUnit.push(unitName); }
+    seen.get(unitName).push(ab);
+  }
+
+  return (
+    <>
+      <div className={`fs-subsection-label ${cls}`}>{label}</div>
+      {byUnit.map(unitName => (
+        <div key={unitName}>
+          <div className="fs-unit-label">{stripPoints(unitName)}</div>
+          {seen.get(unitName).map(ab => <AbilityItem key={ab.name} ab={ab} />)}
+        </div>
+      ))}
+    </>
+  );
+}
+
 export default function AbilitiesTab({ phaseId, roster, wahapediaHook }) {
   const { datasheetRows, datasheetAbilityRows } = wahapediaHook.wahapedia;
 
-  const { abilitiesByDatasheetId } = useMemo(() => {
-    const abilitiesByDatasheetId = {};
+  const abilitiesByDatasheetId = useMemo(() => {
+    const map = {};
     datasheetAbilityRows.forEach(row => {
-      if (!abilitiesByDatasheetId[row.datasheet_id]) abilitiesByDatasheetId[row.datasheet_id] = [];
-      abilitiesByDatasheetId[row.datasheet_id].push(row);
+      if (!map[row.datasheet_id]) map[row.datasheet_id] = [];
+      map[row.datasheet_id].push(row);
     });
-    return { abilitiesByDatasheetId };
+    return map;
   }, [datasheetAbilityRows]);
 
-  const entries = useMemo(() => {
-    if (!roster.loaded || !roster.units.length || !datasheetRows.length) return [];
-    const matched = [];
+  // Flat list of { unitName, ab } for the current phase, tagged with turn
+  const groups = useMemo(() => {
+    const result = { attack: [], either: [], defence: [] };
+    if (!roster.loaded || !roster.units.length || !datasheetRows.length) return result;
+
     for (const rosterUnit of roster.units) {
       const matchingSheets = datasheetRows.filter(ds => matchesRosterUnit(rosterUnit, ds.name));
       const seenNames = new Set();
-      const abilities = matchingSheets.flatMap(ds => abilitiesByDatasheetId[ds.id] || [])
-        .filter(ab => {
-          if (ab.type !== 'Datasheet') return false;
-          if (seenNames.has(ab.name)) return false;
+      for (const ds of matchingSheets) {
+        for (const ab of (abilitiesByDatasheetId[ds.id] || [])) {
+          if (ab.type !== 'Datasheet') continue;
+          if (seenNames.has(ab.name)) continue;
+          if (!detectPhases(ab.description || '').includes(phaseId)) continue;
           seenNames.add(ab.name);
-          const phases = detectPhases(ab.description || '');
-          return phases.includes(phaseId);
-        });
-      if (abilities.length) matched.push({ unitName: rosterUnit, abilities });
+          result[detectTurn(ab.description || '')].push({ unitName: rosterUnit, ab });
+        }
+      }
     }
-    return matched;
+    return result;
   }, [roster, phaseId, datasheetRows, abilitiesByDatasheetId]);
 
   if (!roster.loaded) {
@@ -163,7 +213,8 @@ export default function AbilitiesTab({ phaseId, roster, wahapediaHook }) {
     );
   }
 
-  if (!entries.length) {
+  const total = groups.attack.length + groups.either.length + groups.defence.length;
+  if (!total) {
     return (
       <div className="fs-section">
         <div className="fs-status">No abilities for this phase.</div>
@@ -173,12 +224,9 @@ export default function AbilitiesTab({ phaseId, roster, wahapediaHook }) {
 
   return (
     <div className="fs-section">
-      {entries.map(({ unitName, abilities }) => (
-        <div key={unitName}>
-          <div className="fs-subsection-label">{stripPoints(unitName)}</div>
-          {abilities.map(ab => <AbilityItem key={ab.name} ab={ab} />)}
-        </div>
-      ))}
+      <AbilitySubSection label="Attack"  cls="fs-attack"  items={groups.attack} />
+      <AbilitySubSection label="Either"  cls="fs-either"  items={groups.either} />
+      <AbilitySubSection label="Defence" cls="fs-defence" items={groups.defence} />
       <div className="fs-attribution">
         Ability data: <a href="https://wahapedia.ru" target="_blank" rel="noopener">Wahapedia</a>
       </div>
