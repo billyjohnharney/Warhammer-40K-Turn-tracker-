@@ -78,10 +78,29 @@ async function getWeaponRows() {
   return _weaponRows;
 }
 
+function normalizeUnitName(s) {
+  return s.toLowerCase()
+    .replace(/^[\s•◦▪·*\-–—]+/, '')                  // strip leading bullets/dashes
+    .replace(/\s*[\[(][^\])]*\b\d[\d,]*\s*(pts?|points?)[^\])]*[\])]/gi, '') // strip pts bracket
+    .replace(/^\d+\s*[x×]\s*/i, '')                  // strip leading quantity "10x "
+    .replace(/\s+squad$/i, '')                       // "Intercessor Squad" → "Intercessor"
+    .replace(/s$/i, '')                              // normalise plural
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function matchesRosterUnit(rosterName, datasheetName) {
-  const r = rosterName.toLowerCase().replace(/\s*[\[(]?\d+\s*pts?[\])]?\s*/gi, '').trim();
-  const d = datasheetName.toLowerCase().trim();
-  return r === d || d.startsWith(r + ' ') || d.startsWith(r + ',') || r.startsWith(d + ' ');
+  const r = normalizeUnitName(rosterName);
+  const d = normalizeUnitName(datasheetName);
+  if (!r || !d) return false;
+  // Exact normalised match
+  if (r === d) return true;
+  // One is a prefix of the other (e.g. "Captain" matches "Captain in Terminator Armour")
+  if (d.startsWith(r + ' ') || r.startsWith(d + ' ')) return true;
+  // Raw (un-normalised) exact match as a fallback
+  const rRaw = rosterName.toLowerCase().replace(/\s*[\[(]?\d+\s*pts?[\])]?\s*/gi, '').trim();
+  const dRaw = datasheetName.toLowerCase().trim();
+  return rRaw === dRaw;
 }
 
 function weaponInSelection(wahapediaName, selections) {
@@ -269,6 +288,8 @@ h1.pg-hdr{font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:
 
 .footer{margin-top:.4cm;font-size:5pt;color:#999;text-align:right}
 .footer a{color:#999}
+.no-data-warn{background:#fff3cd;border:1px solid #ffc107;border-radius:4pt;padding:.3cm .5cm;margin-bottom:.4cm;font-size:7pt;color:#7a5900;max-width:26.4cm}
+@media print{.no-data-warn{display:none}}
 `;
 
 export async function generateUnitCardsHtml(roster, wahapediaData, config) {
@@ -303,13 +324,19 @@ export async function generateUnitCardsHtml(roster, wahapediaData, config) {
   });
 
   const cards = [];
+  const matched = [];
+  const unmatched = [];
   const seenDsIds = new Set();
 
   for (const unitName of units) {
     const ds = datasheetRows.find(d => matchesRosterUnit(unitName, d.name));
-    if (!ds) { cards.push(stubCard(unitName)); continue; }
+    if (!ds) {
+      unmatched.push(unitName);
+      continue;
+    }
     if (seenDsIds.has(ds.id)) continue;
     seenDsIds.add(ds.id);
+    matched.push(unitName);
 
     const models   = modelsByDsId[ds.id] || [];
     const allWeapons = weaponsByDsId[ds.id] || [];
@@ -323,6 +350,10 @@ export async function generateUnitCardsHtml(roster, wahapediaData, config) {
     cards.push(renderCard(unitName, ds, models, weapons, abilities));
   }
 
+  const noDataWarning = unmatched.length
+    ? `<div class="no-data-warn"><strong>No Wahapedia data found for:</strong> ${unmatched.map(u => esc(u)).join(', ')}</div>`
+    : '';
+
   const title = [config.playerFaction, config.playerDetachment].filter(Boolean).join(' · ');
 
   return `<!DOCTYPE html>
@@ -335,6 +366,7 @@ export async function generateUnitCardsHtml(roster, wahapediaData, config) {
 </head>
 <body>
 <h1 class="pg-hdr">Unit Cards${title ? ' — ' + title : ''}</h1>
+${noDataWarning}
 <div class="grid">${cards.join('\n')}</div>
 <div class="footer">Data: <a href="https://wahapedia.ru">Wahapedia.ru</a> &middot; Warhammer 40K Turn Tracker</div>
 </body>

@@ -137,7 +137,10 @@ export function parseRosXml(xmlText) {
     // BattleScribe uses type="upgrade" for config entries (game size, faction ID,
     // character attachment slots). Only take actual playable selections.
     if (type && type !== 'unit' && type !== 'model') return;
-    const name = el.getAttribute('name');
+    const raw = el.getAttribute('name');
+    if (!raw) return;
+    // Some roster apps embed the quantity in the name ("4x Intercessors") — strip it
+    const name = raw.replace(/^\d+[x×]\s*/i, '').trim();
     if (name) units.push(name);
   });
 
@@ -178,7 +181,9 @@ export function parseRosXml(xmlText) {
   doc.querySelectorAll('forces > force > selections > selection').forEach(el => {
     const type = el.getAttribute('type');
     if (type && type !== 'unit' && type !== 'model') return;
-    const unitName = el.getAttribute('name');
+    const raw = el.getAttribute('name');
+    if (!raw) return;
+    const unitName = raw.replace(/^\d+[x×]\s*/i, '').trim();
     if (!unitName) return;
     const names = new Set();
     el.querySelectorAll('selection[type="upgrade"]').forEach(sel => {
@@ -193,28 +198,73 @@ export function parseRosXml(xmlText) {
   return { units, activeKeywords, faction, detachment, unitSelections };
 }
 
+// Section headers in the Warhammer app / New Recruit exports — never units
+const SECTION_HDR = /^(characters?|battleline|other datasheets?|dedicated transports?|allied units?|epic heroes?|infantry|mounted|vehicles?|monsters?|fortifications?|beasts?|swarms?|army roster|exported with|total|grand total|points total)\b/i;
+const GAME_SIZE = /^(combat patrol|incursion|strike force|onslaught|boarding action|patrol)\b/i;
+const DETACHMENT_LINE = /\(\s*\d+\s*detachment points?\s*\)/i;
+const BULLET = /^[•◦▪·*\-–—]\s*/;
+
+function cleanUnitName(line) {
+  return line
+    .replace(BULLET, '')
+    .replace(/\s*[\[(][^\])]*\b\d[\d,]*\s*(pts?|points?)[^\])]*[\])]\s*$/i, '') // trailing pts bracket
+    .replace(/^\d+\s*[x×]\s*/i, '')  // leading quantity "10x "
+    .replace(/:\s*$/, '')
+    .trim();
+}
+
+function isJunkUnitLine(name) {
+  if (!name || name.length < 3 || name.length > 60) return true;
+  if (SECTION_HDR.test(name)) return true;
+  if (GAME_SIZE.test(name)) return true;
+  if (DETACHMENT_LINE.test(name)) return true;
+  if (/^warlord$/i.test(name)) return true;
+  if (/^enhancements?\b/i.test(name)) return true;
+  return false;
+}
+
 export function parseTextRoster(text) {
   const activeKeywords = new Set();
   scanTextForKeywords(text.toUpperCase(), activeKeywords);
 
+  const rawLines = text.split('\n');
   const units = [];
-  const GAME_SIZE_LINE = /^(strike force|combat patrol|incursion|onslaught|boarding action|patrol)\b/i;
-  const ATTACHMENT_LINE = /^attached unit\s*\d*$/i;
-  const POINTS_BRACKET = /\(\s*[\d,]+\s*points?\s*\)/i;
+  const seen = new Set();
 
-  text.split('\n').forEach(line => {
-    line = line.trim().replace(/^\d+x\s*/i, '');
-    if (
-      !line ||
-      line.startsWith('=') || line.startsWith('+') ||
-      line.match(/^\d+\s*pts?$/i) ||
-      line.length < 4 || line.length > 60 ||
-      GAME_SIZE_LINE.test(line) ||
-      ATTACHMENT_LINE.test(line) ||
-      POINTS_BRACKET.test(line)
-    ) return;
-    units.push(line);
-  });
+  function add(name) {
+    if (isJunkUnitLine(name)) return;
+    const key = name.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    units.push(name);
+  }
+
+  // Strategy A — entries carrying a points value (New Recruit, BattleScribe text).
+  const HAS_PTS = /[\[(][^\])]*\b\d[\d,]*\s*(pts?|points?)\b/i;
+  for (const raw of rawLines) {
+    const line = raw.trim();
+    if (!line || line.startsWith('+') || line.startsWith('=')) continue;
+    if (BULLET.test(line)) continue;        // bullets are weapons/models, never units
+    if (DETACHMENT_LINE.test(line)) continue;
+    if (!HAS_PTS.test(line)) continue;
+    add(cleanUnitName(line));
+  }
+
+  // Strategy B — Warhammer app export: unit names are unindented, un-bulleted lines
+  // that head a block of "•" weapon/model lines. Used when strategy A found nothing.
+  if (!units.length) {
+    for (let i = 0; i < rawLines.length; i++) {
+      const line = rawLines[i].trim();
+      if (!line || BULLET.test(line)) continue;
+      if (/^[+=]/.test(line)) continue;
+      // A unit name is followed by at least one bullet line (allowing blanks between)
+      let j = i + 1;
+      while (j < rawLines.length && !rawLines[j].trim()) j++;
+      if (j < rawLines.length && BULLET.test(rawLines[j].trim())) {
+        add(cleanUnitName(line));
+      }
+    }
+  }
 
   const faction = detectFaction(text);
   const detachment = detectDetachment(text, faction);
