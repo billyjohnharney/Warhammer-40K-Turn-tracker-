@@ -5,6 +5,7 @@ import { useGame } from '../context/GameContext.jsx';
 import { factions } from '../data/factions.js';
 import { parseRosXml, parseTextRoster, looksLikeWarhammer, matchDetachment } from '../hooks/useRoster.js';
 import { ChevronDownIcon, CheckIcon, CloseIcon } from './Icons.jsx';
+import { generateUnitCardsHtml } from '../utils/generateUnitCards.js';
 
 function FactionSelect({ id, label, value, onChange, placeholder }) {
   return (
@@ -164,7 +165,6 @@ function SideComponent({ side, wahapediaHook, onRemove }) {
     win.document.write('<html><head><title>Generating…</title></head><body style="font-family:sans-serif;padding:2rem;color:#333"><p>Generating unit cards…</p></body></html>');
     setExporting(true);
     try {
-      const { generateUnitCardsHtml } = await import('../utils/generateUnitCards.js');
       const html = await generateUnitCardsHtml(
         rsData.parsed,
         wahapediaHook.wahapedia,
