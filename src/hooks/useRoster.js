@@ -137,7 +137,10 @@ export function parseRosXml(xmlText) {
     // BattleScribe uses type="upgrade" for config entries (game size, faction ID,
     // character attachment slots). Only take actual playable selections.
     if (type && type !== 'unit' && type !== 'model') return;
-    const name = el.getAttribute('name');
+    const raw = el.getAttribute('name');
+    if (!raw) return;
+    // Some roster apps embed the quantity in the name ("4x Intercessors") — strip it
+    const name = raw.replace(/^\d+[x×]\s*/i, '').trim();
     if (name) units.push(name);
   });
 
@@ -178,7 +181,9 @@ export function parseRosXml(xmlText) {
   doc.querySelectorAll('forces > force > selections > selection').forEach(el => {
     const type = el.getAttribute('type');
     if (type && type !== 'unit' && type !== 'model') return;
-    const unitName = el.getAttribute('name');
+    const raw = el.getAttribute('name');
+    if (!raw) return;
+    const unitName = raw.replace(/^\d+[x×]\s*/i, '').trim();
     if (!unitName) return;
     const names = new Set();
     el.querySelectorAll('selection[type="upgrade"]').forEach(sel => {
@@ -197,24 +202,42 @@ export function parseTextRoster(text) {
   const activeKeywords = new Set();
   scanTextForKeywords(text.toUpperCase(), activeKeywords);
 
-  const units = [];
-  const GAME_SIZE_LINE = /^(strike force|combat patrol|incursion|onslaught|boarding action|patrol)\b/i;
-  const ATTACHMENT_LINE = /^attached unit\s*\d*$/i;
-  const POINTS_BRACKET = /\(\s*[\d,]+\s*points?\s*\)/i;
+  // Unit lines in every major format (New Recruit, Warhammer app, BattleScribe text)
+  // always carry a points value. Category headers, weapons, abilities, and model
+  // sub-entries never do — so matching on the pts bracket is the cleanest filter.
+  // Patterns handled: "[80pts]", "[80 pts]", "(80pts)", "(80 points)", "[6 PL, 80pts]"
+  const HAS_PTS = /[\[(][^\]\)]*\b\d[\d,]*\s*pts?[\s\]\),]/i;
+  const GAME_SIZE = /^(combat patrol|incursion|strike force|onslaught|boarding action|patrol)\b/i;
 
-  text.split('\n').forEach(line => {
-    line = line.trim().replace(/^\d+x\s*/i, '');
-    if (
-      !line ||
-      line.startsWith('=') || line.startsWith('+') ||
-      line.match(/^\d+\s*pts?$/i) ||
-      line.length < 4 || line.length > 60 ||
-      GAME_SIZE_LINE.test(line) ||
-      ATTACHMENT_LINE.test(line) ||
-      POINTS_BRACKET.test(line)
-    ) return;
-    units.push(line);
-  });
+  const units = [];
+  const seen = new Set();
+
+  for (const rawLine of text.split('\n')) {
+    const line = rawLine.trim();
+    if (!line) continue;
+    // Skip structural markers and indented sub-entries
+    if (/^[+=.•·*]/.test(line)) continue;
+    if (!HAS_PTS.test(line)) continue;
+
+    // Strip the pts/PL bracket and everything after it, then clean up the name
+    let name = line
+      .replace(/\s*[\[(][^\]\)]*\b\d[\d,]*\s*pts?[\s\S]*$/i, '')
+      .replace(/^\d+[x×]\s*/i, '')  // leading "3x " or "3× " quantity
+      .replace(/^[\d]+\s+/, '')      // leading bare number "5 "
+      .replace(/:\s*$/, '')          // trailing colon
+      .replace(/^[-–•·]\s*/, '')     // leading bullet/dash
+      .trim();
+
+    if (!name || name.length < 3 || name.length > 60) continue;
+    if (GAME_SIZE.test(name)) continue;
+    if (/^(army roster|total|grand total|points total|enhancement)/i.test(name)) continue;
+
+    const key = name.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      units.push(name);
+    }
+  }
 
   const faction = detectFaction(text);
   const detachment = detectDetachment(text, faction);
