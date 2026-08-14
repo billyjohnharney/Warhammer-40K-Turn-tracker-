@@ -46,14 +46,14 @@ let _weaponRows = null;
 
 async function getModelRows() {
   if (_modelRows) return _modelRows;
-  const cached = localStorage.getItem('wh_datasheet_models');
+  const cached = localStorage.getItem('wh11_datasheet_models');
   if (cached && cached.length > 200) {
     _modelRows = parseCsv(cached);
     return _modelRows;
   }
-  const text = await fetchCsvText('https://wahapedia.ru/wh40k10ed/Datasheets_models.csv');
+  const text = await fetchCsvText('https://wahapedia.ru/wh40k11ed/Datasheets_models.csv');
   if (text) {
-    try { localStorage.setItem('wh_datasheet_models', text); } catch (_) {}
+    try { localStorage.setItem('wh11_datasheet_models', text); } catch (_) {}
     _modelRows = parseCsv(text);
   } else {
     _modelRows = [];
@@ -63,14 +63,14 @@ async function getModelRows() {
 
 async function getWeaponRows() {
   if (_weaponRows) return _weaponRows;
-  const cached = localStorage.getItem('wh_datasheet_weapons');
+  const cached = localStorage.getItem('wh11_datasheet_weapons');
   if (cached && cached.length > 200) {
     _weaponRows = parseCsv(cached);
     return _weaponRows;
   }
-  const text = await fetchCsvText('https://wahapedia.ru/wh40k10ed/Datasheets_weapons.csv');
+  const text = await fetchCsvText('https://wahapedia.ru/wh40k11ed/Datasheets_weapons.csv');
   if (text) {
-    try { localStorage.setItem('wh_datasheet_weapons', text); } catch (_) {}
+    try { localStorage.setItem('wh11_datasheet_weapons', text); } catch (_) {}
     _weaponRows = parseCsv(text);
   } else {
     _weaponRows = [];
