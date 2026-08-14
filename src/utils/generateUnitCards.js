@@ -80,10 +80,12 @@ async function getWeaponRows() {
 
 function normalizeUnitName(s) {
   return s.toLowerCase()
-    .replace(/\s*[\[(]?\d+\s*pts?[\])]?\s*/gi, '') // strip points
-    .replace(/^\d+[x×]\s*/i, '')                    // strip leading quantity
+    .replace(/^[\s•◦▪·*\-–—]+/, '')                  // strip leading bullets/dashes
+    .replace(/\s*[\[(][^\])]*\b\d[\d,]*\s*(pts?|points?)[^\])]*[\])]/gi, '') // strip pts bracket
+    .replace(/^\d+\s*[x×]\s*/i, '')                  // strip leading quantity "10x "
     .replace(/\s+squad$/i, '')                       // "Intercessor Squad" → "Intercessor"
-    .replace(/s$/i, '')                              // normalise plural: "Intercessors" → "Intercessor"
+    .replace(/s$/i, '')                              // normalise plural
+    .replace(/\s+/g, ' ')
     .trim();
 }
 

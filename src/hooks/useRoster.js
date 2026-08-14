@@ -198,44 +198,71 @@ export function parseRosXml(xmlText) {
   return { units, activeKeywords, faction, detachment, unitSelections };
 }
 
+// Section headers in the Warhammer app / New Recruit exports — never units
+const SECTION_HDR = /^(characters?|battleline|other datasheets?|dedicated transports?|allied units?|epic heroes?|infantry|mounted|vehicles?|monsters?|fortifications?|beasts?|swarms?|army roster|exported with|total|grand total|points total)\b/i;
+const GAME_SIZE = /^(combat patrol|incursion|strike force|onslaught|boarding action|patrol)\b/i;
+const DETACHMENT_LINE = /\(\s*\d+\s*detachment points?\s*\)/i;
+const BULLET = /^[•◦▪·*\-–—]\s*/;
+
+function cleanUnitName(line) {
+  return line
+    .replace(BULLET, '')
+    .replace(/\s*[\[(][^\])]*\b\d[\d,]*\s*(pts?|points?)[^\])]*[\])]\s*$/i, '') // trailing pts bracket
+    .replace(/^\d+\s*[x×]\s*/i, '')  // leading quantity "10x "
+    .replace(/:\s*$/, '')
+    .trim();
+}
+
+function isJunkUnitLine(name) {
+  if (!name || name.length < 3 || name.length > 60) return true;
+  if (SECTION_HDR.test(name)) return true;
+  if (GAME_SIZE.test(name)) return true;
+  if (DETACHMENT_LINE.test(name)) return true;
+  if (/^warlord$/i.test(name)) return true;
+  if (/^enhancements?\b/i.test(name)) return true;
+  return false;
+}
+
 export function parseTextRoster(text) {
   const activeKeywords = new Set();
   scanTextForKeywords(text.toUpperCase(), activeKeywords);
 
-  // Unit lines in every major format (New Recruit, Warhammer app, BattleScribe text)
-  // always carry a points value. Category headers, weapons, abilities, and model
-  // sub-entries never do — so matching on the pts bracket is the cleanest filter.
-  // Patterns handled: "[80pts]", "[80 pts]", "(80pts)", "(80 points)", "[6 PL, 80pts]"
-  const HAS_PTS = /[\[(][^\]\)]*\b\d[\d,]*\s*pts?[\s\]\),]/i;
-  const GAME_SIZE = /^(combat patrol|incursion|strike force|onslaught|boarding action|patrol)\b/i;
-
+  const rawLines = text.split('\n');
   const units = [];
   const seen = new Set();
 
-  for (const rawLine of text.split('\n')) {
-    const line = rawLine.trim();
-    if (!line) continue;
-    // Skip structural markers and indented sub-entries
-    if (/^[+=.•·*]/.test(line)) continue;
-    if (!HAS_PTS.test(line)) continue;
-
-    // Strip the pts/PL bracket and everything after it, then clean up the name
-    let name = line
-      .replace(/\s*[\[(][^\]\)]*\b\d[\d,]*\s*pts?[\s\S]*$/i, '')
-      .replace(/^\d+[x×]\s*/i, '')  // leading "3x " or "3× " quantity
-      .replace(/^[\d]+\s+/, '')      // leading bare number "5 "
-      .replace(/:\s*$/, '')          // trailing colon
-      .replace(/^[-–•·]\s*/, '')     // leading bullet/dash
-      .trim();
-
-    if (!name || name.length < 3 || name.length > 60) continue;
-    if (GAME_SIZE.test(name)) continue;
-    if (/^(army roster|total|grand total|points total|enhancement)/i.test(name)) continue;
-
+  function add(name) {
+    if (isJunkUnitLine(name)) return;
     const key = name.toLowerCase();
-    if (!seen.has(key)) {
-      seen.add(key);
-      units.push(name);
+    if (seen.has(key)) return;
+    seen.add(key);
+    units.push(name);
+  }
+
+  // Strategy A — entries carrying a points value (New Recruit, BattleScribe text).
+  const HAS_PTS = /[\[(][^\])]*\b\d[\d,]*\s*(pts?|points?)\b/i;
+  for (const raw of rawLines) {
+    const line = raw.trim();
+    if (!line || line.startsWith('+') || line.startsWith('=')) continue;
+    if (BULLET.test(line)) continue;        // bullets are weapons/models, never units
+    if (DETACHMENT_LINE.test(line)) continue;
+    if (!HAS_PTS.test(line)) continue;
+    add(cleanUnitName(line));
+  }
+
+  // Strategy B — Warhammer app export: unit names are unindented, un-bulleted lines
+  // that head a block of "•" weapon/model lines. Used when strategy A found nothing.
+  if (!units.length) {
+    for (let i = 0; i < rawLines.length; i++) {
+      const line = rawLines[i].trim();
+      if (!line || BULLET.test(line)) continue;
+      if (/^[+=]/.test(line)) continue;
+      // A unit name is followed by at least one bullet line (allowing blanks between)
+      let j = i + 1;
+      while (j < rawLines.length && !rawLines[j].trim()) j++;
+      if (j < rawLines.length && BULLET.test(rawLines[j].trim())) {
+        add(cleanUnitName(line));
+      }
     }
   }
 
