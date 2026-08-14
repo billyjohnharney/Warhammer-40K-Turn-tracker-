@@ -40,43 +40,42 @@ async function fetchCsvText(url) {
   return null;
 }
 
+// Editions tried in order — 11th ed if published, otherwise 10th.
+const WAHAPEDIA_EDITIONS = ['wh40k11ed', 'wh40k10ed'];
+
 // Module-level cache so repeated exports don't re-fetch
-let _modelRows = null;
-let _weaponRows = null;
+const _rowCache = {};
 
-async function getModelRows() {
-  if (_modelRows) return _modelRows;
-  const cached = localStorage.getItem('wh11_datasheet_models');
+// Loads a Wahapedia CSV: memory cache → localStorage → network.
+async function getRows(cacheKey, file) {
+  if (_rowCache[cacheKey]) return _rowCache[cacheKey];
+
+  const cached = localStorage.getItem(cacheKey);
   if (cached && cached.length > 200) {
-    _modelRows = parseCsv(cached);
-    return _modelRows;
+    _rowCache[cacheKey] = parseCsv(cached);
+    if (_rowCache[cacheKey].length) return _rowCache[cacheKey];
   }
-  const text = await fetchCsvText('https://wahapedia.ru/wh40k11ed/Datasheets_models.csv');
+
+  // Try 11th edition first, fall back to 10th if that path isn't published yet.
+  let text = null;
+  for (const ed of WAHAPEDIA_EDITIONS) {
+    text = await fetchCsvText(`https://wahapedia.ru/${ed}/${file}`);
+    if (text) break;
+  }
+
   if (text) {
-    try { localStorage.setItem('wh11_datasheet_models', text); } catch (_) {}
-    _modelRows = parseCsv(text);
+    try { localStorage.setItem(cacheKey, text); } catch (_) {}
+    _rowCache[cacheKey] = parseCsv(text);
   } else {
-    _modelRows = [];
+    _rowCache[cacheKey] = _rowCache[cacheKey] || [];
   }
-  return _modelRows;
+  return _rowCache[cacheKey];
 }
 
-async function getWeaponRows() {
-  if (_weaponRows) return _weaponRows;
-  const cached = localStorage.getItem('wh11_datasheet_weapons');
-  if (cached && cached.length > 200) {
-    _weaponRows = parseCsv(cached);
-    return _weaponRows;
-  }
-  const text = await fetchCsvText('https://wahapedia.ru/wh40k11ed/Datasheets_weapons.csv');
-  if (text) {
-    try { localStorage.setItem('wh11_datasheet_weapons', text); } catch (_) {}
-    _weaponRows = parseCsv(text);
-  } else {
-    _weaponRows = [];
-  }
-  return _weaponRows;
-}
+const getModelRows     = () => getRows('wh11_datasheet_models', 'Datasheets_models.csv');
+const getWeaponRows    = () => getRows('wh11_datasheet_weapons', 'Datasheets_weapons.csv');
+const getDatasheetRows = () => getRows('wh11_datasheets', 'Datasheets.csv');
+const getAbilityRows   = () => getRows('wh11_datasheet_abilities', 'Datasheets_abilities.csv');
 
 function normalizeUnitName(s) {
   return s.toLowerCase()
@@ -294,9 +293,25 @@ h1.pg-hdr{font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:
 
 export async function generateUnitCardsHtml(roster, wahapediaData, config) {
   const { units, unitSelections = {} } = roster;
-  const { datasheetRows, datasheetAbilityRows } = wahapediaData;
 
-  const [modelRows, weaponRows] = await Promise.all([getModelRows(), getWeaponRows()]);
+  // The app loads datasheets lazily, so they may not be in React state yet when
+  // export runs. Fall back to loading them here rather than emitting empty cards.
+  const [modelRows, weaponRows, datasheetRows, datasheetAbilityRows] = await Promise.all([
+    getModelRows(),
+    getWeaponRows(),
+    wahapediaData?.datasheetRows?.length
+      ? Promise.resolve(wahapediaData.datasheetRows)
+      : getDatasheetRows(),
+    wahapediaData?.datasheetAbilityRows?.length
+      ? Promise.resolve(wahapediaData.datasheetAbilityRows)
+      : getAbilityRows(),
+  ]);
+
+  if (!datasheetRows.length) {
+    throw new Error(
+      'Could not load unit data from Wahapedia. Check your connection and try again.'
+    );
+  }
 
   // Index lookups
   const modelsByDsId = {};

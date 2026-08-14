@@ -23,11 +23,16 @@ export function matchDetachment(raw, availableDetachments) {
 }
 
 function detectDetachment(text, faction, availableDetachments = []) {
-  const explicit = text.match(/detachment[:\s]+([^\n\r+\[]+)/i);
+  // "(2 Detachment Points)" is a budget line, not a detachment name — strip those
+  // first so the explicit "Detachment: X" match below can't capture "Points)".
+  const cleanText = text.replace(/\(\s*\d+\s*detachment points?\s*\)/gi, '');
+
+  const explicit = cleanText.match(/detachment\s*:\s*([^\n\r+\[]+)/i);
   if (explicit) {
     const c = explicit[1].trim();
     if (c.length > 2) return c;
   }
+  text = cleanText;
 
   const bsHeader = text.match(/\+\+\s*[^:\n]+:\s*([^[+\n\r]+)/i);
   if (bsHeader) {
@@ -220,6 +225,8 @@ function isJunkUnitLine(name) {
   if (DETACHMENT_LINE.test(name)) return true;
   if (/^warlord$/i.test(name)) return true;
   if (/^enhancements?\b/i.test(name)) return true;
+  // Numbered list entries ("2. Death Plasma") are enhancements/rules, not units
+  if (/^\d+\.\s/.test(name)) return true;
   return false;
 }
 
