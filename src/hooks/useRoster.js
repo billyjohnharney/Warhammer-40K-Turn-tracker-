@@ -133,6 +133,10 @@ export function parseRosXml(xmlText) {
   const activeKeywords = new Set();
 
   doc.querySelectorAll('forces > force > selections > selection').forEach(el => {
+    const type = el.getAttribute('type');
+    // BattleScribe uses type="upgrade" for config entries (game size, faction ID,
+    // character attachment slots). Only take actual playable selections.
+    if (type && type !== 'unit' && type !== 'model') return;
     const name = el.getAttribute('name');
     if (name) units.push(name);
   });
@@ -172,6 +176,8 @@ export function parseRosXml(xmlText) {
 
   const unitSelections = {};
   doc.querySelectorAll('forces > force > selections > selection').forEach(el => {
+    const type = el.getAttribute('type');
+    if (type && type !== 'unit' && type !== 'model') return;
     const unitName = el.getAttribute('name');
     if (!unitName) return;
     const names = new Set();
@@ -192,12 +198,22 @@ export function parseTextRoster(text) {
   scanTextForKeywords(text.toUpperCase(), activeKeywords);
 
   const units = [];
+  const GAME_SIZE_LINE = /^(strike force|combat patrol|incursion|onslaught|boarding action|patrol)\b/i;
+  const ATTACHMENT_LINE = /^attached unit\s*\d*$/i;
+  const POINTS_BRACKET = /\(\s*[\d,]+\s*points?\s*\)/i;
+
   text.split('\n').forEach(line => {
     line = line.trim().replace(/^\d+x\s*/i, '');
-    if (line && !line.startsWith('=') && !line.startsWith('+') &&
-        !line.match(/^\d+\s*pts?$/i) && line.length >= 4 && line.length <= 60) {
-      units.push(line);
-    }
+    if (
+      !line ||
+      line.startsWith('=') || line.startsWith('+') ||
+      line.match(/^\d+\s*pts?$/i) ||
+      line.length < 4 || line.length > 60 ||
+      GAME_SIZE_LINE.test(line) ||
+      ATTACHMENT_LINE.test(line) ||
+      POINTS_BRACKET.test(line)
+    ) return;
+    units.push(line);
   });
 
   const faction = detectFaction(text);
