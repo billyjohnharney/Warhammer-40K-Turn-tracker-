@@ -73,6 +73,20 @@ async function fetchText(url) {
   throw new Error('All fetch attempts failed');
 }
 
+// Editions tried in order — 11th ed if published, otherwise 10th.
+const WAHAPEDIA_EDITIONS = ['wh40k11ed', 'wh40k10ed'];
+
+// Fetch a Wahapedia CSV, trying each edition path until one returns usable data.
+async function fetchWahapediaCsv(file) {
+  let lastErr;
+  for (const ed of WAHAPEDIA_EDITIONS) {
+    try {
+      return await fetchText(`https://wahapedia.ru/${ed}/${file}`);
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr || new Error(`Could not fetch ${file}`);
+}
+
 export function wahapediaPhaseId(wPhase) {
   const p = (wPhase || '').toLowerCase();
   if (p.includes('command')) return 'command';
@@ -130,9 +144,9 @@ export function useWahapedia(gameConfig) {
       const base = import.meta.env.BASE_URL || '/';
       const [dt, at] = await Promise.all([
         fetchLocalCsv(`${base}Datasheets.csv`)
-          .catch(() => fetchText('https://wahapedia.ru/wh40k11ed/Datasheets.csv')),
+          .catch(() => fetchWahapediaCsv('Datasheets.csv')),
         fetchLocalCsv(`${base}Datasheets_abilities.csv`)
-          .catch(() => fetchText('https://wahapedia.ru/wh40k11ed/Datasheets_abilities.csv')),
+          .catch(() => fetchWahapediaCsv('Datasheets_abilities.csv')),
       ]);
       try { localStorage.setItem('wh11_datasheets', dt); } catch (_) {}
       try { localStorage.setItem('wh11_datasheet_abilities', at); } catch (_) {}
@@ -178,9 +192,9 @@ export function useWahapedia(gameConfig) {
       const base = import.meta.env.BASE_URL || '/';
       const [ft, st] = await Promise.all([
         fetchLocalCsv(`${base}Factions.csv`)
-          .catch(() => fetchText('https://wahapedia.ru/wh40k11ed/Factions.csv')),
+          .catch(() => fetchWahapediaCsv('Factions.csv')),
         fetchLocalCsv(`${base}Stratagems.csv`)
-          .catch(() => fetchText('https://wahapedia.ru/wh40k11ed/Stratagems.csv')),
+          .catch(() => fetchWahapediaCsv('Stratagems.csv')),
       ]);
       localStorage.setItem('wh11_factions', ft);
       localStorage.setItem('wh11_stratagems', st);
@@ -249,9 +263,9 @@ export function useWahapedia(gameConfig) {
       const base = import.meta.env.BASE_URL || '/';
       const [ft, st] = await Promise.all([
         fetchLocalCsv(`${base}Factions.csv`)
-          .catch(() => fetchText('https://wahapedia.ru/wh40k11ed/Factions.csv')),
+          .catch(() => fetchWahapediaCsv('Factions.csv')),
         fetchLocalCsv(`${base}Stratagems.csv`)
-          .catch(() => fetchText('https://wahapedia.ru/wh40k11ed/Stratagems.csv')),
+          .catch(() => fetchWahapediaCsv('Stratagems.csv')),
       ]);
       localStorage.setItem('wh11_factions', ft);
       localStorage.setItem('wh11_stratagems', st);
