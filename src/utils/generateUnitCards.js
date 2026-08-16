@@ -349,73 +349,100 @@ function stubCard(unitName) {
 </div>`;
 }
 
+/*
+ * Layout maths — A4 portrait, 1cm margins → 19 × 27.7cm printable.
+  * Two cards stacked: 2 x 13.4cm + 0.4cm gap = 27.2cm, fits with room to spare.
+ * The wide card keeps the 8-column weapon table readable, and the extra area
+ * (255cm² vs the old 94cm²) is what allows 8pt body text.
+ */
 const CSS = `
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-@page{size:A4 landscape;margin:1cm}
+@page{size:A4 portrait;margin:1cm}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background:#ccc;padding:.5cm;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-h1.pg-hdr{font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#555;margin-bottom:.4cm}
-.grid{display:grid;grid-template-columns:repeat(2,12.5cm);gap:.6cm;justify-content:center}
-@media print{body{background:white;padding:0}.grid{gap:.4cm}}
+h1.pg-hdr{font-size:10pt;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#555;margin-bottom:.4cm}
+.grid{display:grid;grid-template-columns:18.6cm;gap:.4cm;justify-content:center}
+@media print{body{background:white;padding:0}h1.pg-hdr{display:none}}
 
-/* ── Fixed-size card: 12.5 × 7.5 cm ── */
+/* ── Fixed-size card: 19 × 13.4 cm, two per A4 portrait page ── */
 .card{
-  width:12.5cm;height:7.5cm;
+  width:18.6cm;height:13.4cm;
   overflow:hidden;
   background:#fff;
   border:1.5pt solid #111;
-  border-radius:2pt;
+  border-radius:3pt;
   break-inside:avoid;page-break-inside:avoid;
   display:flex;flex-direction:column
 }
 
 /* Header */
-.card-hdr{background:#111;color:#fff;padding:.18cm .35cm;display:flex;justify-content:space-between;align-items:baseline;gap:.25cm;flex-shrink:0}
-.unit-name{font-size:7pt;font-weight:800;text-transform:uppercase;letter-spacing:.07em;line-height:1.3;flex:1}
-.pts{font-size:5.5pt;color:#aaa;white-space:nowrap;flex-shrink:0}
+.card-hdr{background:#111;color:#fff;padding:.22cm .45cm;display:flex;justify-content:space-between;align-items:baseline;gap:.3cm;flex-shrink:0}
+.unit-name{font-size:13pt;font-weight:800;text-transform:uppercase;letter-spacing:.05em;line-height:1.2;flex:1}
+.pts{font-size:9pt;color:#bbb;white-space:nowrap;flex-shrink:0}
 
 /* Stats */
-.stats-section{background:#f6edcf;border-bottom:1.5pt solid #b8911e;padding:.15cm .35cm;flex-shrink:0}
-.model-lbl{font-size:4.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#8a6a10;margin-bottom:.06cm}
-.stat-row{display:flex;align-items:flex-end;gap:.05cm}
+.stats-section{background:#f6edcf;border-bottom:1.5pt solid #b8911e;padding:.18cm .45cm;flex-shrink:0}
+.model-lbl{font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#8a6a10;margin-bottom:.08cm}
+.stat-row{display:flex;align-items:flex-end;gap:.1cm}
 .stat-box{text-align:center;flex:1;min-width:0}
-.stat-lbl{font-size:4pt;text-transform:uppercase;letter-spacing:.08em;color:#9a7a20;font-weight:700;line-height:1.2;display:block}
-.stat-val{font-size:9pt;font-weight:900;color:#111;line-height:1.1;display:block}
-.invul{background:#8b1c1c;color:#fff;font-size:5pt;font-weight:700;letter-spacing:.06em;padding:.08cm .22cm;border-radius:2pt;white-space:nowrap;margin-left:.25cm;flex-shrink:0;align-self:center}
+.stat-lbl{font-size:7.5pt;text-transform:uppercase;letter-spacing:.06em;color:#9a7a20;font-weight:700;line-height:1.2;display:block}
+.stat-val{font-size:16pt;font-weight:900;color:#111;line-height:1.15;display:block}
+.invul{background:#8b1c1c;color:#fff;font-size:9pt;font-weight:700;letter-spacing:.05em;padding:.1cm .3cm;border-radius:2pt;white-space:nowrap;margin-left:.35cm;flex-shrink:0;align-self:center}
 
 /* Weapons */
 .weapon-table{width:100%;border-collapse:collapse}
 .weapon-table thead tr{background:#1e3b18;color:#fff}
-.weapon-table thead th{padding:.1cm .2cm;font-size:4.5pt;font-weight:700;letter-spacing:.06em;text-align:center;white-space:nowrap}
-.weapon-table thead th.col-name{text-align:left;padding-left:.35cm}
-.weapon-table thead th.col-kw{text-align:left;max-width:2.5cm}
-.weapon-table tbody td{padding:.08cm .2cm;border-bottom:.5pt solid #e8e8e8;text-align:center;font-size:5.5pt;vertical-align:top}
+.weapon-table thead th{padding:.1cm .2cm;font-size:7.5pt;font-weight:700;letter-spacing:.04em;text-align:center;white-space:nowrap}
+.weapon-table thead th.col-name{text-align:left;padding-left:.45cm}
+.weapon-table thead th.col-kw{text-align:left;max-width:4.5cm}
+.weapon-table tbody td{padding:.1cm .2cm;border-bottom:.5pt solid #e8e8e8;text-align:center;font-size:8pt;vertical-align:top}
 .weapon-table tbody tr:nth-child(even) td{background:#f8f8f8}
-.weapon-table tbody td.col-name{text-align:left;font-weight:600;padding-left:.35cm}
-.weapon-table tbody td.col-kw{text-align:left;font-size:4.5pt;color:#555;font-style:italic;max-width:2.5cm;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.weapon-table tbody td.col-name{text-align:left;font-weight:600;padding-left:.45cm}
+.weapon-table tbody td.col-kw{text-align:left;font-size:7.5pt;color:#555;font-style:italic;max-width:4.5cm;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 
 /* Abilities */
-.abilities-section{padding:.15cm .35cm;flex:1;overflow:hidden}
-.section-hdr{font-size:4.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#777;margin-bottom:.1cm;padding-bottom:.08cm;border-bottom:.5pt solid #ddd}
-.ab-row{font-size:5.5pt;line-height:1.4;margin-top:.1cm}
+.abilities-section{padding:.18cm .45cm;flex:1;overflow:hidden}
+.section-hdr{font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#777;margin-bottom:.12cm;padding-bottom:.08cm;border-bottom:.5pt solid #ddd}
+.ab-row{font-size:8pt;line-height:1.35;margin-top:.12cm}
 .ab-name{font-weight:700;color:#111}
 .ab-text{color:#333}
 
 /* Footer rows inside card */
-.composition{font-size:4.5pt;color:#999;padding:.08cm .35cm;border-top:.5pt solid #eee;font-style:italic;flex-shrink:0}
-.damaged{font-size:5pt;color:#7a1414;background:#fff5f5;border-top:.5pt solid #f0e0e0;padding:.1cm .35cm;line-height:1.4;flex-shrink:0}
-.damaged-lbl{font-weight:700;font-size:4.5pt;text-transform:uppercase;letter-spacing:.05em}
+.composition{font-size:7.5pt;color:#888;padding:.1cm .45cm;border-top:.5pt solid #eee;font-style:italic;flex-shrink:0}
+.damaged{font-size:7.5pt;color:#7a1414;background:#fff5f5;border-top:.5pt solid #f0e0e0;padding:.12cm .45cm;line-height:1.35;flex-shrink:0}
+.damaged-lbl{font-weight:700;font-size:7.5pt;text-transform:uppercase;letter-spacing:.04em}
 
 /* Keywords footer */
-.keywords-section{margin-top:auto;border-top:.5pt solid #ddd;padding:.1cm .35cm;flex-shrink:0;background:#fafafa}
-.kw-line{font-size:4.5pt;line-height:1.35;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.kw-lbl{font-weight:700;letter-spacing:.05em;color:#777}
+.keywords-section{margin-top:auto;border-top:.5pt solid #ddd;padding:.12cm .45cm;flex-shrink:0;background:#fafafa}
+.kw-line{font-size:7.5pt;line-height:1.3;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kw-lbl{font-weight:700;letter-spacing:.04em;color:#777}
 .kw-faction .kw-lbl{color:#8a6a10}
 .kw-faction{color:#8a6a10;font-weight:600}
 
-.footer{margin-top:.4cm;font-size:5pt;color:#999;text-align:right}
+.footer{margin-top:.4cm;font-size:8pt;color:#999;text-align:right}
 .footer a{color:#999}
-.no-data-warn{background:#fff3cd;border:1px solid #ffc107;border-radius:4pt;padding:.3cm .5cm;margin-bottom:.4cm;font-size:7pt;color:#7a5900;max-width:26.4cm}
-@media print{.no-data-warn{display:none}}
+.no-data-warn{background:#fff3cd;border:1px solid #ffc107;border-radius:4pt;padding:.3cm .5cm;margin-bottom:.4cm;font-size:9pt;color:#7a5900;max-width:19cm;margin-left:auto;margin-right:auto}
+
+/* On-screen print bar — the app runs as a PWA where browser print menus
+   aren't reachable, so the page carries its own print control. */
+.print-bar{
+  position:fixed;top:0;left:0;right:0;z-index:99;
+  display:flex;align-items:center;justify-content:center;gap:.75rem;
+  padding:.6rem;background:#111;color:#fff;
+  box-shadow:0 2px 8px rgba(0,0,0,.3)
+}
+.print-bar button{
+  font-family:inherit;font-size:14px;font-weight:600;
+  padding:.5rem 1.5rem;border:0;border-radius:6px;
+  background:#c8a02a;color:#111;cursor:pointer
+}
+.print-bar button:active{background:#a8851f}
+.print-bar .hint{font-size:12px;color:#aaa}
+body{padding-top:3.5rem}
+@media print{
+  .no-data-warn{display:none}
+  .print-bar{display:none}
+  body{padding-top:0}
+}
 `;
 
 export async function generateUnitCardsHtml(roster, wahapediaData, config, onProgress) {
@@ -520,6 +547,10 @@ export async function generateUnitCardsHtml(roster, wahapediaData, config, onPro
 <style>${CSS}</style>
 </head>
 <body>
+<div class="print-bar">
+  <button type="button" onclick="window.print()">Print / Save as PDF</button>
+  <span class="hint">${cards.length} card${cards.length === 1 ? '' : 's'} &middot; 2 per A4 page</span>
+</div>
 <h1 class="pg-hdr">Unit Cards${title ? ' — ' + title : ''}</h1>
 ${noDataWarning}
 <div class="grid">${cards.join('\n')}</div>

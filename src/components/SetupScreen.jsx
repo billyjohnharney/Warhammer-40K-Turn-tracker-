@@ -63,7 +63,10 @@ function SideComponent({ side, wahapediaHook, onRemove }) {
   const faction = isPlayer ? state.gameConfig.playerFaction : state.gameConfig.enemyFaction;
   const selectedDet = isPlayer ? state.gameConfig.playerDetachment : state.gameConfig.enemyDetachment;
   const fileRef = useRef(null);
+  const cardsFrameRef = useRef(null);
   const [exporting, setExporting] = useState(false);
+  const [progress, setProgress] = useState('');
+  const [cardsHtml, setCardsHtml] = useState(null);
 
   const detachments = wahapediaHook.getAvailableDetachments(faction);
   const detLoading = faction && wahapediaHook.wahapedia.loading;
@@ -159,23 +162,42 @@ function SideComponent({ side, wahapediaHook, onRemove }) {
     }
   }
 
+  // Installed PWAs have no browser chrome, so window.open either fails or
+  // escapes the app. In that mode the cards are shown in an in-app overlay
+  // that carries its own print control.
+  function isStandalone() {
+    return window.matchMedia?.('(display-mode: standalone)').matches === true
+      || window.navigator.standalone === true;
+  }
+
   async function handleExportCards() {
-    const win = window.open('about:blank', '_blank');
-    if (!win) { alert('Allow popups to export unit cards.'); return; }
-    win.document.write(
-      '<html><head><title>Generating…</title></head>' +
-      '<body style="font-family:sans-serif;padding:2rem;color:#333">' +
-      '<p id="msg">Starting…</p>' +
-      '<p style="color:#888;font-size:.85rem">First run downloads unit data from Wahapedia — this can take up to a minute.</p>' +
-      '</body></html>'
-    );
+    const standalone = isStandalone();
+    let win = null;
+    if (!standalone) {
+      win = window.open('about:blank', '_blank');
+      if (win) {
+        win.document.write(
+          '<html><head><title>Generating…</title></head>' +
+          '<body style="font-family:sans-serif;padding:2rem;color:#333">' +
+          '<p id="msg">Starting…</p>' +
+          '<p style="color:#888;font-size:.85rem">First run downloads unit data from Wahapedia — this can take up to a minute.</p>' +
+          '</body></html>'
+        );
+      }
+    }
+
     const report = msg => {
-      try {
-        const el = win.document.getElementById('msg');
-        if (el) el.textContent = msg;
-      } catch (_) { /* window closed */ }
+      setProgress(msg);
+      if (win) {
+        try {
+          const el = win.document.getElementById('msg');
+          if (el) el.textContent = msg;
+        } catch (_) { /* window closed */ }
+      }
     };
+
     setExporting(true);
+    setProgress('Starting…');
     try {
       const html = await generateUnitCardsHtml(
         rsData.parsed,
@@ -183,16 +205,33 @@ function SideComponent({ side, wahapediaHook, onRemove }) {
         { playerFaction: faction, playerDetachment: selectedDet },
         report,
       );
-      win.document.open();
-      win.document.write(html);
-      win.document.close();
+      if (win) {
+        win.document.open();
+        win.document.write(html);
+        win.document.close();
+      } else {
+        setCardsHtml(html);
+      }
     } catch (e) {
-      win.document.open();
-      win.document.write(`<html><body style="font-family:sans-serif;padding:2rem;color:#c00"><p>Failed: ${e.message}</p></body></html>`);
-      win.document.close();
+      const msg = e.message || 'Failed to generate cards.';
+      if (win) {
+        win.document.open();
+        win.document.write(`<html><body style="font-family:sans-serif;padding:2rem;color:#c00"><p>Failed: ${msg}</p></body></html>`);
+        win.document.close();
+      } else {
+        dispatch({ type: 'SET_RS_STATE', side, data: { error: msg } });
+      }
     } finally {
       setExporting(false);
+      setProgress('');
     }
+  }
+
+  function handlePrintCards() {
+    const frame = cardsFrameRef.current;
+    if (!frame?.contentWindow) return;
+    frame.contentWindow.focus();
+    frame.contentWindow.print();
   }
 
   const parsed = rsData.parsed;
@@ -274,8 +313,27 @@ function SideComponent({ side, wahapediaHook, onRemove }) {
             onClick={handleExportCards}
             disabled={exporting}
           >
-            {exporting ? 'Generating…' : 'Export Unit Cards'}
+            {exporting ? (progress || 'Generating…') : 'Export Unit Cards'}
           </button>
+        </div>
+      )}
+
+      {cardsHtml && (
+        <div className="cards-overlay" role="dialog" aria-label="Unit cards">
+          <div className="cards-overlay-bar">
+            <button className="cards-print-btn" onClick={handlePrintCards}>
+              Print / Save as PDF
+            </button>
+            <button className="cards-close-btn" onClick={() => setCardsHtml(null)}>
+              Close
+            </button>
+          </div>
+          <iframe
+            ref={cardsFrameRef}
+            className="cards-frame"
+            title="Unit cards"
+            srcDoc={cardsHtml}
+          />
         </div>
       )}
     </div>
