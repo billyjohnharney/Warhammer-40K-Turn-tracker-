@@ -47,7 +47,7 @@ export const commandPhaseAbilities = {
       { name: 'Shadow in the Warp', text: 'Each enemy unit within 12" of a MONSTER suffers -1 Leadership until your next Command phase.' },
     ],
     'Assimilation Swarm': [
-      { name: 'Endless Swarm', text: 'Select one destroyed CORE unit with 10 or fewer starting models — it may be set up again in Strategic Reserves at half strength.' },
+      { name: 'Endless Swarm', text: 'Select one destroyed CORE unit with 10 or fewer starting models — it may be set up again in Strategic Reserves at half strength. Once per battle.' },
     ],
   },
   'Necrons': {

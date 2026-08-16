@@ -1,10 +1,11 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { Select } from '@base-ui/react/select';
 import { Field } from '@base-ui/react/field';
 import { useGame } from '../context/GameContext.jsx';
 import { factions } from '../data/factions.js';
 import { parseRosXml, parseTextRoster, looksLikeWarhammer, matchDetachment } from '../hooks/useRoster.js';
 import { ChevronDownIcon, CheckIcon, CloseIcon } from './Icons.jsx';
+import { generateUnitCardsHtml } from '../utils/generateUnitCards.js';
 
 function FactionSelect({ id, label, value, onChange, placeholder }) {
   return (
@@ -55,13 +56,17 @@ function DetachmentSelect({ id, label, value, onChange, detachments, loading }) 
   );
 }
 
-function SideComponent({ side, wahapediaHook }) {
+function SideComponent({ side, wahapediaHook, onRemove }) {
   const { state, dispatch } = useGame();
   const isPlayer = side === 'player';
   const rsData = state.rsState[side];
   const faction = isPlayer ? state.gameConfig.playerFaction : state.gameConfig.enemyFaction;
   const selectedDet = isPlayer ? state.gameConfig.playerDetachment : state.gameConfig.enemyDetachment;
   const fileRef = useRef(null);
+  const cardsFrameRef = useRef(null);
+  const [exporting, setExporting] = useState(false);
+  const [progress, setProgress] = useState('');
+  const [cardsHtml, setCardsHtml] = useState(null);
 
   const detachments = wahapediaHook.getAvailableDetachments(faction);
   const detLoading = faction && wahapediaHook.wahapedia.loading;
@@ -157,6 +162,78 @@ function SideComponent({ side, wahapediaHook }) {
     }
   }
 
+  // Installed PWAs have no browser chrome, so window.open either fails or
+  // escapes the app. In that mode the cards are shown in an in-app overlay
+  // that carries its own print control.
+  function isStandalone() {
+    return window.matchMedia?.('(display-mode: standalone)').matches === true
+      || window.navigator.standalone === true;
+  }
+
+  async function handleExportCards() {
+    const standalone = isStandalone();
+    let win = null;
+    if (!standalone) {
+      win = window.open('about:blank', '_blank');
+      if (win) {
+        win.document.write(
+          '<html><head><title>Generating…</title></head>' +
+          '<body style="font-family:sans-serif;padding:2rem;color:#333">' +
+          '<p id="msg">Starting…</p>' +
+          '<p style="color:#888;font-size:.85rem">First run downloads unit data from Wahapedia — this can take up to a minute.</p>' +
+          '</body></html>'
+        );
+      }
+    }
+
+    const report = msg => {
+      setProgress(msg);
+      if (win) {
+        try {
+          const el = win.document.getElementById('msg');
+          if (el) el.textContent = msg;
+        } catch (_) { /* window closed */ }
+      }
+    };
+
+    setExporting(true);
+    setProgress('Starting…');
+    try {
+      const html = await generateUnitCardsHtml(
+        rsData.parsed,
+        wahapediaHook.wahapedia,
+        { playerFaction: faction, playerDetachment: selectedDet },
+        report,
+      );
+      if (win) {
+        win.document.open();
+        win.document.write(html);
+        win.document.close();
+      } else {
+        setCardsHtml(html);
+      }
+    } catch (e) {
+      const msg = e.message || 'Failed to generate cards.';
+      if (win) {
+        win.document.open();
+        win.document.write(`<html><body style="font-family:sans-serif;padding:2rem;color:#c00"><p>Failed: ${msg}</p></body></html>`);
+        win.document.close();
+      } else {
+        dispatch({ type: 'SET_RS_STATE', side, data: { error: msg } });
+      }
+    } finally {
+      setExporting(false);
+      setProgress('');
+    }
+  }
+
+  function handlePrintCards() {
+    const frame = cardsFrameRef.current;
+    if (!frame?.contentWindow) return;
+    frame.contentWindow.focus();
+    frame.contentWindow.print();
+  }
+
   const parsed = rsData.parsed;
   const kws = parsed ? [...parsed.activeKeywords].sort() : [];
 
@@ -170,6 +247,9 @@ function SideComponent({ side, wahapediaHook }) {
             &nbsp;
             <button className="side-clear" onClick={() => dispatch({ type: 'CLEAR_RS_STATE', side })} aria-label="Clear"><CloseIcon /></button>
           </span>
+        )}
+        {onRemove && (
+          <button className="side-remove-btn" onClick={onRemove}>Remove</button>
         )}
       </div>
 
@@ -228,6 +308,32 @@ function SideComponent({ side, wahapediaHook }) {
               {kws.map(k => <span key={k} className="roster-kw-chip">{k}</span>)}
             </div>
           )}
+          <button
+            className="roster-export-btn"
+            onClick={handleExportCards}
+            disabled={exporting}
+          >
+            {exporting ? (progress || 'Generating…') : 'Export Unit Cards'}
+          </button>
+        </div>
+      )}
+
+      {cardsHtml && (
+        <div className="cards-overlay" role="dialog" aria-label="Unit cards">
+          <div className="cards-overlay-bar">
+            <button className="cards-print-btn" onClick={handlePrintCards}>
+              Print / Save as PDF
+            </button>
+            <button className="cards-close-btn" onClick={() => setCardsHtml(null)}>
+              Close
+            </button>
+          </div>
+          <iframe
+            ref={cardsFrameRef}
+            className="cards-frame"
+            title="Unit cards"
+            srcDoc={cardsHtml}
+          />
         </div>
       )}
     </div>
@@ -235,21 +341,36 @@ function SideComponent({ side, wahapediaHook }) {
 }
 
 export default function SetupScreen({ wahapediaHook, onLaunch }) {
-  const { state } = useGame();
+  const { state, dispatch } = useGame();
+  const [showEnemy, setShowEnemy] = useState(false);
   const { playerFaction, playerDetachment, enemyFaction, enemyDetachment } = state.gameConfig;
-  const canStart = !!(playerFaction && playerDetachment && enemyFaction && enemyDetachment);
+
+  const canStart = showEnemy
+    ? !!(playerFaction && playerDetachment && enemyFaction && enemyDetachment)
+    : !!(playerFaction && playerDetachment);
+
+  function handleRemoveEnemy() {
+    setShowEnemy(false);
+    dispatch({ type: 'CLEAR_RS_STATE', side: 'enemy' });
+    dispatch({ type: 'SET_GAME_CONFIG', payload: { enemyFaction: '', enemyDetachment: '' } });
+  }
 
   return (
     <main>
       <div className="faction-screen">
-        <img src={`${import.meta.env.BASE_URL}IMG_8702.png`} alt="" className="setup-logo" />
+        <h1 className="setup-page-title">Muster Armies</h1>
         <div className="setup-content">
-          <div className="faction-screen-intro">
-            All your army rules, abilities and strategy combined.
-          </div>
           <SideComponent side="player" wahapediaHook={wahapediaHook} />
-          <div className="setup-vs-sep">VS</div>
-          <SideComponent side="enemy" wahapediaHook={wahapediaHook} />
+          {showEnemy ? (
+            <>
+              <div className="setup-vs-sep">VS</div>
+              <SideComponent side="enemy" wahapediaHook={wahapediaHook} onRemove={handleRemoveEnemy} />
+            </>
+          ) : (
+            <button className="setup-add-enemy-btn" onClick={() => setShowEnemy(true)}>
+              + Add Enemy
+            </button>
+          )}
         </div>
       </div>
       <div className="setup-start-bar">

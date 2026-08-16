@@ -80,8 +80,8 @@ export default function StratagemTab({ phaseId, wahapediaHook }) {
   return (
     <div className="fs-section">
       <SubSection label="Attack" items={attackItems} cls="fs-attack" />
-      <SubSection label="Defence" items={defenceItems} cls="fs-defence" />
       <SubSection label="Either" items={eitherItems} cls="fs-either" />
+      <SubSection label="Defence" items={defenceItems} cls="fs-defence" />
       <div className="fs-attribution">
         Stratagem data: <a href="https://wahapedia.ru" target="_blank" rel="noopener">Wahapedia</a>
       </div>

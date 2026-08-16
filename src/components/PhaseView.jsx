@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Tabs } from '@base-ui/react/tabs';
 import { useGame } from '../context/GameContext.jsx';
 import { phases } from '../data/phases.js';
@@ -6,6 +7,8 @@ import { keywordFactions } from '../data/factions.js';
 import { wahapediaPhaseId } from '../hooks/useWahapedia.js';
 import StepsTab from './StepsTab.jsx';
 import StratagemTab from './StratagemTab.jsx';
+import AbilitiesTab from './AbilitiesTab.jsx';
+import MissionModal from './MissionModal.jsx';
 
 export function kwForPlayer(kw, gameConfig, roster) {
   if (coreAlwaysVisible.has(kw)) return true;
@@ -17,6 +20,7 @@ export function kwForPlayer(kw, gameConfig, roster) {
 
 export function kwForEnemy(kw, gameConfig, enemyRoster) {
   if (coreAlwaysVisible.has(kw)) return true;
+  if (!gameConfig.enemyFaction && !enemyRoster.loaded) return false;
   const fl = keywordFactions[kw];
   if (fl && !fl.includes(gameConfig.enemyFaction)) return false;
   if (enemyRoster.loaded) return enemyRoster.activeKeywords.has(kw);
@@ -39,6 +43,7 @@ export function shouldShowItem(item, gameConfig, roster, enemyRoster, commandPha
 export default function PhaseView({ wahapediaHook }) {
   const { state, dispatch, getCommandPhaseAbilities } = useGame();
   const { activePhaseIndex, gameConfig, roster, enemyRoster, phaseTab } = state;
+  const [missionModalOpen, setMissionModalOpen] = useState(false);
   const phase = phases[activePhaseIndex];
   const tab = phaseTab[phase.id] || 'steps';
 
@@ -68,7 +73,15 @@ export default function PhaseView({ wahapediaHook }) {
         <div className="phase-header-left">
           <span className="phase-title">{phase.title}</span>
         </div>
+        {gameConfig.mission && (
+          <button className="mission-obj-btn" onClick={() => setMissionModalOpen(true)}>
+            Obj.1
+          </button>
+        )}
       </div>
+      {missionModalOpen && (
+        <MissionModal missionId={gameConfig.mission} onClose={() => setMissionModalOpen(false)} />
+      )}
 
       <Tabs.Root value={tab} onValueChange={handleTabChange}>
         <Tabs.List className="phase-tabs">
@@ -77,6 +90,9 @@ export default function PhaseView({ wahapediaHook }) {
           </Tabs.Tab>
           <Tabs.Tab value="stratagems" className="phase-tab">
             Stratagems
+          </Tabs.Tab>
+          <Tabs.Tab value="abilities" className="phase-tab">
+            Abilities
           </Tabs.Tab>
         </Tabs.List>
 
@@ -89,6 +105,9 @@ export default function PhaseView({ wahapediaHook }) {
         </Tabs.Panel>
         <Tabs.Panel value="stratagems" className="tab-content">
           <StratagemTab phaseId={phase.id} wahapediaHook={wahapediaHook} />
+        </Tabs.Panel>
+        <Tabs.Panel value="abilities" className="tab-content">
+          <AbilitiesTab phaseId={phase.id} roster={roster} wahapediaHook={wahapediaHook} />
         </Tabs.Panel>
       </Tabs.Root>
 
@@ -103,7 +122,14 @@ export default function PhaseView({ wahapediaHook }) {
           >
             ← {phases[activePhaseIndex - 1].title}
           </button>
-        ) : <span />}
+        ) : (
+          <button
+            className="phase-nav-arrow"
+            onClick={() => dispatch({ type: 'SET_APP_STEP', payload: 'pregame' })}
+          >
+            ← Battle setup
+          </button>
+        )}
 
         {activePhaseIndex < phases.length - 1 ? (
           <button

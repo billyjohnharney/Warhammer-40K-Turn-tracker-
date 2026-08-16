@@ -1,9 +1,9 @@
 // All icons follow Base UI docs style:
 // 10×10 viewBox, fill="none", stroke="currentColor", strokeWidth="1.25", strokeLinecap="round"
 
-export function ChevronDownIcon() {
+export function ChevronDownIcon({ className }) {
   return (
-    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg className={className} width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M1 3.5L5 7.5L9 3.5" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );

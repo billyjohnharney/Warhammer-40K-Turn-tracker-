@@ -1,30 +1,37 @@
 export const pregameSteps = [
   {
-    title: 'Select Attacker & Defender',
-    description: 'For missions that require it, determine which player is the Attacker and which is the Defender. Both players roll one D6; the player who rolls highest chooses. On a tie, re-roll. The Attacker typically deploys and takes the first turn first, unless the mission specifies otherwise.',
+    title: 'Determine Attacker & Defender',
+    summary: 'Roll off — the winner chooses who is Attacker and who is Defender.',
+    description: 'Both players roll one D6. The player who rolls highest chooses whether to be the Attacker or the Defender; their opponent takes the other role. On a tie, re-roll. The deployment map will show each player\'s deployment zone based on this result.',
+  },
+  {
+    title: 'Muster Armies',
+    summary: 'For each Leader and Support unit, choose the Bodyguard unit it leads.',
+    description: 'Before the battle, in the Muster Armies step, for each Leader and Support unit in your army you can select one friendly Bodyguard unit for it to lead, forming an Attached unit with it. Unless otherwise stated, each Bodyguard unit can only have one Leader and one Support unit attached to it.',
   },
   {
     title: 'Declare Battle Formations',
-    description: 'Each player secretly chooses a Battle Formation for their army and reveals them simultaneously. Battle Formations grant different bonuses and affect how your army is organised on the battlefield. Once declared, a Battle Formation cannot be changed for the rest of the battle.',
+    summary: 'Secretly note, then simultaneously reveal: embarked units and Strategic Reserves.',
+    description: 'Each player secretly notes down the following, then both players reveal their choices simultaneously:\n1. Which units start the battle embarked within which Transport models.\n2. Which units will start the battle in Strategic Reserves — unless otherwise stated, their combined points value (including units embarked within Transports also in Reserves) cannot exceed half your army\'s points limit for the battle size.',
   },
   {
     title: 'Deploy Armies',
-    description: 'Players alternate deploying units into their deployment zones. Units with INFILTRATORS are set up now, more than 9\u201d from the enemy deployment zone and more than 9\u201d from all enemy models. They cannot be placed in Strategic Reserves.',
+    summary: 'Alternate deploying units into your deployment zone, Attacker first.',
+    description: 'Players alternate deploying units one at a time, starting with the Attacker. All models must be set up wholly within their controlling player\'s deployment zone. If one player finishes deploying first, their opponent continues deploying the remainder of their units. Units with abilities that allow them to be set up after both armies are deployed (e.g. Infiltrators) are set up last — if both players have such units, roll off and alternate, starting with the winner.',
   },
   {
-    title: 'Declare Strategic Reserves',
-    description: 'Declare any units that will start the battle in Strategic Reserves (e.g. units with DEEP STRIKE). These units cannot arrive until Battle Round 2 unless their rules state otherwise. Strategic Reserves cannot exceed 25\u2060% of your army\u2019s total points value.',
-  },
-  {
-    title: 'Declare Hover Mode',
-    description: 'Any units with the HOVER ability must declare whether they are using Hover mode before the first Battle Round begins. A unit in Hover mode has a Move of 20\u201d and loses all AIRCRAFT rules for the battle.',
+    title: 'Redeploy Units',
+    summary: 'Resolve any rules that allow units to redeploy after deployment.',
+    description: 'Some rules allow players to redeploy certain units after both armies are fully deployed. Unless otherwise stated, these are resolved now — before the first turn is determined. Players alternate resolving any such rules, starting with the Attacker.',
   },
   {
     title: 'Determine First Turn',
-    description: 'Both players roll one D6. The player who finished deploying their army first may add 1 to their roll. The player who rolls highest chooses who takes the first turn. On a tie, re-roll.',
+    summary: 'Roll off — the winner chooses who takes the first turn.',
+    description: 'Both players roll one D6. The player who rolls highest chooses who takes the first turn. On a tie, re-roll. The same player always takes the first turn in each subsequent battle round.',
   },
   {
-    title: 'Resolve Scout Moves',
-    description: 'Units with the SCOUTS X\u201d ability make a Normal Move of up to X\u201d before the first Battle Round begins. They cannot end this move within Engagement Range of any enemy models. If both players have units with SCOUTS, the player taking the first turn resolves their Scout moves first. Units that made a Scout move cannot declare a charge in the first Battle Round.',
+    title: 'Resolve Pre-battle Abilities',
+    summary: 'Resolve Scout moves and any other pre-battle abilities, first-turn player goes first.',
+    description: 'Players alternate resolving any pre-battle abilities their units have, starting with the player who will take the first turn. This is when Scouts X" is resolved — a unit wholly within its deployment zone can make a Scout move of up to X", a unit in Strategic Reserves can instead be set up wholly within its deployment zone, and an eligible Dedicated Transport can make a Scout move on behalf of its embarked passengers. A Scout move must end more than 8" horizontally from all enemy units. This step comes after Declare Battle Formations and before the battle begins.',
   },
 ];

@@ -23,11 +23,16 @@ export function matchDetachment(raw, availableDetachments) {
 }
 
 function detectDetachment(text, faction, availableDetachments = []) {
-  const explicit = text.match(/detachment[:\s]+([^\n\r+\[]+)/i);
+  // "(2 Detachment Points)" is a budget line, not a detachment name — strip those
+  // first so the explicit "Detachment: X" match below can't capture "Points)".
+  const cleanText = text.replace(/\(\s*\d+\s*detachment points?\s*\)/gi, '');
+
+  const explicit = cleanText.match(/detachment\s*:\s*([^\n\r+\[]+)/i);
   if (explicit) {
     const c = explicit[1].trim();
     if (c.length > 2) return c;
   }
+  text = cleanText;
 
   const bsHeader = text.match(/\+\+\s*[^:\n]+:\s*([^[+\n\r]+)/i);
   if (bsHeader) {
@@ -133,7 +138,14 @@ export function parseRosXml(xmlText) {
   const activeKeywords = new Set();
 
   doc.querySelectorAll('forces > force > selections > selection').forEach(el => {
-    const name = el.getAttribute('name');
+    const type = el.getAttribute('type');
+    // BattleScribe uses type="upgrade" for config entries (game size, faction ID,
+    // character attachment slots). Only take actual playable selections.
+    if (type && type !== 'unit' && type !== 'model') return;
+    const raw = el.getAttribute('name');
+    if (!raw) return;
+    // Some roster apps embed the quantity in the name ("4x Intercessors") — strip it
+    const name = raw.replace(/^\d+[x×]\s*/i, '').trim();
     if (name) units.push(name);
   });
 
@@ -170,27 +182,131 @@ export function parseRosXml(xmlText) {
     if (match) activeKeywords.add(match);
   });
 
+  const unitSelections = {};
+  doc.querySelectorAll('forces > force > selections > selection').forEach(el => {
+    const type = el.getAttribute('type');
+    if (type && type !== 'unit' && type !== 'model') return;
+    const raw = el.getAttribute('name');
+    if (!raw) return;
+    const unitName = raw.replace(/^\d+[x×]\s*/i, '').trim();
+    if (!unitName) return;
+    const names = new Set();
+    el.querySelectorAll('selection[type="upgrade"]').forEach(sel => {
+      const n = (sel.getAttribute('name') || '').trim();
+      if (n) names.add(n.toLowerCase());
+    });
+    if (names.size) unitSelections[unitName] = [...names];
+  });
+
   const faction = detectFactionFromXml(doc);
   const detachment = detectDetachmentFromXml(doc, faction);
-  return { units, activeKeywords, faction, detachment };
+  return { units, activeKeywords, faction, detachment, unitSelections };
+}
+
+// Section headers in the Warhammer app / New Recruit exports — never units
+const SECTION_HDR = /^(characters?|battleline|other datasheets?|dedicated transports?|allied units?|epic heroes?|infantry|mounted|vehicles?|monsters?|fortifications?|beasts?|swarms?|army roster|exported with|total|grand total|points total)\b/i;
+const GAME_SIZE = /^(combat patrol|incursion|strike force|onslaught|boarding action|patrol)\b/i;
+const DETACHMENT_LINE = /\(\s*\d+\s*detachment points?\s*\)/i;
+const BULLET = /^[•◦▪·*\-–—]\s*/;
+
+function cleanUnitName(line) {
+  return line
+    .replace(BULLET, '')
+    .replace(/\s*[\[(][^\])]*\b\d[\d,]*\s*(pts?|points?)[^\])]*[\])]\s*$/i, '') // trailing pts bracket
+    .replace(/^\d+\s*[x×]\s*/i, '')  // leading quantity "10x "
+    .replace(/:\s*$/, '')
+    .trim();
+}
+
+function isJunkUnitLine(name) {
+  if (!name || name.length < 3 || name.length > 60) return true;
+  if (SECTION_HDR.test(name)) return true;
+  if (GAME_SIZE.test(name)) return true;
+  if (DETACHMENT_LINE.test(name)) return true;
+  if (/^warlord$/i.test(name)) return true;
+  if (/^enhancements?\b/i.test(name)) return true;
+  // Numbered list entries ("2. Death Plasma") are enhancements/rules, not units
+  if (/^\d+\.\s/.test(name)) return true;
+  return false;
+}
+
+// A bullet line under a unit is a wargear/model entry. Returns the cleaned
+// selection name, or null when the line is a rule rather than equipment.
+function cleanSelectionName(line) {
+  const name = line
+    .replace(BULLET, '')
+    .replace(/^\d+\s*[x×]\s*/i, '')  // "10x Fleshborer" → "Fleshborer"
+    .replace(/:\s*$/, '')
+    .trim();
+  if (!name || name.length < 3) return null;
+  if (/^warlord$/i.test(name)) return null;
+  if (/^enhancements?\b/i.test(name)) return null;
+  return name;
 }
 
 export function parseTextRoster(text) {
   const activeKeywords = new Set();
   scanTextForKeywords(text.toUpperCase(), activeKeywords);
 
+  const rawLines = text.split('\n');
   const units = [];
-  text.split('\n').forEach(line => {
-    line = line.trim().replace(/^\d+x\s*/i, '');
-    if (line && !line.startsWith('=') && !line.startsWith('+') &&
-        !line.match(/^\d+\s*pts?$/i) && line.length >= 4 && line.length <= 60) {
-      units.push(line);
-    }
+  const unitSelections = {};
+  const seen = new Set();
+  const HAS_PTS = /[\[(][^\])]*\b\d[\d,]*\s*(pts?|points?)\b/i;
+
+  // Does this roster mark units with a points value? If not, fall back to
+  // treating any line that heads a block of bullets as a unit name.
+  const usePts = rawLines.some(raw => {
+    const l = raw.trim();
+    return l && !BULLET.test(l) && !/^[+=]/.test(l) &&
+      !DETACHMENT_LINE.test(l) && HAS_PTS.test(l) &&
+      !isJunkUnitLine(cleanUnitName(l));
   });
+
+  let current = null;
+
+  for (let i = 0; i < rawLines.length; i++) {
+    const line = rawLines[i].trim();
+    if (!line) continue;
+
+    // Bullet lines belong to the unit above them — these are the roster's
+    // actual weapon/model selections.
+    if (BULLET.test(line)) {
+      if (current) {
+        const sel = cleanSelectionName(line);
+        if (sel) {
+          const list = unitSelections[current] || (unitSelections[current] = []);
+          const key = sel.toLowerCase();
+          if (!list.includes(key)) list.push(key);
+        }
+      }
+      continue;
+    }
+
+    if (/^[+=]/.test(line) || DETACHMENT_LINE.test(line)) { current = null; continue; }
+
+    // Decide whether this line names a unit
+    let isUnit;
+    if (usePts) {
+      isUnit = HAS_PTS.test(line);
+    } else {
+      let j = i + 1;
+      while (j < rawLines.length && !rawLines[j].trim()) j++;
+      isUnit = j < rawLines.length && BULLET.test(rawLines[j].trim());
+    }
+    if (!isUnit) { current = null; continue; }
+
+    const name = cleanUnitName(line);
+    if (isJunkUnitLine(name)) { current = null; continue; }
+
+    const key = name.toLowerCase();
+    if (!seen.has(key)) { seen.add(key); units.push(name); }
+    current = name;
+  }
 
   const faction = detectFaction(text);
   const detachment = detectDetachment(text, faction);
-  return { units: units.slice(0, 40), activeKeywords, faction, detachment };
+  return { units: units.slice(0, 40), activeKeywords, faction, detachment, unitSelections };
 }
 
 export function looksLikeWarhammer(text) {

@@ -11,14 +11,13 @@ export default function Header({ onChangeFactions }) {
       <div className="header-inner">
         <div className="title-block">
           <h1>{playerFaction}</h1>
-          <p className="faction-badge" onClick={onChangeFactions}>
+          <p className="faction-badge">
             <span className="your-side">{playerFaction}</span>
             <span className="vs-sep">vs</span>
             <span className="enemy-side">{enemyFaction}</span>
-            {' '}
-            <span style={{ marginLeft: 8, opacity: 0.5, cursor: 'pointer' }} title="Change factions">✎</span>
           </p>
         </div>
+        <button className="header-edit-btn" onClick={onChangeFactions}>Edit</button>
       </div>
     </header>
   );
