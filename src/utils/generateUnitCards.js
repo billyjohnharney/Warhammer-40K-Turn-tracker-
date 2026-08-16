@@ -110,6 +110,7 @@ const getModelRows     = () => getRows('wh11_datasheet_models', 'Datasheets_mode
 const getWeaponRows    = () => getRows('wh11_datasheet_weapons', 'Datasheets_weapons.csv');
 const getDatasheetRows = () => getRows('wh11_datasheets', 'Datasheets.csv');
 const getAbilityRows   = () => getRows('wh11_datasheet_abilities', 'Datasheets_abilities.csv');
+const getKeywordRows   = () => getRows('wh11_datasheet_keywords', 'Datasheets_keywords.csv');
 
 function normalizeUnitName(s) {
   return s.toLowerCase()
@@ -161,23 +162,55 @@ function stripHtml(html) {
   return (html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
+// Wahapedia column names vary in case ("Sv", "Ld", "BS_WS"). Look up
+// case-insensitively across a list of aliases and return the first real value.
+function pick(row, ...aliases) {
+  if (!row) return '';
+  for (const alias of aliases) {
+    if (row[alias] != null && row[alias] !== '') return row[alias];
+  }
+  const lowered = {};
+  for (const k of Object.keys(row)) lowered[k.toLowerCase()] = row[k];
+  for (const alias of aliases) {
+    const v = lowered[alias.toLowerCase()];
+    if (v != null && v !== '') return v;
+  }
+  return '';
+}
+
+function hasValue(v) {
+  return v && v !== '-' && v !== '0' && v !== 'N/A';
+}
+
 function renderStats(ds, models) {
-  const STATS = ['M', 'T', 'SV', 'W', 'LD', 'OC'];
+  // label shown on the card, then the aliases to look for in the CSV row
+  const STATS = [
+    ['M',  ['M']],
+    ['T',  ['T']],
+    ['SV', ['Sv', 'SV', 'save']],
+    ['W',  ['W']],
+    ['LD', ['Ld', 'LD', 'leadership']],
+    ['OC', ['OC']],
+  ];
   const hasModels = models && models.length > 0;
 
-  const invulHtml = ds.invul_save && ds.invul_save !== '-' && ds.invul_save !== '0'
-    ? `<div class="invul">INV ${esc(ds.invul_save)}</div>` : '';
+  // The invulnerable save lives on the model row (inv_sv), not the datasheet.
+  const invulRaw = hasModels
+    ? pick(models[0], 'inv_sv', 'invul_save', 'invulnerable_save')
+    : pick(ds, 'invul_save');
+  const invulHtml = hasValue(invulRaw)
+    ? `<div class="invul">INV ${esc(invulRaw)}</div>` : '';
 
   if (!hasModels) {
-    return invulHtml ? `<div class="stats-section"><div class="stats-row">${invulHtml}</div></div>` : '';
+    return invulHtml ? `<div class="stats-section"><div class="stat-row">${invulHtml}</div></div>` : '';
   }
 
   const rows = models.map((m, i) => {
     const labelHtml = models.length > 1
-      ? `<div class="model-lbl">${esc(m.name || '')}</div>` : '';
-    const cells = STATS.map(s => {
-      const val = m[s] || m[s.toLowerCase()] || '-';
-      return `<div class="stat-box"><div class="stat-lbl">${s}</div><div class="stat-val">${esc(val)}</div></div>`;
+      ? `<div class="model-lbl">${esc(pick(m, 'name'))}</div>` : '';
+    const cells = STATS.map(([label, aliases]) => {
+      const val = pick(m, ...aliases) || '-';
+      return `<div class="stat-box"><div class="stat-lbl">${label}</div><div class="stat-val">${esc(val)}</div></div>`;
     }).join('');
     return `${labelHtml}<div class="stat-row">${cells}${i === 0 ? invulHtml : ''}</div>`;
   }).join('');
@@ -185,17 +218,18 @@ function renderStats(ds, models) {
   return `<div class="stats-section">${rows}</div>`;
 }
 
-function renderWeapons(weapons, hasSelectionData) {
+function renderWeapons(weapons) {
   if (!weapons.length) return '';
 
-  const ranged = weapons.filter(w => {
-    const t = (w.type || w.Type || '').toLowerCase();
-    return t === 'ranged' || t === 'r';
-  });
-  const melee = weapons.filter(w => {
-    const t = (w.type || w.Type || '').toLowerCase();
-    return t === 'melee' || t === 'm' || t === '';
-  });
+  const isMelee = w => {
+    const t = String(pick(w, 'type')).toLowerCase();
+    if (t.includes('melee')) return true;
+    if (t.includes('ranged')) return false;
+    // No usable type column — fall back to the range value ("Melee" or a number)
+    return /melee/i.test(String(pick(w, 'range')));
+  };
+  const ranged = weapons.filter(w => !isMelee(w));
+  const melee  = weapons.filter(isMelee);
 
   function table(ws, isRanged) {
     if (!ws.length) return '';
@@ -203,14 +237,16 @@ function renderWeapons(weapons, hasSelectionData) {
     const thExtra = isRanged ? '<th>RNG</th>' : '';
     const head = `<thead><tr><th class="col-name">${label}</th>${thExtra}<th>A</th><th>${isRanged ? 'BS' : 'WS'}</th><th>S</th><th>AP</th><th>D</th><th class="col-kw">KEYWORDS</th></tr></thead>`;
     const rows = ws.map(w => {
-      const name  = esc(w.name || w.Name || '');
-      const range = esc(w.range || w.Range || '-');
-      const att   = esc(w.attacks || w.A || '-');
-      const skill = esc(w.skill || w.BS || w.WS || '-');
-      const str   = esc(w.strength || w.S || '-');
-      const ap    = esc(w.ap || w.AP || '-');
-      const dmg   = esc(w.damage || w.D || '-');
-      const kw    = esc(w.keywords || w.Keywords || '');
+      const name  = esc(pick(w, 'name') || '');
+      const range = esc(pick(w, 'range', 'Range') || '-');
+      const att   = esc(pick(w, 'A', 'attacks') || '-');
+      // Wahapedia stores the single hit stat as BS_WS
+      const skill = esc(pick(w, 'BS_WS', 'skill', 'BS', 'WS') || '-');
+      const str   = esc(pick(w, 'S', 'strength') || '-');
+      const ap    = esc(pick(w, 'AP', 'ap') || '-');
+      const dmg   = esc(pick(w, 'D', 'damage') || '-');
+      // Weapon abilities (Assault, Devastating Wounds, …) live in `description`
+      const kw    = esc(stripHtml(pick(w, 'description', 'keywords')));
       const rangeCell = isRanged ? `<td>${range}</td>` : '';
       return `<tr><td class="col-name">${name}</td>${rangeCell}<td>${att}</td><td>${skill}</td><td>${str}</td><td>${ap}</td><td>${dmg}</td><td class="col-kw">${kw}</td></tr>`;
     }).join('');
@@ -218,6 +254,27 @@ function renderWeapons(weapons, hasSelectionData) {
   }
 
   return `<div class="weapons-section">${table(ranged, true)}${table(melee, false)}</div>`;
+}
+
+function renderKeywords(kwRows) {
+  if (!kwRows || !kwRows.length) return '';
+  const faction = [];
+  const normal = [];
+  for (const r of kwRows) {
+    const kw = pick(r, 'keyword');
+    if (!kw) continue;
+    const isFaction = String(pick(r, 'is_faction_keyword')).toLowerCase() === 'true';
+    (isFaction ? faction : normal).push(kw);
+  }
+  const uniq = arr => [...new Set(arr)];
+  const parts = [];
+  if (normal.length) {
+    parts.push(`<div class="kw-line"><span class="kw-lbl">KEYWORDS:</span> ${esc(uniq(normal).join(', '))}</div>`);
+  }
+  if (faction.length) {
+    parts.push(`<div class="kw-line kw-faction"><span class="kw-lbl">FACTION:</span> ${esc(uniq(faction).join(', '))}</div>`);
+  }
+  return parts.length ? `<div class="keywords-section">${parts.join('')}</div>` : '';
 }
 
 function renderAbilities(abilities) {
@@ -229,14 +286,19 @@ function renderAbilities(abilities) {
   return `<div class="abilities-section"><div class="section-hdr">ABILITIES</div>${items}</div>`;
 }
 
-function renderCard(unitName, ds, models, weapons, abilities) {
-  const pts = ds.points && ds.points !== '0' && ds.points !== ''
-    ? `<span class="pts">${esc(ds.points)} pts</span>` : '';
-  const damaged = ds.damaged_w && ds.damaged_description && ds.damaged_description !== '-'
-    ? `<div class="damaged"><span class="damaged-lbl">DAMAGED (${esc(ds.damaged_w)} WOUNDS REMAINING): </span>${esc(ds.damaged_description)}</div>`
+function renderCard(unitName, ds, models, weapons, abilities, kwRows) {
+  const ptsVal = pick(ds, 'points', 'cost');
+  const pts = hasValue(ptsVal) ? `<span class="pts">${esc(ptsVal)} pts</span>` : '';
+
+  const damagedW = pick(ds, 'damaged_w');
+  const damagedDesc = stripHtml(pick(ds, 'damaged_description'));
+  const damaged = damagedW && hasValue(damagedDesc)
+    ? `<div class="damaged"><span class="damaged-lbl">DAMAGED (${esc(damagedW)} WOUNDS REMAINING): </span>${esc(damagedDesc)}</div>`
     : '';
-  const comp = ds.unit_composition && ds.unit_composition !== '-'
-    ? `<div class="composition">COMPOSITION: ${esc(ds.unit_composition)}</div>` : '';
+
+  const compVal = stripHtml(pick(ds, 'unit_composition', 'composition'));
+  const comp = hasValue(compVal)
+    ? `<div class="composition">COMPOSITION: ${esc(compVal)}</div>` : '';
 
   return `
 <div class="card">
@@ -248,6 +310,7 @@ function renderCard(unitName, ds, models, weapons, abilities) {
   ${renderAbilities(abilities)}
   ${comp}
   ${damaged}
+  ${renderKeywords(kwRows)}
 </div>`;
 }
 
@@ -319,6 +382,13 @@ h1.pg-hdr{font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:
 .damaged{font-size:5pt;color:#7a1414;background:#fff5f5;border-top:.5pt solid #f0e0e0;padding:.1cm .35cm;line-height:1.4;flex-shrink:0}
 .damaged-lbl{font-weight:700;font-size:4.5pt;text-transform:uppercase;letter-spacing:.05em}
 
+/* Keywords footer */
+.keywords-section{margin-top:auto;border-top:.5pt solid #ddd;padding:.1cm .35cm;flex-shrink:0;background:#fafafa}
+.kw-line{font-size:4.5pt;line-height:1.35;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kw-lbl{font-weight:700;letter-spacing:.05em;color:#777}
+.kw-faction .kw-lbl{color:#8a6a10}
+.kw-faction{color:#8a6a10;font-weight:600}
+
 .footer{margin-top:.4cm;font-size:5pt;color:#999;text-align:right}
 .footer a{color:#999}
 .no-data-warn{background:#fff3cd;border:1px solid #ffc107;border-radius:4pt;padding:.3cm .5cm;margin-bottom:.4cm;font-size:7pt;color:#7a5900;max-width:26.4cm}
@@ -347,41 +417,33 @@ export async function generateUnitCardsHtml(roster, wahapediaData, config, onPro
 
   // Stats, weapons and abilities enrich the cards but aren't required — if any
   // of them fail the cards still render with whatever did load.
-  report('Loading stats, weapons and abilities…');
-  const [modelRows, weaponRows, datasheetAbilityRows] = await Promise.all([
+  report('Loading stats, weapons, abilities and keywords…');
+  const [modelRows, weaponRows, datasheetAbilityRows, keywordRows] = await Promise.all([
     getModelRows().catch(() => []),
     getWeaponRows().catch(() => []),
     wahapediaData?.datasheetAbilityRows?.length
       ? Promise.resolve(wahapediaData.datasheetAbilityRows)
       : getAbilityRows().catch(() => []),
+    getKeywordRows().catch(() => []),
   ]);
 
   report('Building cards…');
 
-  // Index lookups
-  const modelsByDsId = {};
-  modelRows.forEach(m => {
-    const k = m.datasheet_id;
-    if (!k) return;
-    if (!modelsByDsId[k]) modelsByDsId[k] = [];
-    modelsByDsId[k].push(m);
-  });
+  // Index every supporting table by datasheet_id
+  const groupByDsId = rows => {
+    const out = {};
+    rows.forEach(r => {
+      const k = pick(r, 'datasheet_id');
+      if (!k) return;
+      (out[k] = out[k] || []).push(r);
+    });
+    return out;
+  };
 
-  const weaponsByDsId = {};
-  weaponRows.forEach(w => {
-    const k = w.datasheet_id || w.Datasheet_id;
-    if (!k) return;
-    if (!weaponsByDsId[k]) weaponsByDsId[k] = [];
-    weaponsByDsId[k].push(w);
-  });
-
-  const absByDsId = {};
-  datasheetAbilityRows.forEach(ab => {
-    const k = ab.datasheet_id;
-    if (!k) return;
-    if (!absByDsId[k]) absByDsId[k] = [];
-    absByDsId[k].push(ab);
-  });
+  const modelsByDsId  = groupByDsId(modelRows);
+  const weaponsByDsId = groupByDsId(weaponRows);
+  const absByDsId     = groupByDsId(datasheetAbilityRows);
+  const kwByDsId      = groupByDsId(keywordRows);
 
   const cards = [];
   const matched = [];
@@ -394,20 +456,27 @@ export async function generateUnitCardsHtml(roster, wahapediaData, config, onPro
       unmatched.push(unitName);
       continue;
     }
-    if (seenDsIds.has(ds.id)) continue;
-    seenDsIds.add(ds.id);
+    const dsId = pick(ds, 'id');
+    if (seenDsIds.has(dsId)) continue;
+    seenDsIds.add(dsId);
     matched.push(unitName);
 
-    const models   = modelsByDsId[ds.id] || [];
-    const allWeapons = weaponsByDsId[ds.id] || [];
-    const abilities  = (absByDsId[ds.id] || []).filter(ab => ab.type === 'Datasheet');
+    const models   = modelsByDsId[dsId] || [];
+    const allWeapons = weaponsByDsId[dsId] || [];
+    const kwRows   = kwByDsId[dsId] || [];
+    // Keep datasheet-specific and wargear abilities; drop generic Core/Faction
+    // entries, which are the same on every card and just eat space.
+    const abilities = (absByDsId[dsId] || []).filter(ab => {
+      const t = String(pick(ab, 'type')).toLowerCase();
+      return t === '' || t === 'datasheet' || t === 'wargear';
+    });
     const selections = unitSelections[unitName];
 
     const weapons = (selections && selections.length)
-      ? allWeapons.filter(w => weaponInSelection(w.name || '', selections))
+      ? allWeapons.filter(w => weaponInSelection(pick(w, 'name'), selections))
       : allWeapons;
 
-    cards.push(renderCard(unitName, ds, models, weapons, abilities));
+    cards.push(renderCard(unitName, ds, models, weapons, abilities, kwRows));
   }
 
   const noDataWarning = unmatched.length
