@@ -162,13 +162,26 @@ function SideComponent({ side, wahapediaHook, onRemove }) {
   async function handleExportCards() {
     const win = window.open('about:blank', '_blank');
     if (!win) { alert('Allow popups to export unit cards.'); return; }
-    win.document.write('<html><head><title>Generating…</title></head><body style="font-family:sans-serif;padding:2rem;color:#333"><p>Generating unit cards…</p></body></html>');
+    win.document.write(
+      '<html><head><title>Generating…</title></head>' +
+      '<body style="font-family:sans-serif;padding:2rem;color:#333">' +
+      '<p id="msg">Starting…</p>' +
+      '<p style="color:#888;font-size:.85rem">First run downloads unit data from Wahapedia — this can take up to a minute.</p>' +
+      '</body></html>'
+    );
+    const report = msg => {
+      try {
+        const el = win.document.getElementById('msg');
+        if (el) el.textContent = msg;
+      } catch (_) { /* window closed */ }
+    };
     setExporting(true);
     try {
       const html = await generateUnitCardsHtml(
         rsData.parsed,
         wahapediaHook.wahapedia,
         { playerFaction: faction, playerDetachment: selectedDet },
+        report,
       );
       win.document.open();
       win.document.write(html);

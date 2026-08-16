@@ -11,37 +11,77 @@ function parseCsv(text) {
   });
 }
 
+// fetch() has no default timeout — without this a single unresponsive proxy
+// hangs the whole export indefinitely.
+const FETCH_TIMEOUT_MS = 20000;
+
+async function fetchWithTimeout(url, opts = {}) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...opts, signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function looksLikeCsv(text) {
+  if (!text || text.trim().length < 100) return false;
+  // Reject HTML error pages that a proxy may return with a 200
+  if (/^\s*<(!doctype|html)/i.test(text)) return false;
+  return text.indexOf('|') < 200;
+}
+
 async function fetchCsvText(url) {
   const enc = encodeURIComponent(url);
   const strategies = [
-    () => fetch(`https://api.allorigins.win/get?url=${enc}`).then(r => r.json()).then(j => {
+    async () => {
+      const r = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${enc}`);
+      if (!r.ok) throw new Error(r.status);
+      return r.text();
+    },
+    async () => {
+      const r = await fetchWithTimeout(`https://corsproxy.io/?url=${enc}`);
+      if (!r.ok) throw new Error(r.status);
+      return r.text();
+    },
+    async () => {
+      const r = await fetchWithTimeout(`https://api.allorigins.win/get?url=${enc}`);
+      if (!r.ok) throw new Error(r.status);
+      const j = await r.json();
       if (!j.contents) throw new Error('empty');
       return j.contents;
-    }),
-    () => fetch(`https://corsproxy.io/?url=${enc}`).then(r => {
+    },
+    async () => {
+      const r = await fetchWithTimeout(url);
       if (!r.ok) throw new Error(r.status);
       return r.text();
-    }),
-    () => fetch(`https://api.allorigins.win/raw?url=${enc}`).then(r => {
-      if (!r.ok) throw new Error(r.status);
-      return r.text();
-    }),
-    () => fetch(url).then(r => {
-      if (!r.ok) throw new Error(r.status);
-      return r.text();
-    }),
+    },
   ];
   for (const fn of strategies) {
     try {
       const text = await fn();
-      if (text && text.trim().length > 100 && text.indexOf('|') < 200) return text;
+      if (looksLikeCsv(text)) return text;
     } catch (_) { /* try next */ }
   }
   return null;
 }
 
-// Editions tried in order — 11th ed if published, otherwise 10th.
+// Editions tried in order — 11th ed if published, otherwise 10th. Once one
+// works we remember it, so later files don't retry the dead path.
 const WAHAPEDIA_EDITIONS = ['wh40k11ed', 'wh40k10ed'];
+let _liveEdition = null;
+
+async function fetchCsvAnyEdition(file) {
+  const order = _liveEdition
+    ? [_liveEdition, ...WAHAPEDIA_EDITIONS.filter(e => e !== _liveEdition)]
+    : WAHAPEDIA_EDITIONS;
+  for (const ed of order) {
+    const text = await fetchCsvText(`https://wahapedia.ru/${ed}/${file}`);
+    if (text) { _liveEdition = ed; return text; }
+  }
+  return null;
+}
 
 // Module-level cache so repeated exports don't re-fetch
 const _rowCache = {};
@@ -52,22 +92,16 @@ async function getRows(cacheKey, file) {
 
   const cached = localStorage.getItem(cacheKey);
   if (cached && cached.length > 200) {
-    _rowCache[cacheKey] = parseCsv(cached);
-    if (_rowCache[cacheKey].length) return _rowCache[cacheKey];
+    const rows = parseCsv(cached);
+    if (rows.length) { _rowCache[cacheKey] = rows; return rows; }
   }
 
-  // Try 11th edition first, fall back to 10th if that path isn't published yet.
-  let text = null;
-  for (const ed of WAHAPEDIA_EDITIONS) {
-    text = await fetchCsvText(`https://wahapedia.ru/${ed}/${file}`);
-    if (text) break;
-  }
-
+  const text = await fetchCsvAnyEdition(file);
   if (text) {
     try { localStorage.setItem(cacheKey, text); } catch (_) {}
     _rowCache[cacheKey] = parseCsv(text);
   } else {
-    _rowCache[cacheKey] = _rowCache[cacheKey] || [];
+    _rowCache[cacheKey] = [];
   }
   return _rowCache[cacheKey];
 }
@@ -291,27 +325,38 @@ h1.pg-hdr{font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:
 @media print{.no-data-warn{display:none}}
 `;
 
-export async function generateUnitCardsHtml(roster, wahapediaData, config) {
+export async function generateUnitCardsHtml(roster, wahapediaData, config, onProgress) {
   const { units, unitSelections = {} } = roster;
+  const report = msg => { try { onProgress?.(msg); } catch (_) {} };
 
   // The app loads datasheets lazily, so they may not be in React state yet when
   // export runs. Fall back to loading them here rather than emitting empty cards.
-  const [modelRows, weaponRows, datasheetRows, datasheetAbilityRows] = await Promise.all([
-    getModelRows(),
-    getWeaponRows(),
-    wahapediaData?.datasheetRows?.length
-      ? Promise.resolve(wahapediaData.datasheetRows)
-      : getDatasheetRows(),
-    wahapediaData?.datasheetAbilityRows?.length
-      ? Promise.resolve(wahapediaData.datasheetAbilityRows)
-      : getAbilityRows(),
-  ]);
+  // Datasheets are fetched first: they're required, and the successful fetch
+  // pins the live edition so the remaining files skip the dead path.
+  let datasheetRows = wahapediaData?.datasheetRows;
+  if (!datasheetRows?.length) {
+    report('Loading unit datasheets…');
+    datasheetRows = await getDatasheetRows();
+  }
 
   if (!datasheetRows.length) {
     throw new Error(
       'Could not load unit data from Wahapedia. Check your connection and try again.'
     );
   }
+
+  // Stats, weapons and abilities enrich the cards but aren't required — if any
+  // of them fail the cards still render with whatever did load.
+  report('Loading stats, weapons and abilities…');
+  const [modelRows, weaponRows, datasheetAbilityRows] = await Promise.all([
+    getModelRows().catch(() => []),
+    getWeaponRows().catch(() => []),
+    wahapediaData?.datasheetAbilityRows?.length
+      ? Promise.resolve(wahapediaData.datasheetAbilityRows)
+      : getAbilityRows().catch(() => []),
+  ]);
+
+  report('Building cards…');
 
   // Index lookups
   const modelsByDsId = {};

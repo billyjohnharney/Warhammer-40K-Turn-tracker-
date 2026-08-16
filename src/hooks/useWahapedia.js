@@ -38,28 +38,42 @@ async function fetchLocalCsv(path) {
   return text;
 }
 
+// fetch() has no default timeout — without this an unresponsive proxy stalls
+// the app's data load indefinitely.
+const FETCH_TIMEOUT_MS = 20000;
+
+async function fetchWithTimeout(url) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
+  try {
+    return await fetch(url, { signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function fetchText(url) {
   const enc = encodeURIComponent(url);
   const strategies = [
     async () => {
-      const r = await fetch(`https://api.allorigins.win/get?url=${enc}`);
+      const r = await fetchWithTimeout(`https://api.allorigins.win/raw?url=${enc}`);
+      if (!r.ok) throw new Error(r.status);
+      return r.text();
+    },
+    async () => {
+      const r = await fetchWithTimeout(`https://corsproxy.io/?url=${enc}`);
+      if (!r.ok) throw new Error(r.status);
+      return r.text();
+    },
+    async () => {
+      const r = await fetchWithTimeout(`https://api.allorigins.win/get?url=${enc}`);
       if (!r.ok) throw new Error(r.status);
       const j = await r.json();
       if (!j.contents) throw new Error('empty');
       return j.contents;
     },
     async () => {
-      const r = await fetch(`https://corsproxy.io/?url=${enc}`);
-      if (!r.ok) throw new Error(r.status);
-      return r.text();
-    },
-    async () => {
-      const r = await fetch(`https://api.allorigins.win/raw?url=${enc}`);
-      if (!r.ok) throw new Error(r.status);
-      return r.text();
-    },
-    async () => {
-      const r = await fetch(url);
+      const r = await fetchWithTimeout(url);
       if (!r.ok) throw new Error(r.status);
       return r.text();
     },
@@ -73,15 +87,22 @@ async function fetchText(url) {
   throw new Error('All fetch attempts failed');
 }
 
-// Editions tried in order — 11th ed if published, otherwise 10th.
+// Editions tried in order — 11th ed if published, otherwise 10th. Once one
+// works we remember it so later files don't retry the dead path.
 const WAHAPEDIA_EDITIONS = ['wh40k11ed', 'wh40k10ed'];
+let _liveEdition = null;
 
 // Fetch a Wahapedia CSV, trying each edition path until one returns usable data.
 async function fetchWahapediaCsv(file) {
+  const order = _liveEdition
+    ? [_liveEdition, ...WAHAPEDIA_EDITIONS.filter(e => e !== _liveEdition)]
+    : WAHAPEDIA_EDITIONS;
   let lastErr;
-  for (const ed of WAHAPEDIA_EDITIONS) {
+  for (const ed of order) {
     try {
-      return await fetchText(`https://wahapedia.ru/${ed}/${file}`);
+      const text = await fetchText(`https://wahapedia.ru/${ed}/${file}`);
+      _liveEdition = ed;
+      return text;
     } catch (e) { lastErr = e; }
   }
   throw lastErr || new Error(`Could not fetch ${file}`);
