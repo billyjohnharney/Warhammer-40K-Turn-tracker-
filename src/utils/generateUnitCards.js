@@ -72,13 +72,16 @@ async function fetchCsvText(url) {
 const WAHAPEDIA_EDITIONS = ['wh40k11ed', 'wh40k10ed'];
 let _liveEdition = null;
 
-async function fetchCsvAnyEdition(file) {
+async function fetchCsvAnyEdition(files) {
+  const names = Array.isArray(files) ? files : [files];
   const order = _liveEdition
     ? [_liveEdition, ...WAHAPEDIA_EDITIONS.filter(e => e !== _liveEdition)]
     : WAHAPEDIA_EDITIONS;
   for (const ed of order) {
-    const text = await fetchCsvText(`https://wahapedia.ru/${ed}/${file}`);
-    if (text) { _liveEdition = ed; return text; }
+    for (const file of names) {
+      const text = await fetchCsvText(`https://wahapedia.ru/${ed}/${file}`);
+      if (text) { _liveEdition = ed; return text; }
+    }
   }
   return null;
 }
@@ -107,7 +110,9 @@ async function getRows(cacheKey, file) {
 }
 
 const getModelRows     = () => getRows('wh11_datasheet_models', 'Datasheets_models.csv');
-const getWeaponRows    = () => getRows('wh11_datasheet_weapons', 'Datasheets_weapons.csv');
+// Wahapedia publishes weapon profiles as Datasheets_wargear.csv
+const getWeaponRows    = () => getRows('wh11_datasheet_wargear',
+  ['Datasheets_wargear.csv', 'Datasheets_weapons.csv']);
 const getDatasheetRows = () => getRows('wh11_datasheets', 'Datasheets.csv');
 const getAbilityRows   = () => getRows('wh11_datasheet_abilities', 'Datasheets_abilities.csv');
 const getKeywordRows   = () => getRows('wh11_datasheet_keywords', 'Datasheets_keywords.csv');
@@ -137,12 +142,30 @@ function matchesRosterUnit(rosterName, datasheetName) {
   return rRaw === dRaw;
 }
 
+function normalizeWeaponName(s) {
+  return String(s || '')
+    .toLowerCase()
+    .replace(/^\d+\s*[x×]\s*/i, '')       // leading quantity
+    .replace(/\s+[–—-]\s+\S.*$/, '')      // firing mode: "Plasma pistol – supercharge"
+    .replace(/[’']/g, "'")
+    .replace(/[^a-z0-9' ]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function weaponInSelection(wahapediaName, selections) {
   if (!selections || !selections.length) return true; // no filter — show all
-  const base = wahapediaName.toLowerCase().replace(/\s+[–—-]\s+\S.*$/, '').trim();
+  const base = normalizeWeaponName(wahapediaName);
+  if (!base) return false;
   return selections.some(sel => {
-    const s = sel.toLowerCase().trim();
-    return s === base || s === wahapediaName.toLowerCase() || base.startsWith(s) || s.startsWith(base);
+    const s = normalizeWeaponName(sel);
+    if (!s) return false;
+    if (s === base) return true;
+    // Allow one to extend the other only on a word boundary, so "bolt pistol"
+    // never matches "bolt rifle" and short fragments can't match everything.
+    const [shorter, longer] = s.length <= base.length ? [s, base] : [base, s];
+    if (shorter.length < 4) return false;
+    return longer.startsWith(shorter + ' ');
   });
 }
 
@@ -470,11 +493,14 @@ export async function generateUnitCardsHtml(roster, wahapediaData, config, onPro
       const t = String(pick(ab, 'type')).toLowerCase();
       return t === '' || t === 'datasheet' || t === 'wargear';
     });
+    // Show only the weapons the roster actually selected. If nothing matches
+    // (unfamiliar naming), fall back to the full list rather than an empty card.
     const selections = unitSelections[unitName];
-
-    const weapons = (selections && selections.length)
-      ? allWeapons.filter(w => weaponInSelection(pick(w, 'name'), selections))
-      : allWeapons;
+    let weapons = allWeapons;
+    if (selections && selections.length) {
+      const filtered = allWeapons.filter(w => weaponInSelection(pick(w, 'name'), selections));
+      if (filtered.length) weapons = filtered;
+    }
 
     cards.push(renderCard(unitName, ds, models, weapons, abilities, kwRows));
   }
