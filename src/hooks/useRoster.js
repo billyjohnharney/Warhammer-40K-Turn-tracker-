@@ -230,52 +230,83 @@ function isJunkUnitLine(name) {
   return false;
 }
 
+// A bullet line under a unit is a wargear/model entry. Returns the cleaned
+// selection name, or null when the line is a rule rather than equipment.
+function cleanSelectionName(line) {
+  const name = line
+    .replace(BULLET, '')
+    .replace(/^\d+\s*[x×]\s*/i, '')  // "10x Fleshborer" → "Fleshborer"
+    .replace(/:\s*$/, '')
+    .trim();
+  if (!name || name.length < 3) return null;
+  if (/^warlord$/i.test(name)) return null;
+  if (/^enhancements?\b/i.test(name)) return null;
+  return name;
+}
+
 export function parseTextRoster(text) {
   const activeKeywords = new Set();
   scanTextForKeywords(text.toUpperCase(), activeKeywords);
 
   const rawLines = text.split('\n');
   const units = [];
+  const unitSelections = {};
   const seen = new Set();
-
-  function add(name) {
-    if (isJunkUnitLine(name)) return;
-    const key = name.toLowerCase();
-    if (seen.has(key)) return;
-    seen.add(key);
-    units.push(name);
-  }
-
-  // Strategy A — entries carrying a points value (New Recruit, BattleScribe text).
   const HAS_PTS = /[\[(][^\])]*\b\d[\d,]*\s*(pts?|points?)\b/i;
-  for (const raw of rawLines) {
-    const line = raw.trim();
-    if (!line || line.startsWith('+') || line.startsWith('=')) continue;
-    if (BULLET.test(line)) continue;        // bullets are weapons/models, never units
-    if (DETACHMENT_LINE.test(line)) continue;
-    if (!HAS_PTS.test(line)) continue;
-    add(cleanUnitName(line));
-  }
 
-  // Strategy B — Warhammer app export: unit names are unindented, un-bulleted lines
-  // that head a block of "•" weapon/model lines. Used when strategy A found nothing.
-  if (!units.length) {
-    for (let i = 0; i < rawLines.length; i++) {
-      const line = rawLines[i].trim();
-      if (!line || BULLET.test(line)) continue;
-      if (/^[+=]/.test(line)) continue;
-      // A unit name is followed by at least one bullet line (allowing blanks between)
+  // Does this roster mark units with a points value? If not, fall back to
+  // treating any line that heads a block of bullets as a unit name.
+  const usePts = rawLines.some(raw => {
+    const l = raw.trim();
+    return l && !BULLET.test(l) && !/^[+=]/.test(l) &&
+      !DETACHMENT_LINE.test(l) && HAS_PTS.test(l) &&
+      !isJunkUnitLine(cleanUnitName(l));
+  });
+
+  let current = null;
+
+  for (let i = 0; i < rawLines.length; i++) {
+    const line = rawLines[i].trim();
+    if (!line) continue;
+
+    // Bullet lines belong to the unit above them — these are the roster's
+    // actual weapon/model selections.
+    if (BULLET.test(line)) {
+      if (current) {
+        const sel = cleanSelectionName(line);
+        if (sel) {
+          const list = unitSelections[current] || (unitSelections[current] = []);
+          const key = sel.toLowerCase();
+          if (!list.includes(key)) list.push(key);
+        }
+      }
+      continue;
+    }
+
+    if (/^[+=]/.test(line) || DETACHMENT_LINE.test(line)) { current = null; continue; }
+
+    // Decide whether this line names a unit
+    let isUnit;
+    if (usePts) {
+      isUnit = HAS_PTS.test(line);
+    } else {
       let j = i + 1;
       while (j < rawLines.length && !rawLines[j].trim()) j++;
-      if (j < rawLines.length && BULLET.test(rawLines[j].trim())) {
-        add(cleanUnitName(line));
-      }
+      isUnit = j < rawLines.length && BULLET.test(rawLines[j].trim());
     }
+    if (!isUnit) { current = null; continue; }
+
+    const name = cleanUnitName(line);
+    if (isJunkUnitLine(name)) { current = null; continue; }
+
+    const key = name.toLowerCase();
+    if (!seen.has(key)) { seen.add(key); units.push(name); }
+    current = name;
   }
 
   const faction = detectFaction(text);
   const detachment = detectDetachment(text, faction);
-  return { units: units.slice(0, 40), activeKeywords, faction, detachment, unitSelections: {} };
+  return { units: units.slice(0, 40), activeKeywords, faction, detachment, unitSelections };
 }
 
 export function looksLikeWarhammer(text) {
